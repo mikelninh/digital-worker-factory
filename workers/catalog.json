@@ -1,0 +1,41 @@
+{
+  "version": "1.0.0",
+  "principle": "Build workers that earn autonomy",
+  "workers": [
+    {
+      "id": "pruefpilot",
+      "role": "public_document_reviewer",
+      "capabilities": ["document_intake", "versioned_rule_retrieval", "evidence_match", "completeness_check"],
+      "approval_required": ["external_document_request", "funding_decision"],
+      "evals": ["required_evidence_present", "grounding_guard", "human_boundary"]
+    },
+    {
+      "id": "casepilot",
+      "role": "reliability_evaluator",
+      "capabilities": ["trace_normalisation", "completion_gate", "tool_compliance", "replay"],
+      "approval_required": ["worker_promotion"],
+      "evals": ["premature_finish", "missing_artifact", "skipped_tool", "loop", "bad_escalation"]
+    },
+    {
+      "id": "kanzleipilot",
+      "role": "legal_assistant",
+      "capabilities": ["gitlaw_search", "citation_verification", "document_context", "deadline_check", "drafting"],
+      "approval_required": ["external_legal_communication", "court_filing"],
+      "evals": ["citation_resolution", "evidence_coverage", "deadline_integrity", "human_boundary"]
+    },
+    {
+      "id": "buergerpilot",
+      "role": "public_service_coordinator",
+      "capabilities": ["identity_context", "register_need", "service_routing", "data_minimisation"],
+      "approval_required": ["government_submission", "payment", "binding_decision"],
+      "evals": ["minimum_data", "authority_boundary", "service_completion"]
+    },
+    {
+      "id": "worker_builder",
+      "role": "applied_ai_delivery",
+      "capabilities": ["workflow_mapping", "capability_composition", "policy_generation", "eval_contract", "shadow_plan"],
+      "approval_required": ["production_deployment", "autonomy_promotion"],
+      "evals": ["workflow_coverage", "policy_coverage", "shadow_readiness"]
+    }
+  ]
+}
