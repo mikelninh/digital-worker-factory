@@ -1,107 +1,115 @@
-# Digital Worker Factory — V0
+# Digital Worker Factory — V1
 
-A small foundation for building **trustworthy, human-supervised digital workers** without cloning a new agent codebase for every vertical.
+> **LEGO for digital labour. Build workers that earn autonomy.**
 
-## Core idea
+A portfolio-grade working prototype for **trustworthy, human-supervised digital workers**. One shared contract powers specialised workers for document review, legal workflows, public services, reliability evaluation and applied-AI delivery.
 
-Each worker is a **versioned manifest** declaring:
+## Live product thesis
 
-- goals;
-- allow-listed tools;
-- forbidden tools;
-- actions that may auto-execute;
-- actions that require approval;
-- critical actions;
-- eval suites.
-
-The runtime owns the invariants: policy, approvals, evidence, audit, tenant boundaries, execution state and observability. The model is an interchangeable reasoning component, not the authority.
+A worker does not control its own authority. It may interpret context and propose an action, while deterministic runtime rules own permissions, evidence requirements, approval gates and audit.
 
 ```text
-Channels / events
-      ↓
-Normalizer + entity resolution
-      ↓
-Context / evidence
-      ↓
-Worker runtime  ← worker manifest
-      ↓
-Structured action proposal
-      ↓
-Policy engine
-   ↙      ↘
-auto     approval queue
-   ↘      ↙
-Tool execution
-      ↓
-Audit + outcome + eval
+input / event
+    ↓
+worker capabilities
+    ↓
+observable tool trace
+    ↓
+evidence contract
+    ↓
+policy gate
+    ↓
+proposed action
+    ↓
+human approval
+    ↓
+audit + eval
 ```
 
-## Included worker manifests
+## V1: five working application demos
 
-- `KanzleiPilot` — legal research and case workflow
-- `CarePilot` — care/family administration
-- `PraxisPilot` — medical-practice administration
-- `HandwerkPilot` — jobs, quotes and scheduling
-- `HausPilot` — property-management operations
-- `Money Finder` — revenue recovery / spend leakage
+The website exposes company-specific entry routes, but every route calls the same V1 API contract.
 
-## Why KanzleiPilot should reuse GitLaw
+| Route | Worker | Demonstrates |
+| --- | --- | --- |
+| `/proof/aconium` | **PrüfPilot** | document intake → versioned rules → evidence → missing-proof escalation |
+| `/proof/interloom` | **CasePilot Reliability** | premature-completion failure → trace replay → pass |
+| `/proof/conny` | **KanzleiPilot** | GitLaw-backed legal workflow → citation verification → qualified human review |
+| `/proof/digitalservice` | **BürgerPilot** | life-event orchestration → minimal-data service plan → explicit authority boundary |
+| `/proof/overfly` | **Worker Builder** | workflow mapping → capability composition → policy/eval contract → shadow plan |
 
-Do **not** copy GitLaw into this repository. Treat it as a specialised capability provider.
+All examples use **synthetic data**. The demo never pretends to execute legal, governmental, financial or other external actions.
 
-Suggested adapter:
+## Working API gates
 
-```text
-Digital Worker Factory
-      │
-      └── KanzleiPilot
-              │
-              ├── GitLaw MCP: search_laws
-              ├── GitLaw MCP: hybrid_search
-              ├── GitLaw MCP: verify_citation
-              ├── GitLaw MCP: lookup_paragraph
-              ├── GitLaw MCP: find_related_paragraphs
-              └── GitLaw MCP: list_laws
+### `POST /api/run`
+
+Executes a deterministic demo worker contract and returns:
+
+- worker + scenario;
+- observable execution trace;
+- evidence items and states;
+- finding;
+- proposed next action;
+- human/policy gate;
+- reliability dimensions;
+- run ID.
+
+Example:
+
+```json
+{
+  "demo": "conny"
+}
 ```
 
-GitLaw remains the legal evidence engine. The Factory owns worker lifecycle, permissions, approvals, tenant isolation, audit and deployment.
+For Interloom, pass `"replay": true` to replay the corrected procedure after the intentional first-run completion failure.
 
-## Run
+### `POST /api/approve`
 
-```bash
-python -m venv .venv
-source .venv/bin/activate   # Windows: .venv\\Scripts\\activate
-pip install -e '.[dev]'
-uvicorn app.main:app --reload
+Records a human approve/reject decision against a run ID. The portfolio sandbox records the audit event but deliberately executes no external side effect.
+
+```json
+{
+  "runId": "conny-abc123",
+  "demo": "conny",
+  "decision": "approve"
+}
 ```
 
-Open `http://127.0.0.1:8000/docs`.
+## Worker specifications
 
-### Example
+[`workers/catalog.json`](workers/catalog.json) contains the first reusable worker contracts: capabilities, approval boundaries and evaluation suites.
 
-```bash
-curl -X POST http://127.0.0.1:8000/workers/kanzleipilot/events \
-  -H 'content-type: application/json' \
-  -d '{
-    "tenant_id":"bao-demo",
-    "kind":"legal_question",
-    "source":"client-email",
-    "payload":{"question":"Welche Normen sind für diesen Fall relevant?"}
-  }'
-```
+The key design choice is **declarative specialisation**. A new worker should increasingly be a versioned specification using shared runtime primitives rather than another cloned agent application.
 
-The API returns a structured `ActionProposal` with evidence, confidence, risk and approval requirements.
+## Existing systems reused
 
-## V0 → V1
+### GitLaw → legal intelligence capability
 
-1. **Persistent state:** PostgreSQL for events, cases, proposals, approvals and audit.
-2. **Durable workflows:** Temporal for long-running jobs, retries and waiting on humans/external systems.
-3. **Model adapter:** structured-output reasoning provider behind a stable interface.
-4. **Tool layer:** MCP-first capability registry plus ordinary internal tools where MCP is unnecessary.
-5. **Policy:** move increasingly complex organisation policies to OPA/Rego; keep a hard-deny layer in code.
-6. **Observability:** OpenTelemetry traces tying model calls, tool calls, approvals and outcomes to one run ID.
-7. **Evals:** every worker ships with golden cases and policy-violation tests. A worker cannot be promoted if eval gates fail.
-8. **Deployment:** dev → shadow → approval-only → constrained autonomy. Never jump directly to full autonomy.
+KanzleiPilot does not copy GitLaw. GitLaw remains a specialised capability for legal retrieval and deterministic citation verification.
+
+- `search_laws`
+- `hybrid_search`
+- `verify_citation`
+- `lookup_paragraph`
+- `find_related_paragraphs`
+
+### PrüfPilot → evidence-first case engine
+
+PrüfPilot V5.1 already demonstrates a reusable case-engine pattern across synthetic administrative domains: document intake, versioned rules, evidence states, bounded actions and human review.
+
+### CasePilot → reliability engine
+
+CasePilot becomes the Factory reliability layer:
+
+- completion integrity;
+- required-tool checks;
+- required-artifact checks;
+- loop detection;
+- escalation quality;
+- failure replay;
+- regression gates.
 
 ## Worker lifecycle
 
@@ -110,56 +118,59 @@ DRAFT
   ↓
 EVAL
   ↓
-SHADOW        observes real work, acts on nothing
+SHADOW        observe; no external action
   ↓
-COPILOT       proposes, human approves everything
+COPILOT       propose; human approves
   ↓
-LIMITED AUTO  only pre-approved low-risk actions
+LIMITED AUTO  only proven low-risk actions
   ↓
-PRODUCTION
+TRUSTED       bounded autonomy with continuous evals
 ```
 
-Promotion is based on evidence, not vibes: task success, false-action rate, policy violations, human override rate, cost, latency and business outcome.
+**Autonomy is earned from evidence, not enabled by confidence.**
 
-## The moat
+## What good digital work looks like
 
-The valuable asset is not prompts. It is the accumulated **Worker Specification + Tool Graph + Policy Library + Eval Corpus + Execution History** that lets a new vertical worker become safe and useful quickly.
+1. **Grounded** — claims connect to evidence.
+2. **Bounded** — permissions live outside the model.
+3. **Observable** — actions leave a trace.
+4. **Recoverable** — failures become replayable cases.
+5. **Improving** — autonomy follows measured reliability.
 
-## Factory website
+## Repository
 
-The portfolio/product UI lives in [`site/`](site/). It is intentionally dependency-free: plain HTML, CSS and JavaScript, with clean Vercel rewrites for company-specific routes.
+```text
+site/
+  index.html       portfolio / product UI
+  app.js           V1 interactive proof experiences
+  styles.css       warm-futurist responsive design
+  api/
+    run.js         shared demo worker runtime
+    approve.js     explicit human approval gate
+  vercel.json      proof-route SPA rewrites
 
-### Local preview
+workers/
+  catalog.json     first declarative worker specs
+```
+
+## Run locally
+
+The homepage itself is static. Vercel serverless endpoints power the V1 proof interactions in deployment.
 
 ```bash
 cd site
 python -m http.server 4173
 ```
 
-Open `http://localhost:4173`.
+For the complete API experience, deploy `site/` to Vercel.
 
-### Application entry URLs
+## Related proof projects
 
-- `/proof/aconium` — PrüfPilot → reusable document/case worker architecture
-- `/proof/interloom` — CasePilot reliability → observable agent work
-- `/proof/conny` — KanzleiPilot + GitLaw → human-reviewed legal workflows
-- `/proof/digitalservice` — public-service worker / proactive administration thesis
-- `/proof/overfly` — Factory itself → repeatable applied-AI delivery
+- **PrüfPilot V5.1:** https://github.com/mikelninh/pruefpilot-document-ai
+- **GitLaw:** https://github.com/mikelninh/gitlaw
 
-### Design thesis
+## Author
 
-The site is built to explain the project in under 30 seconds:
+Michael Ninh · AI Engineer · Berlin
 
-1. **LEGO for digital labour** — reusable worker capabilities.
-2. **Build workers that earn autonomy** — trust is promoted through evidence.
-3. **What good digital work looks like** — grounded, bounded, observable, recoverable, improving.
-4. **One flagship project, multiple entry doors** — tailored proof without creating five unrelated demos.
-
-## Publish as its own GitHub repo
-
-Recommended repository name: **`digital-worker-factory`**.
-
-Then import the repository into Vercel and set the **Root Directory** to `site`.
-No build command is required; the site is dependency-free.
-
-Suggested production URL: `digital-worker-factory.vercel.app` (or your own domain).
+This is an independent proof-of-work project. Company-specific routes are tailored technical demonstrations and do not imply affiliation with those organisations.
