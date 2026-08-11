@@ -1,5 +1,13 @@
 {
   "rewrites": [
     { "source": "/proof/:slug", "destination": "/index.html" }
+  ],
+  "headers": [
+    {
+      "source": "/proof/:slug",
+      "headers": [
+        { "key": "X-Robots-Tag", "value": "noindex, nofollow" }
+      ]
+    }
   ]
 }
