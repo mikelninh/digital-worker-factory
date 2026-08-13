@@ -1,8 +1,10 @@
 # Digital Worker Factory — V1
 
-> **LEGO for digital labour. Build workers that earn autonomy.**
+**AI workers that handle repeatable work, show when they are unsure, and ask a human before important decisions.**
 
-A working prototype for **trustworthy, human-supervised digital workers**. One shared contract powers specialised workers for document review, legal workflows, public services, reliability evaluation and applied-AI delivery.
+Digital Worker Factory is a working prototype for **trustworthy, human-supervised digital workers**. One shared contract powers specialised workers for document review, legal workflows, public services, reliability evaluation and applied-AI delivery.
+
+> **Product idea:** LEGO for digital labour — build workers that earn autonomy instead of receiving it by default.
 
 ## Product thesis
 
@@ -107,30 +109,20 @@ CasePilot contributes the reliability pattern:
 ## Worker lifecycle
 
 ```text
-DRAFT
+SPEC
   ↓
-EVAL
+SHADOW        observe + compare with human decisions
   ↓
-SHADOW        observe; no external action
+ASSISTED      propose, human approves
   ↓
-COPILOT       propose; human approves
-  ↓
-LIMITED AUTO  only proven low-risk actions
+BOUNDED       execute low-risk actions inside policy limits
   ↓
 TRUSTED       bounded autonomy with continuous evals
 ```
 
-**Autonomy is earned from evidence, not enabled by confidence.**
+The lifecycle is earned through evidence. A worker should not gain more authority because its demo looks convincing.
 
-## What good digital work looks like
-
-1. **Grounded** — claims connect to evidence.
-2. **Bounded** — permissions live outside the model.
-3. **Observable** — actions leave a trace.
-4. **Recoverable** — failures become replayable cases.
-5. **Improving** — autonomy follows measured reliability.
-
-## Repository
+## Repository map
 
 ```text
 site/
@@ -154,8 +146,18 @@ evals/
 
 - **PrüfPilot V5.1:** https://github.com/mikelninh/pruefpilot-document-ai
 - **GitLaw:** https://github.com/mikelninh/gitlaw
+- **Agent Loop Lab:** https://github.com/mikelninh/agent-loop-lab
 
-## Author
+## Principles
+
+- Show evidence before confidence.
+- Make uncertainty and failure visible.
+- Humans own consequential decisions.
+- Evaluate repeatably before expanding autonomy.
+- Prefer a reusable contract over cloned agent demos.
+- Label synthetic evidence honestly.
+
+---
 
 Michael Ninh · AI Engineer · Berlin
 
