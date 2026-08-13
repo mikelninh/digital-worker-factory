@@ -1,8 +1,10 @@
 # Digital Worker Factory — V1
 
-> **LEGO for digital labour. Build workers that earn autonomy.**
+**AI workers that handle repeatable work, show when they are unsure, and ask a human before important decisions.**
 
-A working prototype for **trustworthy, human-supervised digital workers**. One shared contract powers specialised workers for document review, legal workflows, public services, reliability evaluation and applied-AI delivery.
+Digital Worker Factory is a working prototype for **trustworthy, human-supervised digital workers**. One shared contract powers specialised workers for document review, legal workflows, public services, reliability evaluation and applied-AI delivery.
+
+> **Product idea:** LEGO for digital labour — build workers that earn autonomy instead of receiving it by default.
 
 ## Product thesis
 
