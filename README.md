@@ -109,20 +109,30 @@ CasePilot contributes the reliability pattern:
 ## Worker lifecycle
 
 ```text
-SPEC
+DRAFT
   ↓
-SHADOW        observe + compare with human decisions
+EVAL
   ↓
-ASSISTED      propose, human approves
+SHADOW        observe; no external action
   ↓
-BOUNDED       execute low-risk actions inside policy limits
+COPILOT       propose; human approves
+  ↓
+LIMITED AUTO  only proven low-risk actions
   ↓
 TRUSTED       bounded autonomy with continuous evals
 ```
 
-The lifecycle is earned through evidence. A worker should not gain more authority because its demo looks convincing.
+**Autonomy is earned from evidence, not enabled by confidence.**
 
-## Repository map
+## What good digital work looks like
+
+1. **Grounded** — claims connect to evidence.
+2. **Bounded** — permissions live outside the model.
+3. **Observable** — actions leave a trace.
+4. **Recoverable** — failures become replayable cases.
+5. **Improving** — autonomy follows measured reliability.
+
+## Repository
 
 ```text
 site/
@@ -146,18 +156,8 @@ evals/
 
 - **PrüfPilot V5.1:** https://github.com/mikelninh/pruefpilot-document-ai
 - **GitLaw:** https://github.com/mikelninh/gitlaw
-- **Agent Loop Lab:** https://github.com/mikelninh/agent-loop-lab
 
-## Principles
-
-- Show evidence before confidence.
-- Make uncertainty and failure visible.
-- Humans own consequential decisions.
-- Evaluate repeatably before expanding autonomy.
-- Prefer a reusable contract over cloned agent demos.
-- Label synthetic evidence honestly.
-
----
+## Author
 
 Michael Ninh · AI Engineer · Berlin
 
