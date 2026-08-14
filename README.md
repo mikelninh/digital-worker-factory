@@ -1,14 +1,12 @@
-# Digital Worker Factory — V1
+# Digital Worker Factory
 
-**AI workers that handle repeatable work, show when they are unsure, and ask a human before important decisions.**
+**Trustworthy AI workers for repeatable operational work.**
 
-Digital Worker Factory is a working prototype for **trustworthy, human-supervised digital workers**. One shared contract powers specialised workers for document review, legal workflows, public services, reliability evaluation and applied-AI delivery.
+Digital Worker Factory is a reusable architecture for AI workers that can interpret context, use tools and prepare actions — while deterministic runtime rules control permissions, evidence requirements, approval gates and audit.
 
-> **Product idea:** LEGO for digital labour — build workers that earn autonomy instead of receiving it by default.
+**[Open the live demo](https://digital-worker-factory-hallochupi-7378s-projects.vercel.app/)**
 
-## Product thesis
-
-A worker does not control its own authority. It may interpret context and propose an action, while deterministic runtime rules own permissions, evidence requirements, approval gates and audit.
+## The contract
 
 ```text
 input / event
@@ -28,50 +26,23 @@ human approval
 audit + eval
 ```
 
-## V1 proof surfaces
+**Autonomy is earned from evidence, not enabled by confidence.**
 
-The public portfolio demonstrates the same architecture across several kinds of work:
+## What the demo proves
 
-- **Document AI** — intake → versioned rules → evidence → targeted next action
-- **Agent reliability** — premature-completion failure → trace replay → pass
-- **Legal workflow** — grounded retrieval → citation verification → qualified human review
-- **Public service** — life-event orchestration → minimal-data service plan → explicit authority boundary
-- **Worker builder** — workflow mapping → capability composition → policy/eval contract → shadow deployment
+The same runtime pattern is applied across several kinds of work:
 
-Some application flows use unlisted tailored entry routes. They are intentionally excluded from the public portfolio navigation and search indexing.
+- **Document AI** — intake → rules → evidence → next action
+- **Agent reliability** — trace replay → failure diagnosis → regression pass
+- **Legal workflows** — grounded retrieval → citation verification → human review
+- **Public services** — life event → service plan → explicit authority boundary
+- **Worker builder** — workflow mapping → capabilities → policy/eval contract
 
-All examples use **synthetic data** unless explicitly stated otherwise. The demo never pretends to execute legal, governmental, financial or other external actions.
+Public examples use synthetic data unless explicitly stated otherwise.
 
-## Working API gates
+## Reliability layer
 
-### `POST /api/run`
-
-Executes a deterministic demo worker contract and returns:
-
-- worker + scenario
-- observable execution trace
-- evidence items and states
-- finding
-- proposed next action
-- human/policy gate
-- reliability dimensions
-- run ID
-
-### `POST /api/approve`
-
-Records a human approve/reject decision against a run ID. The portfolio sandbox records the audit event but deliberately executes no external side effect.
-
-## Worker specifications
-
-[`workers/catalog.json`](workers/catalog.json) contains the first reusable worker contracts: capabilities, approval boundaries and evaluation suites.
-
-The key design choice is **declarative specialisation**. A new worker should increasingly be a versioned specification using shared runtime primitives rather than another cloned agent application.
-
-## Synthetic reliability suite
-
-[`evals/run.mjs`](evals/run.mjs) generates and evaluates **50 deterministic synthetic cases** across five worker families.
-
-The suite checks failure modes including:
+The repository includes a deterministic synthetic evaluation suite across five worker families. It checks failure modes such as:
 
 - missing required tool calls
 - missing required artifacts
@@ -80,31 +51,7 @@ The suite checks failure modes including:
 - loop-budget violations
 - unsafe autonomy across a human boundary
 
-The suite is deliberately labelled **synthetic**. It demonstrates testability and regression discipline; it does not claim real-world task accuracy.
-
-GitHub Actions runs the suite on pushes and pull requests via [`.github/workflows/evals.yml`](.github/workflows/evals.yml).
-
-## Existing systems reused
-
-### GitLaw → legal intelligence capability
-
-GitLaw remains a specialised capability for legal retrieval and deterministic citation verification rather than being copied into the Factory.
-
-### PrüfPilot → evidence-first case engine
-
-PrüfPilot V5.1 demonstrates a reusable case-engine pattern across synthetic administrative domains: document intake, versioned rules, evidence states, bounded actions and human review.
-
-### CasePilot → reliability engine
-
-CasePilot contributes the reliability pattern:
-
-- completion integrity
-- required-tool checks
-- required-artifact checks
-- loop detection
-- escalation quality
-- failure replay
-- regression gates
+GitHub Actions runs the suite on pushes and pull requests.
 
 ## Worker lifecycle
 
@@ -113,52 +60,35 @@ DRAFT
   ↓
 EVAL
   ↓
-SHADOW        observe; no external action
+SHADOW
   ↓
-COPILOT       propose; human approves
+COPILOT
   ↓
-LIMITED AUTO  only proven low-risk actions
+LIMITED AUTO
   ↓
-TRUSTED       bounded autonomy with continuous evals
+TRUSTED
 ```
 
-**Autonomy is earned from evidence, not enabled by confidence.**
+A worker should gain authority only after measured reliability at the previous stage.
 
-## What good digital work looks like
+## Design principles
 
 1. **Grounded** — claims connect to evidence.
 2. **Bounded** — permissions live outside the model.
 3. **Observable** — actions leave a trace.
 4. **Recoverable** — failures become replayable cases.
-5. **Improving** — autonomy follows measured reliability.
+5. **Improving** — evaluations decide when autonomy can increase.
 
-## Repository
+## Related systems
 
-```text
-site/
-  index.html       portfolio / product UI
-  app.js           V1 interactive proof experiences
-  identity.js      public portfolio / personal layer
-  styles.css       core responsive design
-  identity.css     public portfolio styling
-  api/
-    run.js         shared demo worker runtime
-    approve.js     explicit human approval gate
+- [GitLaw](https://github.com/mikelninh/gitlaw) — legal retrieval and citation verification
+- [PrüfPilot](https://github.com/mikelninh/pruefpilot-document-ai) — evidence-first case workflows
+- [Council](https://github.com/mikelninh/council) — evidence-gated multi-agent decision making
 
-workers/
-  catalog.json     declarative worker specs
+## Stack
 
-evals/
-  run.mjs          50-case synthetic reliability suite
-```
+`JavaScript · APIs · AI agents · tool contracts · policy gates · evals · human-in-the-loop`
 
-## Related proof projects
+---
 
-- **PrüfPilot V5.1:** https://github.com/mikelninh/pruefpilot-document-ai
-- **GitLaw:** https://github.com/mikelninh/gitlaw
-
-## Author
-
-Michael Ninh · AI Engineer · Berlin
-
-I like turning complicated systems into things humans can understand and use — especially where AI needs to be reliable enough to do real work.
+Built by [Michael Ninh](https://github.com/mikelninh) in Berlin.
