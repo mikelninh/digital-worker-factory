@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="description" content="CasePilot Reliability — a targeted proof of work for Interloom by Michael Ninh." />
+  <title>CasePilot Reliability — Proof for Interloom</title>
+  <link rel="stylesheet" href="/interloom.css" />
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="https://mikelninh.github.io/" target="_blank" rel="noreferrer">
+      <span class="mark">MN</span>
+      <span><b>Michael Ninh</b><small>AI Engineer · Berlin</small></span>
+    </a>
+    <div class="toplinks">
+      <a href="https://github.com/mikelninh/digital-worker-factory" target="_blank" rel="noreferrer">Source ↗</a>
+      <a href="mailto:mikel_ninh@yahoo.de">Contact ↗</a>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero shell">
+      <div class="hero-copy">
+        <div class="eyebrow">TARGETED PROOF OF WORK · INTERLOOM AI ENGINEER</div>
+        <h1>Can your agent prove it is <em>actually done?</em></h1>
+        <p class="lede">A small reliability layer for operational agents: natural-language procedure, explicit context, observable tool use, deterministic completion gates, replayable failures and regression evals.</p>
+        <div class="hero-actions">
+          <a class="btn primary" href="#demo">Run the 90-second demo ↓</a>
+          <a class="btn" href="https://github.com/mikelninh/digital-worker-factory" target="_blank" rel="noreferrer">Inspect code ↗</a>
+        </div>
+        <p class="honesty">Independent portfolio prototype · synthetic data only · built from the public role description, not Interloom internals.</p>
+      </div>
+      <aside class="thesis-card">
+        <span>THE RELIABILITY QUESTION</span>
+        <h2>Do not trust the completion claim. Trust the trace.</h2>
+        <div class="mini-flow">
+          <b>procedure</b><i>→</i><b>context</b><i>→</i><b>tools</b><i>→</i><b>evidence</b><i>→</i><b>gate</b>
+        </div>
+      </aside>
+    </section>
+
+    <section class="shell context-section">
+      <header class="section-head">
+        <span>01 · DESCRIBE, THEN AUTOMATE</span>
+        <h2>An expert writes the procedure in plain language.</h2>
+        <p>The runtime turns that instruction into checkable completion requirements rather than relying on the model to self-certify.</p>
+      </header>
+      <div class="context-grid">
+        <article class="procedure-card panel">
+          <div class="panel-label">EXPERT PROCEDURE · v3</div>
+          <blockquote>“Before closing an invoice reconciliation: open the invoice, find the purchase order, verify the vendor and amount, create a reconciliation note, and escalate any unresolved mismatch. Only then mark the stage complete.”</blockquote>
+          <div class="requirements">
+            <span>4 required actions</span><span>1 required artifact</span><span>1 escalation rule</span>
+          </div>
+        </article>
+        <article class="graph-card panel">
+          <div class="panel-label">SIMULATED CONTEXT GRAPH</div>
+          <div class="graph">
+            <div class="node main">Case #1842<small>invoice reconciliation</small></div>
+            <div class="edges"><i></i><i></i><i></i><i></i></div>
+            <div class="node">Invoice<small>INV-1842</small></div>
+            <div class="node">Vendor<small>NordWerk GmbH</small></div>
+            <div class="node">PO<small>#7712</small></div>
+            <div class="node">Procedure<small>reconcile.v3</small></div>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section class="demo-section" id="demo">
+      <div class="shell">
+        <header class="section-head inverse">
+          <span>02 · RUN THE FAILURE</span>
+          <h2>One silent failure. Made observable.</h2>
+          <p>The agent claims the stage is complete. The runtime checks what actually happened.</p>
+        </header>
+
+        <div class="demo-console" id="console">
+          <div class="console-top"><span><i></i> CasePilot Reliability</span><b>READY</b></div>
+          <div class="console-empty">
+            <div class="pulse">I</div>
+            <h3>Case #1842 · Vendor invoice reconciliation</h3>
+            <p>Run the trace, inspect the missing work, then replay the revised procedure.</p>
+            <button class="btn primary light" id="runBtn">Run failure trace →</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="shell eval-section">
+      <header class="section-head">
+        <span>03 · FAILURE → EVAL</span>
+        <h2>Every production mistake should make the next version harder to break.</h2>
+        <p>This prototype includes a deterministic synthetic regression suite across five workflow domains.</p>
+      </header>
+      <div class="stats">
+        <article><strong>50</strong><span>synthetic eval cases</span></article>
+        <article><strong>5</strong><span>workflow domains</span></article>
+        <article><strong>6</strong><span>failure classes</span></article>
+        <article><strong>0</strong><span>expected-result mismatches</span></article>
+      </div>
+      <div class="failure-grid">
+        <span>premature completion</span><span>missing tool</span><span>missing artifact</span><span>weak evidence</span><span>loop budget</span><span>bad autonomy</span>
+      </div>
+      <p class="tiny-note">Synthetic deterministic suite; values are not production performance claims.</p>
+    </section>
+
+    <section class="fit-section">
+      <div class="shell fit-grid">
+        <div>
+          <div class="eyebrow">WHY I BUILT THIS FOR INTERLOOM</div>
+          <h2>Your role is not “prompt the model better.” It is making agents reliable in real work.</h2>
+          <p>That is exactly the engineering problem I want to work on: the small runtime details that determine whether an agent is useful, debuggable and safe when the happy path disappears.</p>
+        </div>
+        <div class="fit-list">
+          <article><b>Tools & skills</b><span>Make capabilities explicit, bounded and easy for the model to use correctly.</span></article>
+          <article><b>Runtime & recovery</b><span>Instrument tool calls, retries, handoffs and safe failure paths.</span></article>
+          <article><b>Failure modes</b><span>Catch incomplete work, loops, missing artifacts and bad escalation before they become silent errors.</span></article>
+          <article><b>Evaluation</b><span>Turn real failures into replayable scenarios and regression gates.</span></article>
+        </div>
+      </div>
+    </section>
+
+    <section class="shell closing">
+      <div>
+        <span>MICHAEL NINH · AI ENGINEER · BERLIN</span>
+        <h2>I would love to build the boring, difficult details that make agents trustworthy.</h2>
+      </div>
+      <div class="hero-actions">
+        <a class="btn primary" href="https://mikelninh.github.io/" target="_blank" rel="noreferrer">Portfolio ↗</a>
+        <a class="btn" href="https://github.com/mikelninh" target="_blank" rel="noreferrer">GitHub ↗</a>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">CasePilot Reliability · 2026 · Independent proof of work for a technical conversation.</footer>
+  <script src="/interloom.js"></script>
+</body>
+</html>
