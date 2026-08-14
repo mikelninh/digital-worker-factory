@@ -1,10 +1,10 @@
-# Digital Worker Factory
+# Digital Worker Factory 🤖
 
 **Trustworthy AI workers for repeatable operational work.**
 
 Digital Worker Factory is a reusable architecture for AI workers that can interpret context, use tools and prepare actions — while deterministic runtime rules control permissions, evidence requirements, approval gates and audit.
 
-**[Open the live demo](https://digital-worker-factory-hallochupi-7378s-projects.vercel.app/)**
+**[Open the live demo →](https://digital-worker-factory-hallochupi-7378s-projects.vercel.app/)** · [Portfolio](https://mikelninh.github.io/)
 
 ## The contract
 
@@ -26,69 +26,63 @@ human approval
 audit + eval
 ```
 
-**Autonomy is earned from evidence, not enabled by confidence.**
+The model can interpret and propose. **Authority lives outside the model.**
 
 ## What the demo proves
 
-The same runtime pattern is applied across several kinds of work:
+- explicit worker capabilities instead of unrestricted tool access
+- evidence requirements before actions advance
+- visible tool traces and state transitions
+- human approval for consequential steps
+- replayable failure cases
+- reliability checks for missing tools, artifacts, evidence and unsafe autonomy
+- declarative worker specifications rather than cloned one-off agents
 
-- **Document AI** — intake → rules → evidence → next action
-- **Agent reliability** — trace replay → failure diagnosis → regression pass
-- **Legal workflows** — grounded retrieval → citation verification → human review
-- **Public services** — life event → service plan → explicit authority boundary
-- **Worker builder** — workflow mapping → capabilities → policy/eval contract
-
-Public examples use synthetic data unless explicitly stated otherwise.
-
-## Reliability layer
-
-The repository includes a deterministic synthetic evaluation suite across five worker families. It checks failure modes such as:
-
-- missing required tool calls
-- missing required artifacts
-- weak evidence coverage
-- policy violations
-- loop-budget violations
-- unsafe autonomy across a human boundary
-
-GitHub Actions runs the suite on pushes and pull requests.
-
-## Worker lifecycle
+## Reliability loop
 
 ```text
-DRAFT
-  ↓
-EVAL
-  ↓
-SHADOW
-  ↓
-COPILOT
-  ↓
-LIMITED AUTO
-  ↓
-TRUSTED
+DRAFT → EVAL → SHADOW → COPILOT → LIMITED AUTO → TRUSTED
 ```
 
-A worker should gain authority only after measured reliability at the previous stage.
+**Autonomy is earned from evidence, not enabled by confidence.**
 
-## Design principles
+## Synthetic evaluation suite
 
-1. **Grounded** — claims connect to evidence.
-2. **Bounded** — permissions live outside the model.
-3. **Observable** — actions leave a trace.
-4. **Recoverable** — failures become replayable cases.
-5. **Improving** — evaluations decide when autonomy can increase.
+The repository includes a deterministic synthetic suite across multiple worker families. It checks failure modes such as:
 
-## Related systems
+- required tool not called
+- required artifact missing
+- weak evidence coverage
+- policy violation
+- loop-budget violation
+- action crossing a human boundary
 
-- [GitLaw](https://github.com/mikelninh/gitlaw) — legal retrieval and citation verification
-- [PrüfPilot](https://github.com/mikelninh/pruefpilot-document-ai) — evidence-first case workflows
-- [Council](https://github.com/mikelninh/council) — evidence-gated multi-agent decision making
+Synthetic evals demonstrate testability and regression discipline; they do **not** claim real-world task accuracy.
+
+## Architecture
+
+```text
+shared runtime
+   ├─ capabilities
+   ├─ evidence contract
+   ├─ policy gate
+   ├─ approval state
+   ├─ audit trace
+   └─ eval harness
+        ↓
+ specialised worker specs
+```
+
+Related proofs feed into the same architecture:
+
+- **GitLaw** → grounded legal retrieval + citation verification
+- **PrüfPilot** → evidence-first document review
+- **Council** → evidence-gated multi-agent decisions
 
 ## Stack
 
-`JavaScript · APIs · AI agents · tool contracts · policy gates · evals · human-in-the-loop`
+**JavaScript · Node.js · APIs · AI agents · tool contracts · policy gates · evals · human-in-the-loop**
 
 ---
 
-Built by [Michael Ninh](https://github.com/mikelninh) in Berlin.
+Built by [Michael Ninh](https://mikelninh.github.io/) in Berlin.
