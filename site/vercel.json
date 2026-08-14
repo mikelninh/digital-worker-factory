@@ -1,5 +1,6 @@
 {
   "rewrites": [
+    { "source": "/proof/interloom", "destination": "/interloom.html" },
     { "source": "/proof/:slug", "destination": "/index.html" }
   ],
   "headers": [
