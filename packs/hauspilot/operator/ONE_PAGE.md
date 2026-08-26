@@ -12,12 +12,12 @@
    - eine prüfende Person
 
 2. **Operations startet**
-   - Interface zeigt entweder `STARTEN` oder konkret, was fehlt.
-   - Kein Terminal, kein JSON, kein Prompting als tägliche Aufgabe.
+   - Die Bedienoberfläche zeigt `STARTEN`, `ANFORDERN`, `WARTEN` oder `STOPP`.
+   - Kein Prompting und keine technischen Entscheidungen als tägliche Aufgabe.
 
 3. **Reviewer entscheidet**
-   - `Sieht richtig aus`
-   - `Bitte ändern`
+   - `Richtig`
+   - `Ändern`
    - `Falsch`
 
 4. **Ergebnis**
@@ -42,6 +42,19 @@ Kein neues Projekt und keine zweite Bedienwelt. Derselbe Ablauf wiederholt sich:
 - Preise oder kommerzielle Sonderfälle
 
 Das System soll diese Situationen blockieren und die richtige Eskalation anzeigen.
+
+## Stand heute
+
+Die **Bedienlogik** ist bereits auf diesen einfachen Ablauf reduziert. Der echte Modelllauf wird für den ersten bezahlten Pilot aber noch von einem **internen technischen Operator** über `run-pilot.mjs` gestartet.
+
+Das ist absichtlich transparent:
+
+- Die sichtbare `Starten`-Oberfläche ist derzeit eine Demo des Zielablaufs.
+- Kunde und fachlicher Reviewer brauchen trotzdem kein Terminal, JSON oder API-Wissen.
+- Für den ersten Kunden übernimmt der technische Operator diesen einen internen Schritt.
+- Erst nach dem ersten bezahlten Proof lohnt es sich, diesen Runner an den `Starten`-Button zu hängen.
+
+Wir nennen den Ablauf daher noch **nicht vollautomatisch oder self-service**.
 
 ## Erfolgsdefinition
 
