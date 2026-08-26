@@ -26,6 +26,8 @@ export function buildOutputSchema(template){
   const schema=JSON.parse(JSON.stringify(OUTPUT_SCHEMA));
   const taxonomy=Array.isArray(template?.classification_taxonomy)?template.classification_taxonomy.filter(Boolean):[];
   if(taxonomy.length) schema.properties.classification={type:'string',enum:taxonomy};
+  const actions=Array.isArray(template?.action_taxonomy)?template.action_taxonomy.filter(Boolean):[];
+  if(actions.length) schema.properties.proposed_action.properties.type={type:'string',enum:actions};
   return schema;
 }
 
@@ -47,6 +49,8 @@ function cleanCase(caseData) {
 function validateParsed(parsed,template){
   const taxonomy=template?.classification_taxonomy||[];
   if(taxonomy.length&&!taxonomy.includes(parsed?.classification)) throw new Error(`Model classification outside template taxonomy: ${parsed?.classification}`);
+  const actions=template?.action_taxonomy||[];
+  if(actions.length&&!actions.includes(parsed?.proposed_action?.type)) throw new Error(`Model proposed_action outside template action taxonomy: ${parsed?.proposed_action?.type}`);
   if(parsed?.approval_state!=='shadow_only') throw new Error('Model approval_state must be shadow_only');
   if(!Array.isArray(parsed?.evidence)||!Array.isArray(parsed?.missing_information)||!Array.isArray(parsed?.flags)) throw new Error('Model output missing required arrays');
   const c=Number(parsed?.confidence);if(!Number.isFinite(c)||c<0||c>1) throw new Error('Model confidence outside 0..1');
@@ -70,6 +74,7 @@ export async function runShadow({ caseData, template, clientConfig = {}, fetchIm
     'Never claim that an external action was executed.',
     'The environment is shadow-only. Every result must have approval_state=shadow_only.',
     'classification MUST be one of classification_taxonomy in the workflow template. If uncertain, use the explicit unknown/ambiguous class when available.',
+    'proposed_action.type MUST be one of action_taxonomy in the workflow template. Do not invent synonyms or new action names.',
     'urgency is a preliminary assessment. A deterministic operational policy may raise it after your output; never downplay clearly complete outages or safety signals.',
     `Workflow template: ${JSON.stringify(template)}`,
     `Client policy: ${JSON.stringify(clientConfig.policy || {})}`
