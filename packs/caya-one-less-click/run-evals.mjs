@@ -45,8 +45,7 @@ for (const c of cases) {
   if (body.status === "duplicate_ignored") duplicateOk++;
 }
 
-// A failed first attempt must NOT poison the idempotency key. The retry should
-// execute normally rather than disappear as duplicate_ignored.
+// A failed first attempt must NOT poison the idempotency key.
 let lookupAttempts = 0;
 const retryAudit = [];
 const retryHandler = createHandler({
@@ -73,6 +72,40 @@ assert.equal(retryBody.status, "prepared");
 assert.equal(lookupAttempts, 2);
 assert.equal(retryAudit.length, 1);
 
+// Concurrent copies of the same event must not both execute. While the first
+// request is still running, the second receives duplicate_in_flight. Once the
+// first completes, later replays are duplicate_ignored.
+let releaseLookup;
+let lookupStarted;
+const lookupStartedPromise = new Promise((resolve) => { lookupStarted = resolve; });
+const lookupReleasePromise = new Promise((resolve) => { releaseLookup = resolve; });
+const concurrentAudit = [];
+const concurrentHandler = createHandler({
+  customerLookup: async () => {
+    lookupStarted();
+    await lookupReleasePromise;
+    return { plan: "synthetic-concurrency" };
+  },
+  audit: async (row) => concurrentAudit.push(row)
+});
+const concurrentPayload = {
+  ticket_id: "T-CONCURRENT-1",
+  event_id: "E-CONCURRENT-1",
+  message: "DATEV connection failed and documents are not being forwarded."
+};
+const firstConcurrent = concurrentHandler({ body: JSON.stringify(concurrentPayload) });
+await lookupStartedPromise;
+const inFlightResponse = await concurrentHandler({ body: JSON.stringify(concurrentPayload) });
+const inFlightBody = JSON.parse(inFlightResponse.body);
+assert.equal(inFlightResponse.statusCode, 202);
+assert.equal(inFlightBody.status, "duplicate_in_flight");
+releaseLookup();
+const completedConcurrent = await firstConcurrent;
+assert.equal(completedConcurrent.statusCode, 200);
+const completedReplay = await concurrentHandler({ body: JSON.stringify(concurrentPayload) });
+assert.equal(JSON.parse(completedReplay.body).status, "duplicate_ignored");
+assert.equal(concurrentAudit.length, 1);
+
 const metrics = {
   cases: cases.length,
   intent_accuracy: `${intentOk}/${cases.length}`,
@@ -83,6 +116,7 @@ const metrics = {
   safe_auto_execution: `${safeAutoOk}/${autoExpected}`,
   duplicate_webhook_recovery: `${duplicateOk}/${cases.length}`,
   transient_failure_retry: "PASS",
+  concurrent_duplicate_gate: "PASS",
   audit_rows: auditRows.length,
   safe_actions: executedActions.length
 };
