@@ -9,6 +9,7 @@ const root = path.resolve(here, '../../..');
 const read = rel => fs.readFileSync(path.join(root, rel), 'utf8');
 
 const sales = read('site/hauspilot.html');
+const onepager = read('site/hauspilot-onepager.html');
 const simple = read('site/simple-operations.html');
 const reviewer = read('site/hauspilot-review.html');
 const report = read('packs/hauspilot/runtime/report.mjs');
@@ -30,6 +31,16 @@ test('customer sales story is four simple steps and makes no unsupported live-mo
   assert.doesNotMatch(sales, /echte Modellfälle/i);
   assert.match(sales, /Live-Modell-Release-Gate ist ein separater Schritt/);
   for (const href of legacyLinks) assert.ok(!sales.includes(href), `sales must not link legacy surface ${href}`);
+});
+
+test('60-second one-pager uses the same simple language', () => {
+  assert.match(onepager, /Geben Sie uns alte Fälle/);
+  assert.match(onepager, /Richtig · Ändern · Falsch/);
+  assert.match(onepager, /Weiter · Verbessern · Stoppen/);
+  assert.doesNotMatch(onepager, /ACCEPT \/ EDIT \/ REJECT/);
+  assert.doesNotMatch(onepager, /KEEP · FIX · STOP/);
+  assert.doesNotMatch(onepager, /Live Modellfälle/);
+  assert.match(onepager, /Live-Modell-Gate wird separat protokolliert/);
 });
 
 test('interactive demo is unmistakably a demo and exposes only one next action per role', () => {
