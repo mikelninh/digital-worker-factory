@@ -1,5 +1,6 @@
 name: Caya proof regression
 
+# Executed proof gate: deterministic workflow + real HTTP + real PostgreSQL.
 on:
   pull_request:
     paths:
