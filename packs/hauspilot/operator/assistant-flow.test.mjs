@@ -36,10 +36,30 @@ test('finalizer requires complete review and creates customer report',()=>{
   assert.equal(result.ok,true);assert.ok(fs.existsSync(result.reportPath));assert.equal(result.summary.measurement.reviewed_cases,2);
 });
 
-test('operations console contract contains the complete no-founder standard path',()=>{
+test('operations console contract contains complete no-founder standard path',()=>{
   const source=fs.readFileSync(new URL('./ops-console.mjs',import.meta.url),'utf8');
   for(const route of ['/api/create','/api/intake','/api/run','/api/finalize','/api/closeout'])assert.match(source,new RegExp(route.replaceAll('/','\\/')));
-  for(const label of ['Zahlungseingang 1.330 €','Drei Dinge vom Kunden','Starten →','Review-Datei herunterladen','570 € Restzahlung'])assert.ok(source.includes(label),label);
+  for(const label of ['Zahlungseingang 1.330 €','Drei Dinge vom Kunden','Starten →','Review-Datei herunterladen','570 € Restzahlung','Kundenreport sicher gesendet','Pilotdaten jetzt gemäß Retention löschen'])assert.ok(source.includes(label),label);
   assert.ok(source.includes('Sonderpreis/Sonderscope'));
   assert.ok(source.includes('OPENAI_API_KEY'));
+});
+
+test('delegated standard path refuses personal-data exceptions',()=>{
+  const source=fs.readFileSync(new URL('./ops-console.mjs',import.meta.url),'utf8');
+  assert.match(source,/pseudonymised_personal_data/);
+  assert.match(source,/authorised_personal_data/);
+  assert.match(source,/STOPP · Datenschutz-Ausnahme/);
+  assert.match(source,/Privacy\/Owner entscheidet zuerst/);
+});
+
+test('closeout performs application-level deletion and records proof without secure-wipe overclaim',()=>{
+  const source=fs.readFileSync(new URL('./ops-console.mjs',import.meta.url),'utf8');
+  assert.match(source,/function purgePilotData/);
+  assert.match(source,/deletion-proof\.local\.json/);
+  assert.match(source,/sha256/);
+  assert.match(source,/fs\.rmSync/);
+  assert.match(source,/not a forensic secure-wipe claim/);
+  assert.match(source,/report_delivered===true/);
+  assert.match(source,/final_payment_paid===true/);
+  assert.match(source,/delete_pilot_data===true/);
 });
