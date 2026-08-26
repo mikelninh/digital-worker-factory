@@ -84,11 +84,14 @@ test('result report preserves internal verdicts but translates the visible decis
   assert.match(report, /Technische Details & Audit öffnen/);
 });
 
-test('operator truthfully distinguishes target UX from current technical runner', () => {
-  assert.match(operator, /Stand heute/);
-  assert.match(operator, /internen technischen Operator/);
-  assert.match(operator, /run-pilot\.mjs/);
-  assert.match(operator, /nicht vollautomatisch oder self-service/);
+test('operator standard path is the prepared browser console with only bounded escalations', () => {
+  assert.match(operator, /start-hauspilot-ops\.cmd/);
+  assert.match(operator, /Kein Terminal, kein GitHub, kein JSON-Editieren/);
+  assert.match(operator, /STARTEN.*ANFORDERN.*WARTEN.*STOPP/s);
+  assert.match(operator, /Datenschutz/);
+  assert.match(operator, /Technik/);
+  assert.match(operator, /Kommerziell/);
+  assert.match(operator, /ohne Founder-Eingriff/);
 });
 
 test('customer onboarding has exactly three requested inputs after commercial scope is agreed', () => {
