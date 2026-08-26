@@ -26,14 +26,15 @@ require approval only for consequential changes
 audit + regression test
 ```
 
-The important distinction is that human approval is **not** inserted into every step. Routine processing can remain automatic; privileged actions such as changing account permissions stay gated.
+The important distinction is that human approval is **not** inserted into every step. A low-risk internal document-routing action can execute automatically; account/permission changes remain gated.
 
 ## Proof status
 
 | Capability | Status | Evidence |
 | --- | --- | --- |
-| Deterministic workflow | **Executed in CI** | 30-case routing/urgency/policy/trace regression |
-| HTTP end-to-end | **Executed in CI** | real loopback `POST /support`, duplicate replay, 400 validation and audit assertions |
+| Deterministic workflow | **Executed in CI** | 30-case routing/urgency/exact-policy/trace regression |
+| Safe routine execution | **Executed in tests** | all 3/3 eligible internal-routing cases invoke the safe-action executor |
+| HTTP end-to-end | **Executed in CI** | real loopback `POST /support`, safe execution, duplicate replay, 400 validation and audit assertions |
 | PostgreSQL | **Executed in CI** | real PostgreSQL service, 20,000 synthetic rows, `EXPLAIN (ANALYZE, BUFFERS)` and index-use assertion |
 | AWS Lambda | **Deployable** | Lambda-compatible `handler(event)` + AWS SAM manifest |
 | Zapier / low-code | **Adapter-ready** | concrete webhook contract + sample payload; no live Zapier account connection claimed |
@@ -43,7 +44,7 @@ The important distinction is that human approval is **not** inserted into every 
 
 | Job signal | Evidence in this pack |
 | --- | --- |
-| End-to-end automation | webhook → idempotency → classification → context → policy → prepared action → audit |
+| End-to-end automation | webhook → idempotency → classification → context → policy → safe action/prepared action → audit |
 | JavaScript / Node.js | Lambda-compatible handler, HTTP wrapper and regression tests |
 | APIs / webhooks | executable HTTP contract + replay-safe handler |
 | AWS Lambda | handler + `aws/template.yaml` SAM deployment manifest |
@@ -51,7 +52,7 @@ The important distinction is that human approval is **not** inserted into every 
 | SQL / PostgreSQL | executable schema, 20k-row synthetic benchmark, composite index and real query-plan assertion |
 | AI-use discipline | interpretation is separated from deterministic policy/approval rules |
 | Support automation | synthetic integration, document-routing, access and billing cases |
-| Reliability | 30-case regression suite + duplicate-event replay + HTTP validation |
+| Reliability | exact policy assertions + safe-action execution + duplicate-event replay + HTTP validation |
 | Observability | explicit trace + audit callback |
 | Product communication | interactive role-proof UI at `site/caya-one-less-click.html` |
 
@@ -72,9 +73,9 @@ customer + incident context
     ↓
 deterministic policy
     ↓
-safe routine action OR prepared consequential action
+safe internal action OR prepared reviewable action
     ↓
-human approval only when required
+human approval for consequential changes
     ↓
 audit + eval
 ```
@@ -87,17 +88,20 @@ bash packs/caya-one-less-click/run-all-proofs.sh
 
 Without `DATABASE_URL`, the local runner executes the deterministic and HTTP suites and explains that PostgreSQL is exercised in CI. CI supplies a real PostgreSQL service automatically.
 
-The deterministic suite currently expects:
+The deterministic suite expects:
 
 ```json
 {
   "cases": 30,
   "intent_accuracy": "30/30",
   "urgency_accuracy": "30/30",
+  "policy_mode": "30/30",
   "approval_boundary": "30/30",
   "observable_trace": "30/30",
+  "safe_auto_execution": "3/3",
   "duplicate_webhook_recovery": "30/30",
-  "audit_rows": 30
+  "audit_rows": 30,
+  "safe_actions": 3
 }
 ```
 
@@ -107,11 +111,12 @@ These are synthetic regression checks, **not real-world model-accuracy claims**.
 
 `run-http-e2e.mjs` opens a real loopback HTTP socket and verifies:
 
-1. a valid integration incident returns `200` and a prepared action,
+1. a DATEV-style integration incident returns `200`, high urgency and `draft_only`,
 2. replaying the same event returns `duplicate_ignored`,
-3. a consequential account-setting request requires `human_approval`,
-4. an invalid payload returns `400`,
-5. only non-duplicate successful requests are audited.
+3. a consequential account-setting request requires `human_approval` and does not execute,
+4. a low-risk internal document-routing request gets `auto_execute` and invokes the safe-action executor,
+5. an invalid payload returns `400`,
+6. only unique successful requests are audited.
 
 ## PostgreSQL proof
 
@@ -130,7 +135,7 @@ Those are **deployment/integration proofs, not claims of connected vendor accoun
 The interactive UI focuses on public-domain workflow shapes rather than pretending to know Caya internals:
 
 1. a DATEV-style integration stops forwarding documents
-2. an invoice is routed to the wrong folder
+2. an invoice/document is routed to the wrong internal destination and can be safely re-routed
 3. an access/permission change requires approval
 4. a duplicate webhook must not trigger duplicate work
 
@@ -142,11 +147,11 @@ It does **not** use Caya's logo, mascot or proprietary product UI.
 
 ## Why the policy boundary matters
 
-AI interpretation is useful for messy operational context, but model confidence is not permission. The runtime therefore keeps authority deterministic:
+AI interpretation is useful for messy operational context, but model confidence is not permission. The runtime keeps authority deterministic:
 
 ```text
-interpret → deterministic policy → automate safe routine work
-                               ↘ human approval for consequential action
+interpret → deterministic policy → execute explicitly safe internal action
+                               ↘ prepare/review or human approval otherwise
 ```
 
 That keeps the product goal intact: **fewer manual steps where automation is safe, explicit control where it matters**.
