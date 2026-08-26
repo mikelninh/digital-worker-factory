@@ -1,4 +1,4 @@
-# HausPilot — Customer Start
+# AI Operations Sprint — Customer Start
 
 This is the **customer-facing source of truth** for starting the first paid AI Operations Sprint.
 
@@ -26,12 +26,14 @@ That is the customer onboarding for V1.
 
 The public demo **never collects customer data**.
 
-For the first paid pilot:
+For the delegated standard pilot:
 
-- prefer synthetic or genuinely anonymised historical data
-- use a customer-approved file-transfer channel
+- use synthetic or genuinely anonymised historical data
+- use a customer-approved secure file-transfer channel
 - do not ask for mailbox, ERP or production write access
-- if personal or pseudonymised data is required, stop until the privacy / processor gates are complete
+- pseudonymised or personal data leaves the standard path and is escalated to Privacy/Owner before processing
+
+The Operations Assistant handles the standard pilot in the internal Operations Console. The customer never needs the console.
 
 ## What happens next
 
@@ -79,8 +81,8 @@ Technical evidence remains available in an audit section, but is not the main cu
 At handover:
 
 - deliver the measured result
-- collect the remaining **€570**
-- record retention / deletion action
-- if the result is `Weiter`, offer the lowest-risk continuation
+- send/collect the remaining **€570**
+- execute the agreed pilot-data deletion and retain the minimal deletion proof
+- if the result is `Weiter`, offer the standard continuation for the same proven workflow
 
-For the first customer, payment collection and file transfer may still be handled manually. Do not describe those steps as automated until they actually are.
+Payment collection and secure file transfer remain human-operated V1 steps, but they are Operations tasks — not Founder-only tasks. Do not describe them as automated until they actually are.
