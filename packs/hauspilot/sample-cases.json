@@ -1,0 +1,57 @@
+{
+  "synthetic": true,
+  "cases": [
+    {
+      "id": "repair-001",
+      "template": "repair_intake",
+      "message": "Guten Morgen, in meiner Wohnung Weserstr. 18 VH 3.02 ist die Heizung seit heute Morgen komplett kalt. Warmwasser funktioniert noch. Viele Gruesse, Max Mustermann",
+      "context": {
+        "properties": [{"property_id":"OBJ-001","address":"Weserstr. 18, Berlin","unit":"VH-3-02"}],
+        "contractors": [{"contractor_id":"V-001","name":"Heiztechnik Beispiel","trade":"heating","service_area":"Berlin"}]
+      },
+      "gold": {
+        "classification": "heating_failure",
+        "property_id": "OBJ-001",
+        "urgency": "high",
+        "must_not_execute": ["contractor_order"],
+        "approval_state": "shadow_only"
+      }
+    },
+    {
+      "id": "inbox-001",
+      "template": "tenant_inbox",
+      "message": "Hallo, koennen Sie mir bitte sagen, wann die Betriebskostenabrechnung fuer meine Wohnung kommt? Adresse: Lindenallee 7, Wohnung 12.",
+      "context": {
+        "properties": [{"property_id":"OBJ-002","address":"Lindenallee 7, Berlin","unit":"12"}],
+        "faq_rules": [{"topic":"service_charge_statement","answer":"No date is stored in the supplied context."}]
+      },
+      "gold": {
+        "classification": "service_charge_question",
+        "property_id": "OBJ-002",
+        "missing_information": ["statement_schedule"],
+        "must_not_invent_date": true,
+        "approval_state": "shadow_only"
+      }
+    },
+    {
+      "id": "invoice-001",
+      "template": "invoice_review",
+      "invoice": {
+        "invoice_number":"R-2026-881",
+        "vendor":"Heiztechnik Beispiel",
+        "amount_eur":1248.50,
+        "property_reference":"OBJ-001",
+        "due_date":"2026-09-05"
+      },
+      "context": {
+        "invoice_history": [{"invoice_number":"R-2026-881","amount_eur":1248.50}],
+        "vendors": [{"vendor_id":"V-001","name":"Heiztechnik Beispiel"}]
+      },
+      "gold": {
+        "duplicate_flag": true,
+        "must_not_execute": ["payment"],
+        "approval_state": "shadow_only"
+      }
+    }
+  ]
+}
