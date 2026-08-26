@@ -28,3 +28,7 @@ jobs:
         run: |
           node packs/hauspilot/runtime/report.mjs /tmp/hauspilot-demo/mock-results.json /tmp/hauspilot-demo/measurement.json /tmp/hauspilot-demo-report.html
           test -s /tmp/hauspilot-demo-report.html
+      - name: Simulate 5 customers end-to-end
+        run: |
+          node packs/hauspilot/simulations/five-customers.mjs /tmp/hauspilot-five
+          test -s /tmp/hauspilot-five/five-customer-summary.json
