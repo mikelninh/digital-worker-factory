@@ -12,12 +12,15 @@ Bevor ein echter bezahlter Kundenpilot gestartet wird:
 
 1. Der aktuelle Release muss die komplette Offline-CI bestehen.
 2. Der manuelle echte Modell-Release-Gate muss zuerst als **20-Case Smoke** und danach als **100-Case Full** tatsächlich laufen und die definierten Schwellen bestehen.
-3. Node.js 22+ auf dem Operations-Rechner installieren.
-4. Repository lokal bereitstellen.
-5. `OPENAI_API_KEY` als lokale Umgebungsvariable oder in der gitignorierten `.env.local` konfigurieren.
-6. `start-hauspilot-ops.cmd` testen.
-7. Einen kundenseitig freigegebenen sicheren Datei-Transferkanal festlegen. Für V1 bleibt Upload/Download bewusst ein menschlicher Operations-Schritt; Kundendaten gehen niemals über die öffentliche Demo.
-8. Operations erhält Stripe-Zugriff, um Zahlungseingang und Rechnungsversand selbst zu bearbeiten.
+3. Die beiden Audit-Artefakte herunterladen und einmalig aktivieren:
+   `node packs/hauspilot/operator/activate-release.mjs <smoke.json> <full.json>`.
+   Nur zwei `KEEP`-Audits mit mindestens 20 bzw. 100 vollständig abgeschlossenen Fällen erzeugen `hauspilot-release-proof.local.json`. Ohne diesen Beleg bleibt der Kundenrunner technisch gesperrt.
+4. Node.js 22+ auf dem Operations-Rechner installieren.
+5. Repository lokal bereitstellen.
+6. `OPENAI_API_KEY` als lokale Umgebungsvariable oder in der gitignorierten `.env.local` konfigurieren.
+7. `start-hauspilot-ops.cmd` testen. Der Launcher führt zuerst `admin-ready.mjs` aus und öffnet die Console nur, wenn Node, API-Key, Release-Beleg und Vorlagen vorhanden sind.
+8. Einen kundenseitig freigegebenen sicheren Datei-Transferkanal festlegen. Für V1 bleibt Upload/Download bewusst ein menschlicher Operations-Schritt; Kundendaten gehen niemals über die öffentliche Demo.
+9. Operations erhält Stripe-Zugriff, um Zahlungseingang und Rechnungsversand selbst zu bearbeiten.
 
 Diese Schritte sind **Admin-/Release-Setup, nicht pro Kunde**.
 
@@ -39,7 +42,8 @@ So muss eine nicht-technische Assistenz niemals selbst Rechtsgrundlage, AVV/Proc
 ### 1. Zahlung prüfen
 
 - In Stripe: **1.330 € eingegangen**.
-- Operations Console öffnen.
+- `start-hauspilot-ops.cmd` doppelklicken.
+- Operations Console öffnet nur bei grünem Admin-Readiness-Check.
 - Kunde, Workflow, Reviewer und Operations-Namen eintragen.
 - Zahlungseingang bestätigen.
 - `Kunde starten`.
@@ -89,7 +93,7 @@ Bei `STARTEN` auf **Starten** klicken.
 
 Im Hintergrund laufen automatisch:
 
-`Preflight → Privacy Manifest → Konfiguration → echter Modelllauf → Safety Boundary → Ergebnisdatei → Review-Paket`
+`Release Lock → Preflight → Privacy Manifest → Konfiguration → echter Modelllauf → Safety Boundary → Ergebnisdatei → Review-Paket`
 
 Operations muss diese Schritte nicht einzeln ausführen.
 
@@ -163,4 +167,4 @@ Ein Standardkunde darf vom Zahlungseingang bis zum Closeout ohne Founder-Eingrif
 
 Der Founder ist **nicht** Teil des Standard-Workflows. Er wird nur über die drei Eskalationspfade hinzugezogen.
 
-**Release-Regel:** Diese Aussage gilt für Produktion erst, wenn die Assistant-Flow-Tests + vollständige Offline-CI auf dem aktuellen Commit grün sind und der 20-/100-Case-Live-Modell-Gate protokolliert bestanden wurde.
+**Release-Regel:** Diese Aussage gilt für Produktion erst, wenn die Assistant-Flow-Tests + vollständige Offline-CI auf dem aktuellen Commit grün sind und der 20-/100-Case-Live-Modell-Gate protokolliert bestanden und über `activate-release.mjs` aktiviert wurde.
