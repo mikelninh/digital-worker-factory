@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>HausPilot · Pilot Setup</title>
+<style>
+:root{--bg:#f5f1e8;--paper:#fffdf8;--ink:#171715;--muted:#6b685f;--line:#d9d3c7;--acid:#d7ff5f;--dark:#1d241d;--good:#eaf4df;--warn:#fff3d6}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,system-ui,sans-serif}.wrap{width:min(980px,calc(100% - 28px));margin:auto;padding:28px 0 70px}a{color:inherit}.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:54px}.brand{font-weight:900;text-decoration:none}.pill{font-size:12px;font-weight:800;border:1px solid var(--line);border-radius:999px;padding:8px 11px;background:var(--paper)}h1{font-size:clamp(42px,7vw,78px);letter-spacing:-.06em;line-height:.95;margin:0 0 18px}h1 em{font-style:normal;background:var(--acid);padding:0 .08em;border-radius:.12em}p{color:var(--muted);line-height:1.55}.steps{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:32px 0}.step{padding:13px;border:1px solid var(--line);border-radius:14px;background:rgba(255,255,255,.4);font-size:13px}.step b{display:block;margin-bottom:4px}.card{background:var(--paper);border:1px solid var(--line);border-radius:24px;padding:26px;margin:16px 0}.grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}.field{margin:16px 0}.field label{display:block;font-size:13px;font-weight:800;margin-bottom:7px}.field input,.field select{width:100%;border:1px solid var(--line);border-radius:12px;padding:12px 13px;background:#fff;font:inherit}.upload{border:1px dashed #aaa497;border-radius:14px;padding:18px;background:#faf8f1}.upload small{color:var(--muted)}button{border:0;border-radius:13px;min-height:50px;padding:0 20px;background:var(--dark);color:#fff;font-weight:900;font-size:15px;cursor:pointer}.secondary{background:var(--acid);color:var(--ink)}.result{display:none}.result.show{display:block}.checks{display:grid;gap:9px;margin:18px 0}.check{display:flex;justify-content:space-between;gap:15px;padding:12px 14px;border-radius:12px;background:#f1eee6}.check.good{background:var(--good)}.check.warn{background:var(--warn)}pre{white-space:pre-wrap;word-break:break-word;background:#1d241d;color:#eff4ea;border-radius:16px;padding:18px;max-height:390px;overflow:auto}.note{padding:14px 16px;border-radius:14px;background:var(--warn);font-size:13px;color:#635b4c}.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}@media(max-width:700px){.steps,.grid{grid-template-columns:1fr}.top{margin-bottom:35px}}
+</style>
+</head>
+<body><div class="wrap">
+<div class="top"><a class="brand" href="/hauspilot.html">▦ HausPilot</a><span class="pill">PILOT SETUP · LOCAL PREFLIGHT</span></div>
+<h1>Vom Abschluss zum <em>Shadow-Test.</em></h1>
+<p>Ein Standard-Pilot soll Konfiguration statt Entwicklung sein. Dieses Setup erzeugt den Kunden-Pack und prüft lokal, ob die minimalen Daten für den gewählten Workflow vorhanden sind. Dateien werden in dieser Version nicht hochgeladen.</p>
+<div class="steps"><div class="step"><b>01 · Wählen</b>Workflow-Template</div><div class="step"><b>02 · Verbinden</b>Fälle + Stammdaten</div><div class="step"><b>03 · Prüfen</b>Preflight + Safety</div><div class="step"><b>04 · Starten</b>Shadow → Copilot</div></div>
+
+<section class="card">
+<h2>1. Pilot konfigurieren</h2>
+<div class="grid">
+<div class="field"><label>Unternehmen</label><input id="company" placeholder="Beispiel Hausverwaltung GmbH"></div>
+<div class="field"><label>Workflow</label><select id="template"><option value="repair_intake">Reparaturmeldung</option><option value="tenant_inbox">Postfach-Copilot</option><option value="invoice_review">Rechnungs-Copilot</option></select></div>
+</div>
+<div class="grid">
+<div class="field"><label>Historische Fälle (CSV oder JSON)</label><div class="upload"><input id="cases" type="file" accept=".csv,.json"><small>Empfohlen: 20–50 anonymisierte oder autorisierte Fälle.</small></div></div>
+<div class="field"><label>Objektstamm (CSV)</label><div class="upload"><input id="properties" type="file" accept=".csv"><small>Spalten: property_id, address; unit/external_reference optional.</small></div></div>
+</div>
+<div class="grid">
+<div class="field"><label>Kontakte (optional CSV)</label><div class="upload"><input id="contacts" type="file" accept=".csv"></div></div>
+<div class="field"><label>Dienstleister / Vendoren (optional CSV)</label><div class="upload"><input id="vendors" type="file" accept=".csv"></div></div>
+</div>
+<div class="note"><strong>Production-Grenze:</strong> Dieser Preflight verbindet noch kein Kundenpostfach. Live-Ingestion kommt erst nach erfolgreichem historischen Test und mit autorisiertem OAuth/Connector + DPA.</div>
+<div class="actions"><button id="run">Preflight ausführen →</button></div>
+</section>
+
+<section class="card result" id="result">
+<h2>2. Pilot-Pack</h2><div id="checks" class="checks"></div>
+<div class="actions"><button class="secondary" id="download">Config herunterladen</button><button id="shadow">Shadow-Test vorbereiten →</button></div>
+<pre id="config"></pre>
+</section>
+</div>
+<script>
+const templates={
+ repair_intake:{name:'Reparaturmeldung',recommended:['contacts','vendors'],approval:['external_reply','contractor_assignment','appointment_commitment','spend_commitment'],blocked:['contractor_order','payment','legal_commitment']},
+ tenant_inbox:{name:'Postfach-Copilot',recommended:['contacts'],approval:['external_reply','case_closure','appointment_commitment'],blocked:['legal_statement','rent_change','payment','contract_change']},
+ invoice_review:{name:'Rechnungs-Copilot',recommended:['vendors'],approval:['accounting_write','payment_release','vendor_contact'],blocked:['payment','bank_detail_change','booking_commitment']}
+};
+let current=null;
+function slug(s){return (s||'client').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'').slice(0,50)}
+async function header(file){if(!file)return[];const text=await file.text();if(file.name.endsWith('.json'))return ['json'];return (text.split(/\r?\n/)[0]||'').split(',').map(x=>x.trim().replace(/^"|"$/g,''))}
+function row(label,state,detail){return `<div class="check ${state}"><b>${label}</b><span>${detail}</span></div>`}
+document.getElementById('run').onclick=async()=>{
+ const company=document.getElementById('company').value.trim();const tid=document.getElementById('template').value;const t=templates[tid];
+ const cases=document.getElementById('cases').files[0],props=document.getElementById('properties').files[0],contacts=document.getElementById('contacts').files[0],vendors=document.getElementById('vendors').files[0];
+ const ph=await header(props);const checks=[];
+ checks.push(row('Unternehmen',company?'good':'warn',company||'fehlt'));
+ checks.push(row('Workflow-Template','good',t.name));
+ checks.push(row('Historische Fälle',cases?'good':'warn',cases?cases.name:'20–50 Fälle empfohlen'));
+ const propsGood=props&&ph.includes('property_id')&&ph.includes('address');
+ checks.push(row('Objektstamm',propsGood?'good':'warn',propsGood?props.name:(props?'property_id/address fehlen':'CSV fehlt')));
+ checks.push(row('Kontakte',contacts?'good':'',contacts?contacts.name:'optional für Preflight'));
+ checks.push(row('Dienstleister/Vendoren',vendors?'good':'',vendors?vendors.name:'optional für Preflight'));
+ checks.push(row('Startmodus','good','SHADOW · keine externen Aktionen'));
+ current={company:{id:slug(company),name:company||'UNSET',timezone:'Europe/Berlin'},pilot:{template:tid,mode:'shadow',baseline_cases:20,success:{min_case_minutes_reduction_percent:35,min_routing_accuracy_percent:90,max_unsafe_external_actions:0}},sources:{historical_cases:cases?{type:'file',name:cases.name}:{type:'missing'},properties:props?{type:'csv',name:props.name}:{type:'missing'},contacts:contacts?{type:'csv',name:contacts.name}:{type:'optional'},vendors:vendors?{type:'csv',name:vendors.name}:{type:'optional'}},policy:Object.fromEntries([...t.approval.map(x=>[x,'human_approval']),...t.blocked.map(x=>[x,'blocked'])]),privacy:{pilot_data:'anonymised_or_authorised',retention_days:14,production_requires_dpa:true}};
+ document.getElementById('checks').innerHTML=checks.join('');document.getElementById('config').textContent=JSON.stringify(current,null,2);document.getElementById('result').classList.add('show');document.getElementById('result').scrollIntoView({behavior:'smooth'});
+};
+document.getElementById('download').onclick=()=>{if(!current)return;const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(current,null,2)],{type:'application/json'}));a.download=`hauspilot-${current.company.id}.json`;a.click();URL.revokeObjectURL(a.href)};
+document.getElementById('shadow').onclick=()=>{if(!current)return;alert('Preflight bereit. Nächster Runtime-Schritt: historischen Fall-Runner mit diesem Config-Pack verbinden. Bis dahin wird nichts extern ausgeführt.');};
+</script></body></html>
