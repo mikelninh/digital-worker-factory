@@ -6,16 +6,20 @@ Nach bestätigter Anzahlung kann eine nicht-technische Operations Assistenz eine
 
 Die Assistenz arbeitet nur in der **Operations Console**. Kein Terminal, kein JSON-Editieren, kein GitHub und kein Prompt Engineering im Tagesgeschäft.
 
-## Einmaliges Admin-Setup vor dem ersten Kunden
+## Einmaliges Release-/Admin-Setup vor Kunde #1
 
-1. Node.js 22+ auf dem Operations-Rechner installieren.
-2. Repository lokal bereitstellen.
-3. `OPENAI_API_KEY` als lokale Umgebungsvariable oder in der gitignorierten `.env.local` konfigurieren.
-4. `start-hauspilot-ops.cmd` testen.
-5. Einen kundenseitig freigegebenen sicheren Datei-Transferkanal festlegen.
-6. Stripe-Zugriff für Rechnungsstatus und Rechnungsversand geben.
+Bevor ein echter bezahlter Kundenpilot gestartet wird:
 
-Diese Schritte sind **Admin-Setup, nicht pro Kunde**.
+1. Der aktuelle Release muss die komplette Offline-CI bestehen.
+2. Der manuelle echte Modell-Release-Gate muss zuerst als **20-Case Smoke** und danach als **100-Case Full** tatsächlich laufen und die definierten Schwellen bestehen.
+3. Node.js 22+ auf dem Operations-Rechner installieren.
+4. Repository lokal bereitstellen.
+5. `OPENAI_API_KEY` als lokale Umgebungsvariable oder in der gitignorierten `.env.local` konfigurieren.
+6. `start-hauspilot-ops.cmd` testen.
+7. Einen kundenseitig freigegebenen sicheren Datei-Transferkanal festlegen.
+8. Stripe-Zugriff für Rechnungsstatus und Rechnungsversand geben.
+
+Diese Schritte sind **Admin-/Release-Setup, nicht pro Kunde**.
 
 ## Welche Kunden laufen ohne Eskalation?
 
