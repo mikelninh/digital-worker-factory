@@ -66,6 +66,14 @@ jobs:
           grep -q "STOP / escalation rules" packs/hauspilot/operator/RETAINER_PLAYBOOK.md
           grep -q "Operations Assistant" site/retainer-command-center.html
           grep -q "ACCEPT" site/retainer-command-center.html
+      - name: Run managed operations state-machine tests
+        run: node --test packs/hauspilot/retainer/state.test.mjs
+      - name: Smoke retainer workspace generator
+        run: |
+          node packs/hauspilot/retainer/new-retainer.mjs --id ci-demo --customer "CI Demo GmbH" --reviewer "Reviewer" --operator "Ops" --workflow repair_intake --fee 750
+          test -s retainers/ci-demo/retainer.json
+          test -s retainers/ci-demo/cycles/$(date +%Y-%m)/cycle.json
+          grep -q "ACTIVE_MANAGED_OPS" retainers/ci-demo/retainer.json
       - name: Run HausPilot V1.1 five-customer regression
         run: |
           node packs/hauspilot/simulations/five-customers-v1-1.mjs /tmp/hauspilot-five-v11
