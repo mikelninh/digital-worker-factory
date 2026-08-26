@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="description" content="HausPilot AI Operations Sprint: einen wiederkehrenden Hausverwaltungs-Workflow in 7 Tagen analysieren, sicher automatisieren und messbar entlasten." />
+  <title>HausPilot · AI Operations Sprint für Hausverwaltungen</title>
+  <style>
+    :root{--bg:#f5f1e8;--paper:#fffdf8;--ink:#171715;--muted:#6b685f;--line:#d9d3c7;--accent:#d7ff5f;--dark:#1d241d;--soft:#eef1e6;--radius:22px;--shadow:0 18px 50px rgba(35,31,24,.09)}
+    *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;line-height:1.5}.wrap{width:min(1160px,calc(100% - 32px));margin:auto}.nav{display:flex;justify-content:space-between;align-items:center;padding:22px 0;font-size:14px}.brand{font-weight:800;letter-spacing:-.02em}.nav a{color:inherit;text-decoration:none}.nav-links{display:flex;gap:24px;color:var(--muted)}.pill{display:inline-flex;gap:8px;align-items:center;border:1px solid var(--line);border-radius:999px;padding:8px 12px;background:rgba(255,255,255,.45);font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase}.dot{width:7px;height:7px;border-radius:50%;background:#5da244;box-shadow:0 0 0 4px rgba(93,162,68,.12)}
+    .hero{display:grid;grid-template-columns:1.08fr .92fr;gap:42px;align-items:center;padding:72px 0 64px}.hero h1{font-size:clamp(48px,7vw,88px);line-height:.95;letter-spacing:-.065em;margin:22px 0}.hero h1 em{font-style:normal;background:var(--accent);padding:0 .08em;border-radius:.12em}.hero p{font-size:20px;color:var(--muted);max-width:690px}.actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:30px}.btn{display:inline-flex;align-items:center;justify-content:center;min-height:50px;padding:0 20px;border-radius:13px;border:1px solid var(--line);background:var(--paper);color:var(--ink);text-decoration:none;font-weight:800;cursor:pointer}.btn.primary{background:var(--dark);border-color:var(--dark);color:#fff}.btn.accent{background:var(--accent);border-color:#b4dc3e}.micro{margin-top:16px;font-size:13px;color:var(--muted)}
+    .demo{background:var(--dark);color:#f7f6ef;border-radius:28px;padding:24px;box-shadow:var(--shadow);transform:rotate(1deg)}.demo-top{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:#cdd1c7;margin-bottom:18px}.ticket{background:#2a322a;border:1px solid #424b42;border-radius:18px;padding:20px}.ticket small{color:#a8b1a4}.ticket h3{font-size:25px;margin:6px 0 14px}.row{display:flex;justify-content:space-between;border-top:1px solid #414a41;padding:12px 0;font-size:14px}.row b{font-weight:700}.status{color:#d7ff5f}.flow{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:17px;font-size:11px}.flow span{background:#f4f0e7;color:#1d241d;padding:8px;border-radius:8px;font-weight:800}.flow i{font-style:normal;color:#879086}
+    section.block{padding:76px 0;border-top:1px solid var(--line)}.eyebrow{font-size:12px;font-weight:900;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}h2{font-size:clamp(36px,5vw,62px);letter-spacing:-.05em;line-height:1;margin:10px 0 16px}.lead{font-size:19px;color:var(--muted);max-width:760px}.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:32px}.card{background:var(--paper);border:1px solid var(--line);border-radius:var(--radius);padding:24px}.card .num{font-size:12px;font-weight:900;color:var(--muted)}.card h3{font-size:23px;letter-spacing:-.03em;margin:24px 0 8px}.card p{color:var(--muted);margin:0}.beforeafter{display:grid;grid-template-columns:1fr 58px 1fr;gap:14px;align-items:stretch;margin-top:34px}.panel{background:var(--paper);border:1px solid var(--line);border-radius:22px;padding:25px}.panel.after{background:var(--soft)}.panel ul{padding-left:20px;color:var(--muted)}.arrow{display:grid;place-items:center;font-size:30px}
+    .calculator{display:grid;grid-template-columns:.8fr 1.2fr;gap:26px;margin-top:34px}.controls,.result{background:var(--paper);border:1px solid var(--line);border-radius:24px;padding:26px}.field{margin:18px 0}.field label{display:flex;justify-content:space-between;font-size:14px;font-weight:700}.field input[type=range]{width:100%;accent-color:#242d24;margin-top:10px}.big{font-size:62px;letter-spacing:-.06em;line-height:1;margin:14px 0}.result-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}.metric{background:#f3f0e8;border-radius:14px;padding:15px}.metric small{color:var(--muted)}.metric b{display:block;font-size:25px;margin-top:3px}.assumption{font-size:12px;color:var(--muted);margin-top:16px}
+    .offer{background:var(--dark);color:#fff;border-radius:30px;padding:36px;margin-top:35px}.offer-grid{display:grid;grid-template-columns:1fr .8fr;gap:30px}.price{font-size:68px;letter-spacing:-.06em;line-height:.95;margin:10px 0}.offer ul{padding-left:20px;color:#d7ddd3}.offer .btn{border-color:#a9bd7e}.offer-note{font-size:13px;color:#aeb7aa}.steps{counter-reset:s;display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:30px}.step{background:var(--paper);border:1px solid var(--line);border-radius:18px;padding:20px}.step:before{counter-increment:s;content:"0" counter(s);font-weight:900;font-size:12px;color:var(--muted)}.step h3{margin:18px 0 8px}.step p{margin:0;color:var(--muted);font-size:14px}.guardrail{display:flex;gap:14px;align-items:flex-start;background:#eef5e2;border:1px solid #d5e4bd;border-radius:18px;padding:20px;margin-top:20px}.guardrail strong{display:block}.guardrail p{margin:3px 0 0;color:#58624e}.quote{font-size:31px;line-height:1.25;letter-spacing:-.03em;max-width:900px}.final{padding:88px 0 110px;text-align:center}.final h2{max-width:850px;margin:12px auto 18px}.final p{color:var(--muted);font-size:18px}.footer{display:flex;justify-content:space-between;border-top:1px solid var(--line);padding:28px 0 40px;color:var(--muted);font-size:13px}
+    @media(max-width:850px){.nav-links{display:none}.hero,.calculator,.offer-grid{grid-template-columns:1fr}.demo{transform:none}.grid3,.steps{grid-template-columns:1fr 1fr}.beforeafter{grid-template-columns:1fr}.arrow{transform:rotate(90deg)}.hero{padding-top:40px}.result-grid{grid-template-columns:1fr 1fr}}
+    @media(max-width:540px){.grid3,.steps,.result-grid{grid-template-columns:1fr}.hero h1{font-size:49px}.price,.big{font-size:50px}.wrap{width:min(100% - 22px,1160px)}}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <nav class="nav"><a class="brand" href="/">▦ HausPilot / Digital Worker Factory</a><div class="nav-links"><a href="#workflow">Workflow</a><a href="#roi">ROI</a><a href="#sprint">7-Tage-Sprint</a></div><a href="mailto:mikel_ninh@yahoo.de?subject=HausPilot%20AI%20Operations%20Sprint">Kontakt ↗</a></nav>
+
+    <main>
+      <section class="hero">
+        <div>
+          <span class="pill"><span class="dot"></span> AI Operations Sprint · Berlin</span>
+          <h1>Weniger Verwaltung.<br><em>Mehr erledigt.</em></h1>
+          <p>Wir nehmen einen wiederkehrenden Workflow Ihrer Hausverwaltung, automatisieren die sicheren Schritte mit AI und lassen Entscheidungen dort, wo sie hingehören: bei Ihrem Team.</p>
+          <div class="actions"><a class="btn primary" href="mailto:mikel_ninh@yahoo.de?subject=7-Tage%20AI%20Operations%20Sprint&body=Hallo%20Michael%2C%0A%0AWir%20m%C3%B6chten%20uns%20einen%20wiederkehrenden%20Workflow%20ansehen.%0A%0AWorkflow%3A%20%0ATeamgr%C3%B6%C3%9Fe%3A%20%0A">Workflow prüfen lassen →</a><a class="btn" href="#roi">Einsparung berechnen</a></div>
+          <div class="micro">Fester Pilotumfang · menschliche Freigabe · keine unkontrollierte Autonomie</div>
+        </div>
+        <aside class="demo">
+          <div class="demo-top"><span>HAUSPILOT · CASE 01842</span><span class="status">● READY FOR REVIEW</span></div>
+          <div class="ticket">
+            <small>NEUE MIETERANFRAGE</small><h3>„Heizung seit heute Morgen ausgefallen.“</h3>
+            <div class="row"><span>Objekt erkannt</span><b>Weserstr. 18 · VH</b></div>
+            <div class="row"><span>Dringlichkeit</span><b>hoch · Heizung</b></div>
+            <div class="row"><span>Zuständiger Dienstleister</span><b>Heiztechnik Müller</b></div>
+            <div class="row"><span>Antwort vorbereitet</span><b class="status">✓ vollständig</b></div>
+            <div class="flow"><span>E-Mail</span><i>→</i><span>Kontext</span><i>→</i><span>Prüfung</span><i>→</i><span>Vorschlag</span><i>→</i><span>👤 Freigabe</span></div>
+          </div>
+        </aside>
+      </section>
+
+      <section class="block" id="workflow">
+        <div class="eyebrow">Der Ansatz</div><h2>Ein nerviger Workflow. Sieben Tage. Messbares Ergebnis.</h2>
+        <p class="lead">Kein monatelanges „AI-Transformationsprojekt“. Wir beginnen dort, wo Ihr Team heute Zeit verliert, und bauen eine kontrollierte Abkürzung.</p>
+        <div class="grid3">
+          <article class="card"><span class="num">01 · FINDEN</span><h3>Den Zeitfresser isolieren</h3><p>Mieteranfragen, Reparaturen, Rechnungen, Angebote, Dokumente oder Nachfassschleifen.</p></article>
+          <article class="card"><span class="num">02 · BAUEN</span><h3>AI bereitet die Arbeit vor</h3><p>Klassifizieren, Informationen zusammentragen, prüfen, Antwort oder nächsten Schritt vorbereiten.</p></article>
+          <article class="card"><span class="num">03 · BEWEISEN</span><h3>Vorher/Nachher messen</h3><p>Bearbeitungszeit, manuelle Schritte, Rückfragen, Durchlaufzeit und nachvollziehbare Audit-Spuren.</p></article>
+        </div>
+        <div class="beforeafter">
+          <div class="panel"><div class="eyebrow">Heute</div><h3>Postfach → suchen → Software → PDF → Telefon → Antwort</h3><ul><li>Kontext über mehrere Systeme verteilt</li><li>Routineprüfung immer wieder manuell</li><li>Wissen hängt an einzelnen Mitarbeitenden</li><li>Nachfassen kostet unverhältnismäßig viel Zeit</li></ul></div>
+          <div class="arrow">→</div>
+          <div class="panel after"><div class="eyebrow">Mit HausPilot</div><h3>Anfrage → Kontext + Prüfung → fertiger Vorschlag → Freigabe</h3><ul><li>AI sammelt den relevanten Kontext</li><li>Regeln und Pflichtinformationen werden geprüft</li><li>Antwort oder Aufgabe wird vorbereitet</li><li>Mensch bestätigt folgenreiche Aktionen</li></ul></div>
+        </div>
+      </section>
+
+      <section class="block" id="roi">
+        <div class="eyebrow">ROI-Rechner</div><h2>Was kostet der Workflow heute?</h2><p class="lead">Keine Fantasie-„100x“-Versprechen. Geben Sie grobe echte Zahlen ein und sehen Sie, ab wann sich ein Pilot trägt.</p>
+        <div class="calculator">
+          <div class="controls">
+            <div class="field"><label><span>Fälle / Monat</span><b id="casesOut">220</b></label><input id="cases" type="range" min="20" max="1500" value="220" step="10"></div>
+            <div class="field"><label><span>Minuten / Fall heute</span><b id="minsOut">14</b></label><input id="mins" type="range" min="3" max="60" value="14"></div>
+            <div class="field"><label><span>Interne Kosten / Stunde</span><b id="rateOut">35 €</b></label><input id="rate" type="range" min="20" max="90" value="35"></div>
+            <div class="field"><label><span>Realistische Zeitersparnis</span><b id="saveOut">65 %</b></label><input id="save" type="range" min="20" max="85" value="65"></div>
+          </div>
+          <div class="result"><div class="eyebrow">Geschätzter monatlicher Hebel</div><div class="big" id="monthly">1.251 €</div><div class="result-grid"><div class="metric"><small>Zeit heute</small><b id="hoursNow">51,3 h</b></div><div class="metric"><small>Zeit gespart</small><b id="hoursSaved">33,4 h</b></div><div class="metric"><small>Jahreshebel</small><b id="annual">15.015 €</b></div><div class="metric"><small>Pilot-Amortisation</small><b id="payback">1,5 Mon.</b></div></div><p class="assumption">Modellrechnung auf Basis Ihrer Eingaben; tatsächlicher Nutzen wird im Pilot gemessen. Pilotpreis: 1.900 € netto.</p></div>
+        </div>
+      </section>
+
+      <section class="block" id="sprint">
+        <div class="eyebrow">Das Angebot</div><h2>AI Operations Sprint</h2><p class="lead">Ein klar begrenzter Einstieg, der entweder messbaren Wert produziert — oder uns schnell zeigt, dass dieser Workflow nicht der richtige Hebel ist.</p>
+        <div class="offer">
+          <div class="offer-grid"><div><span class="eyebrow" style="color:#aeb7aa">Fester Pilotpreis</span><div class="price">1.900 €</div><p>netto · ein Workflow · 7 Tage</p><a class="btn accent" href="mailto:mikel_ninh@yahoo.de?subject=HausPilot%20Sprint%20anfragen">Sprint anfragen →</a></div><div><strong>Enthalten</strong><ul><li>60-Minuten Workflow-Mapping</li><li>Ist-Zeit und Erfolgsmetrik festlegen</li><li>funktionierender AI-gestützter Workflow</li><li>Human-Approval-Gate für kritische Aktionen</li><li>Testfälle + Failure Cases</li><li>Vorher/Nachher-ROI-Bericht</li><li>Übergabe und nächste Automationskandidaten</li></ul><p class="offer-note">Empfohlen: 70 % zum Start, 30 % bei Übergabe.</p></div></div>
+        </div>
+        <div class="steps">
+          <article class="step"><h3>Tag 1</h3><p>Workflow aufnehmen, Inputs und Entscheidungspunkte kartieren.</p></article>
+          <article class="step"><h3>Tag 2–3</h3><p>Worker bauen, Datenzugriffe begrenzen, Testfälle definieren.</p></article>
+          <article class="step"><h3>Tag 4–5</h3><p>Shadow-Test mit realistischen Fällen; Fehler und Sonderfälle prüfen.</p></article>
+          <article class="step"><h3>Tag 6–7</h3><p>Copilot-Modus, ROI messen, Team-Übergabe und Ausbauentscheidung.</p></article>
+        </div>
+        <div class="guardrail"><div>🔒</div><div><strong>Die AI bekommt keine Blankovollmacht.</strong><p>Sie darf Informationen verstehen und Arbeit vorbereiten. Berechtigungen, Pflichtnachweise, Freigaben und Audit liegen außerhalb des Modells.</p></div></div>
+      </section>
+
+      <section class="block">
+        <div class="eyebrow">Typische erste Workflows</div><h2>Wo wir wahrscheinlich anfangen.</h2>
+        <div class="grid3">
+          <article class="card"><span class="num">MIETER-SERVICE</span><h3>Anfrage-Triage</h3><p>Anliegen erkennen, Objektkontext sammeln, Dringlichkeit prüfen, Antwort oder Aufgabe vorbereiten.</p></article>
+          <article class="card"><span class="num">INSTANDHALTUNG</span><h3>Reparatur-Koordination</h3><p>Meldung strukturieren, fehlende Angaben anfordern, Dienstleister matchen und Follow-up vorbereiten.</p></article>
+          <article class="card"><span class="num">BACKOFFICE</span><h3>Rechnung & Dokument</h3><p>Dokumentdaten extrahieren, Objekt zuordnen, Pflichtfelder prüfen, Abweichungen markieren und Review vorbereiten.</p></article>
+        </div>
+      </section>
+
+      <section class="block"><div class="eyebrow">Prinzip</div><p class="quote">„AI erledigt nicht ungefragt die Entscheidung. AI sorgt dafür, dass Ihr Mensch die Entscheidung mit vollständigem Kontext in Sekunden treffen kann.“</p></section>
+
+      <section class="final"><div class="eyebrow">Ein sinnvoller Test</div><h2>Zeigen Sie mir den Workflow, den niemand in Ihrem Team vermissen würde.</h2><p>Ich sage Ihnen zuerst, ob er sich überhaupt sinnvoll automatisieren lässt.</p><div class="actions" style="justify-content:center"><a class="btn primary" href="mailto:mikel_ninh@yahoo.de?subject=HausPilot%20Workflow-Check">Workflow schicken →</a><a class="btn" href="/">Technische Factory ansehen</a></div></section>
+    </main>
+
+    <footer class="footer"><span>HausPilot · Digital Worker Factory</span><span>Michael Ninh · Berlin</span></footer>
+  </div>
+  <script>
+    const nf=new Intl.NumberFormat('de-DE',{maximumFractionDigits:0});
+    const q=id=>document.getElementById(id);
+    const inputs=['cases','mins','rate','save'];
+    function calc(){const cases=+q('cases').value,mins=+q('mins').value,rate=+q('rate').value,save=+q('save').value/100;const hours=cases*mins/60,saved=hours*save,monthly=saved*rate,annual=monthly*12,payback=monthly?1900/monthly:0;q('casesOut').textContent=nf.format(cases);q('minsOut').textContent=mins;q('rateOut').textContent=nf.format(rate)+' €';q('saveOut').textContent=Math.round(save*100)+' %';q('hoursNow').textContent=hours.toLocaleString('de-DE',{maximumFractionDigits:1})+' h';q('hoursSaved').textContent=saved.toLocaleString('de-DE',{maximumFractionDigits:1})+' h';q('monthly').textContent=nf.format(monthly)+' €';q('annual').textContent=nf.format(annual)+' €';q('payback').textContent=payback.toLocaleString('de-DE',{maximumFractionDigits:1})+' Mon.'}
+    inputs.forEach(id=>q(id).addEventListener('input',calc));calc();
+  </script>
+</body>
+</html>
