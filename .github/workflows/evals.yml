@@ -14,3 +14,7 @@ jobs:
           node-version: 22
       - name: Run 50-case synthetic reliability suite
         run: node evals/run.mjs
+      - name: Run HausPilot reusable template suite
+        run: node packs/hauspilot/eval.mjs
+      - name: Compile example HausPilot deployment pack
+        run: node packs/hauspilot/compile.mjs packs/hauspilot/client.example.json
