@@ -28,6 +28,8 @@ jobs:
         run: node --test packs/hauspilot/runtime/review.test.mjs
       - name: Run privacy fail-closed contract tests
         run: node --test packs/hauspilot/privacy/privacy.test.mjs
+      - name: Run stakeholder end-to-end simplicity tests
+        run: node --test packs/hauspilot/runtime/stakeholder-e2e.test.mjs
       - name: Validate 100-case real-model release dataset
         run: node packs/hauspilot/runtime/live-release-gate.mjs --dry-run
       - name: Generate 20-case first-customer demo
@@ -42,6 +44,8 @@ jobs:
         run: |
           node packs/hauspilot/runtime/report.mjs /tmp/hauspilot-demo/mock-results.json /tmp/hauspilot-demo/measurement.json /tmp/hauspilot-demo-report.html
           test -s /tmp/hauspilot-demo-report.html
+          grep -q "Drei Antworten" /tmp/hauspilot-demo-report.html
+          grep -q "Technische Details & Audit öffnen" /tmp/hauspilot-demo-report.html
       - name: Verify customer-facing explainer pages
         run: |
           test -s site/hauspilot.html
