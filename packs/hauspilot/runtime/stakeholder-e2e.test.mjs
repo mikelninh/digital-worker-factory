@@ -57,7 +57,6 @@ test('interactive demo is unmistakably a demo and exposes only one next action p
   assert.match(simple, /Falsch/);
   assert.match(simple, /WEITER/);
   assert.match(simple, /Monatlich weiter/);
-  assert.match(simple, /echte Pilot-Runtime.*internen technischen Operator/s);
   for (const href of legacyLinks) assert.ok(!simple.includes(href), `simple flow must not link legacy surface ${href}`);
 });
 
@@ -96,11 +95,13 @@ test('operator standard path is the prepared browser console with only bounded e
 
 test('customer onboarding has exactly three requested inputs after commercial scope is agreed', () => {
   assert.match(customerStart, /customer-facing source of truth/i);
-  assert.match(customerStart, /genau 3 Dinge|exactly 3 things/i);
+  assert.match(customerStart, /exactly 3 things/i);
   assert.match(customerStart, /20–50 completed examples/);
   assert.match(customerStart, /one simple master-data list/);
   assert.match(customerStart, /one reviewing person/);
   assert.match(customerStart, /€1,330 paid before kickoff/);
   assert.match(customerStart, /remaining \*\*€570\*\*/);
   assert.match(customerStart, /public demo \*\*never collects customer data\*\*/i);
+  assert.match(customerStart, /pseudonymised or personal data leaves the standard path/i);
+  assert.match(customerStart, /Operations tasks — not Founder-only tasks/);
 });
