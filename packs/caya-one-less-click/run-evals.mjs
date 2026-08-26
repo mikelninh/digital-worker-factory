@@ -45,6 +45,34 @@ for (const c of cases) {
   if (body.status === "duplicate_ignored") duplicateOk++;
 }
 
+// A failed first attempt must NOT poison the idempotency key. The retry should
+// execute normally rather than disappear as duplicate_ignored.
+let lookupAttempts = 0;
+const retryAudit = [];
+const retryHandler = createHandler({
+  customerLookup: async () => {
+    lookupAttempts++;
+    if (lookupAttempts === 1) throw new Error("synthetic transient lookup failure");
+    return { plan: "synthetic-retry" };
+  },
+  audit: async (row) => retryAudit.push(row)
+});
+const retryPayload = {
+  ticket_id: "T-RETRY-1",
+  event_id: "E-RETRY-1",
+  message: "DATEV connection failed and documents are not being forwarded."
+};
+await assert.rejects(
+  retryHandler({ body: JSON.stringify(retryPayload) }),
+  /synthetic transient lookup failure/
+);
+const retryResponse = await retryHandler({ body: JSON.stringify(retryPayload) });
+const retryBody = JSON.parse(retryResponse.body);
+assert.equal(retryResponse.statusCode, 200);
+assert.equal(retryBody.status, "prepared");
+assert.equal(lookupAttempts, 2);
+assert.equal(retryAudit.length, 1);
+
 const metrics = {
   cases: cases.length,
   intent_accuracy: `${intentOk}/${cases.length}`,
@@ -54,6 +82,7 @@ const metrics = {
   observable_trace: `${traceOk}/${cases.length}`,
   safe_auto_execution: `${safeAutoOk}/${autoExpected}`,
   duplicate_webhook_recovery: `${duplicateOk}/${cases.length}`,
+  transient_failure_retry: "PASS",
   audit_rows: auditRows.length,
   safe_actions: executedActions.length
 };
