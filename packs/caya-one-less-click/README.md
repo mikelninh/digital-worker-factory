@@ -28,19 +28,30 @@ audit + regression test
 
 The important distinction is that human approval is **not** inserted into every step. Routine processing can remain automatic; privileged actions such as changing account permissions stay gated.
 
+## Proof status
+
+| Capability | Status | Evidence |
+| --- | --- | --- |
+| Deterministic workflow | **Executed in CI** | 30-case routing/urgency/policy/trace regression |
+| HTTP end-to-end | **Executed in CI** | real loopback `POST /support`, duplicate replay, 400 validation and audit assertions |
+| PostgreSQL | **Executed in CI** | real PostgreSQL service, 20,000 synthetic rows, `EXPLAIN (ANALYZE, BUFFERS)` and index-use assertion |
+| AWS Lambda | **Deployable** | Lambda-compatible `handler(event)` + AWS SAM manifest |
+| Zapier / low-code | **Adapter-ready** | concrete webhook contract + sample payload; no live Zapier account connection claimed |
+| Public UI | **Live** | portfolio presentation layer with four synthetic scenarios |
+
 ## What this proves
 
 | Job signal | Evidence in this pack |
 | --- | --- |
 | End-to-end automation | webhook → idempotency → classification → context → policy → prepared action → audit |
-| JavaScript / Node.js | AWS Lambda-compatible handler and routing logic |
-| APIs / webhooks | webhook payload contract + handler |
-| AWS Lambda | `lambda.mjs` exports a Lambda-compatible `handler(event)` |
+| JavaScript / Node.js | Lambda-compatible handler, HTTP wrapper and regression tests |
+| APIs / webhooks | executable HTTP contract + replay-safe handler |
+| AWS Lambda | handler + `aws/template.yaml` SAM deployment manifest |
 | Zapier / low-code | adapter guide + sample webhook payload |
-| SQL / PostgreSQL | schema, uniqueness constraint, index and `EXPLAIN (ANALYZE, BUFFERS)` exercise |
+| SQL / PostgreSQL | executable schema, 20k-row synthetic benchmark, composite index and real query-plan assertion |
 | AI-use discipline | interpretation is separated from deterministic policy/approval rules |
 | Support automation | synthetic integration, document-routing, access and billing cases |
-| Reliability | 30-case regression suite + duplicate-event replay |
+| Reliability | 30-case regression suite + duplicate-event replay + HTTP validation |
 | Observability | explicit trace + audit callback |
 | Product communication | interactive role-proof UI at `site/caya-one-less-click.html` |
 
@@ -71,10 +82,12 @@ audit + eval
 ## Run the proof
 
 ```bash
-node packs/caya-one-less-click/run-evals.mjs
+bash packs/caya-one-less-click/run-all-proofs.sh
 ```
 
-Expected deterministic result:
+Without `DATABASE_URL`, the local runner executes the deterministic and HTTP suites and explains that PostgreSQL is exercised in CI. CI supplies a real PostgreSQL service automatically.
+
+The deterministic suite currently expects:
 
 ```json
 {
@@ -90,6 +103,28 @@ Expected deterministic result:
 
 These are synthetic regression checks, **not real-world model-accuracy claims**.
 
+## HTTP proof
+
+`run-http-e2e.mjs` opens a real loopback HTTP socket and verifies:
+
+1. a valid integration incident returns `200` and a prepared action,
+2. replaying the same event returns `duplicate_ignored`,
+3. a consequential account-setting request requires `human_approval`,
+4. an invalid payload returns `400`,
+5. only non-duplicate successful requests are audited.
+
+## PostgreSQL proof
+
+`sql/schema.sql` is executable DDL. CI starts PostgreSQL, loads **20,000 synthetic delivery rows**, runs `ANALYZE`, executes `EXPLAIN (ANALYZE, BUFFERS)` for the latest-delivery access pattern and fails unless PostgreSQL uses `idx_integration_deliveries_customer_type_latest`.
+
+The actual plan is emitted to CI logs. No fixed latency number is claimed because hosted-runner timing is not representative of a production workload.
+
+## AWS and Zapier boundary
+
+`aws/template.yaml` maps `POST /support` to the Lambda-compatible handler using AWS SAM. The Zapier folder documents the concrete webhook adapter and payload.
+
+Those are **deployment/integration proofs, not claims of connected vendor accounts**. A live AWS account deployment and live Zapier connection are intentionally not claimed until authorized credentials/accounts are available.
+
 ## Four realistic demo scenarios
 
 The interactive UI focuses on public-domain workflow shapes rather than pretending to know Caya internals:
@@ -99,24 +134,9 @@ The interactive UI focuses on public-domain workflow shapes rather than pretendi
 3. an access/permission change requires approval
 4. a duplicate webhook must not trigger duplicate work
 
-These cover integration operations, document routing, permission boundaries and reliability in one tiny surface.
-
-## SQL proof
-
-`sql/schema.sql` demonstrates a Postgres-oriented event schema, duplicate protection with `UNIQUE(ticket_id, event_id)`, a composite index for the “latest delivery for customer/integration” access pattern, and the exact `EXPLAIN (ANALYZE, BUFFERS)` query to inspect a plan.
-
-No latency numbers are claimed because no production-scale Postgres benchmark was run here.
-
 ## Design direction
 
-The role-proof page deliberately follows the **qualities** visible in Caya's public brand rather than copying proprietary assets:
-
-- warm off-white canvas rather than developer-dark-mode
-- deep navy for trust and technical depth
-- optimistic green for healthy automation states
-- large, friendly typography and generous whitespace
-- rounded product cards and simple document/workflow illustration
-- workflow-first storytelling before implementation detail
+The role-proof page deliberately follows the **qualities** visible in Caya's public brand rather than copying proprietary assets: warm off-white surfaces, deep navy, optimistic green, large friendly typography, generous whitespace and workflow-first storytelling.
 
 It does **not** use Caya's logo, mascot or proprietary product UI.
 
