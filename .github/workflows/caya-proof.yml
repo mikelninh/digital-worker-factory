@@ -12,6 +12,10 @@ on:
       - "packs/caya-one-less-click/**"
       - ".github/workflows/caya-proof.yml"
 
+concurrency:
+  group: caya-proof-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 jobs:
   eval:
     runs-on: ubuntu-latest
