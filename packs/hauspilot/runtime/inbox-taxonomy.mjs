@@ -1,8 +1,8 @@
 import { normaliseGerman } from './entity-resolution.mjs';
 
 const RULES=[
-  {classification:'repair_request',route:'maintenance',rx:/heizung|warmwasser|leck|wasser|strom|sicherung|schimmel|aufzug|elevator|fenster|reparatur|kaputt|broken/},
-  {classification:'contract_question',route:'contracts',rx:/\b(?:kuendig\w*|kundig\w*|mietvertrag|vertrag|frist|nachtrag|termination|terminate|notice)\b/},
+  {classification:'repair_request',route:'maintenance',rx:/heizung|warmwasser|leck|wasser|strom|sicherung|schimmel|aufzug|elevator|\bfenster\b|reparatur|kaputt|broken/},
+  {classification:'contract_question',route:'contracts',rx:/\b(?:kuendig\w*|kundig\w*|mietvertrag|vertrag\w*|frist|nachtrag\w*|vertragsnachtrag\w*|termination|terminate|notice)\b/},
   {classification:'service_charge_question',route:'billing',rx:/betriebskosten|nebenkosten|abrechnung|service charge|utility bill/},
   {classification:'rent_question',route:'rent',rx:/miethoehe|miet hoehe|miete|mieterhoeh|rent|indexmiete|staffelmiete/},
   {classification:'document_request',route:'documents',rx:/bescheinigung|dokument|kopie|protokoll|energieausweis|mietbescheinigung|document|certificate/},
