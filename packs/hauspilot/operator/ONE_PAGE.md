@@ -14,6 +14,19 @@ Danach arbeitest du nur in der Browser-Console.
 
 Kein Terminal, kein GitHub, kein JSON-Editieren und kein Prompt Engineering im Tagesgeschäft.
 
+## Vor dem ersten echten Kunden
+
+Admin/Engineering muss einmal bestätigen:
+
+- aktuelle Offline-CI grün
+- echter 20-Case Live-Smoke bestanden
+- echter 100-Case Live-Gate bestanden
+- Operations-Rechner + API-Key eingerichtet
+- sicherer Datei-Transferkanal festgelegt
+- Stripe-Zugriff für Operations vorhanden
+
+Danach sind das **keine Aufgaben pro Kunde**.
+
 ## Der Standardkunde
 
 1. **Zahlung prüfen**
@@ -51,7 +64,8 @@ Kein Terminal, kein GitHub, kein JSON-Editieren und kein Prompt Engineering im T
    - Report senden
    - 570-€-Restrechnung in Stripe senden
    - Zahlung prüfen
-   - Retention/Löschung dokumentieren
+   - Pilotdaten gemäß vereinbarter Retention über die Console löschen
+   - Löschbeleg bleibt erhalten
    - bei `Weiter`: Standardbetrieb 750 €/Monat für denselben Workflow anbieten
 
 ## Wenn der Kunde weitermacht
@@ -64,7 +78,7 @@ Kein neues Projekt und keine zweite Bedienwelt:
 
 ### Datenschutz
 
-Personenbezogene/pseudonymisierte Daten ohne vollständige dokumentierte Gates, besondere Datenkategorien oder unklare Rechts-/Processor-Fragen.
+Personenbezogene/pseudonymisierte Daten, besondere Datenkategorien oder unklare Privacy-/Processor-Fragen.
 
 → **STOPP · Privacy/Owner**
 
@@ -79,10 +93,6 @@ Runtime/API/Console defekt oder unerwarteter interner Fehler.
 Sonderpreis, Sonderscope, mehrere Workflows oder neue Produktionsrechte.
 
 → **STOPP · Sales/Founder**
-
-## Einmaliges Admin-Setup
-
-Vor dem ersten Kunden muss der Operations-Rechner einmal vorbereitet sein: Node.js, lokaler API-Key, Repo und sicherer Datei-Transferkanal. Das ist **kein Schritt pro Kunde**.
 
 ## Erfolgsdefinition
 
