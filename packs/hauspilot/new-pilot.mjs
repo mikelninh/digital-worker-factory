@@ -50,6 +50,7 @@ const approval = {
   data_authorised: false,
   shadow_only_confirmed: true,
   operator_named: false,
+  reviewer_named: false,
   retention_confirmed: false,
   anonymisation_confirmed: false,
   privacy_review_confirmed: false,
@@ -70,5 +71,5 @@ fs.writeFileSync(path.join(out,'measurement.json'), JSON.stringify(measurement,n
 fs.writeFileSync(path.join(out,'properties.csv'), 'property_id,address,unit\n');
 if (template === 'repair_intake') fs.writeFileSync(path.join(out,'contractors.csv'), 'contractor_id,name,trade,service_area\n');
 if (template === 'invoice_review') fs.writeFileSync(path.join(out,'vendors.csv'), 'vendor_id,name\n');
-fs.writeFileSync(path.join(out,'START_HERE.md'), `# ${company} — HausPilot Pilot\n\n## Fastest safe path\n\n1. Confirm one workflow: \`${template}\`.\n2. Prefer synthetic or truly anonymised historical cases.\n3. Complete \`pilot-approval.json\`; do not mark a privacy gate true unless the decision is documented.\n4. Add 20–50 authorised cases to \`cases.json\`.\n5. Add property master data to \`properties.csv\`.\n6. Run preflight:\n\n\`\`\`bash\nnode packs/hauspilot/runtime/preflight.mjs ${out}\n\`\`\`\n\n7. Generate the privacy proof artifact:\n\n\`\`\`bash\nnode packs/hauspilot/privacy/manifest.mjs ${out}\n\`\`\`\n\n8. Configure \`OPENAI_API_KEY\` outside the repository.\n9. Run end-to-end:\n\n\`\`\`bash\nnode packs/hauspilot/run-pilot.mjs ${out}\n\`\`\`\n\nPseudonymised/personal data remain personal data for our gate logic and require the extra privacy/processor/legal/subprocessor/residency decisions before processing.\n`);
+fs.writeFileSync(path.join(out,'START_HERE.md'), `# ${company} — HausPilot Pilot\n\n## Fastest safe path\n\n1. Confirm one workflow: \`${template}\`.\n2. Prefer synthetic or truly anonymised historical cases.\n3. Complete \`pilot-approval.json\`; do not mark a privacy gate true unless the decision is documented.\n4. Add 20–50 authorised cases to \`cases.json\`.\n5. Add property master data to \`properties.csv\`.\n6. Name both the Operations owner and the customer reviewer.\n7. Run preflight:\n\n\`\`\`bash\nnode packs/hauspilot/runtime/preflight.mjs ${out}\n\`\`\`\n\n8. Generate the privacy proof artifact:\n\n\`\`\`bash\nnode packs/hauspilot/privacy/manifest.mjs ${out}\n\`\`\`\n\n9. Configure \`OPENAI_API_KEY\` outside the repository.\n10. Run end-to-end:\n\n\`\`\`bash\nnode packs/hauspilot/run-pilot.mjs ${out}\n\`\`\`\n\nPseudonymised/personal data remain personal data for our gate logic and require the extra privacy/processor/legal/subprocessor/residency decisions before processing.\n`);
 console.log(JSON.stringify({ ok:true, deployment:out, template, sources:Object.keys(client.sources) }, null, 2));
