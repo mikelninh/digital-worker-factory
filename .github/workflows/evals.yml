@@ -30,6 +30,8 @@ jobs:
         run: node --test packs/hauspilot/privacy/privacy.test.mjs
       - name: Run stakeholder end-to-end simplicity tests
         run: node --test packs/hauspilot/runtime/stakeholder-e2e.test.mjs
+      - name: Run simple next-action tests
+        run: node --test packs/hauspilot/runtime/next-action.test.mjs
       - name: Validate 100-case real-model release dataset
         run: node packs/hauspilot/runtime/live-release-gate.mjs --dry-run
       - name: Generate 20-case first-customer demo
