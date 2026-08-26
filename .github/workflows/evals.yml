@@ -40,6 +40,7 @@ jobs:
           node --check packs/hauspilot/operator/admin-ready.mjs
           node --test packs/hauspilot/operator/assistant-flow.test.mjs
           node --test packs/hauspilot/operator/console-e2e.test.mjs
+          node --test packs/hauspilot/operator/stakeholder-edge-cases.test.mjs
           node --test packs/hauspilot/operator/release-lock.test.mjs
           test -s start-hauspilot-ops.cmd
           test -s packs/hauspilot/operator/ASSISTANT_READY.md
@@ -68,17 +69,18 @@ jobs:
           test -s site/hauspilot.html
           test -s site/hauspilot-onepager.html
           test -s site/hauspilot-privacy.html
-          grep -q "Erst beweisen" site/hauspilot.html
+          grep -q "Ein Prozess" site/hauspilot.html
+          grep -q "100/100" site/hauspilot.html
           grep -q "Datenschutz ist ein Gate" site/hauspilot-privacy.html
       - name: Verify radically simplified operating interface
         run: |
           test -s site/simple-operations.html
           test -s packs/hauspilot/operator/ONE_PAGE.md
-          grep -q "Vier Menschen" site/simple-operations.html
+          grep -q "Ein Ablauf" site/simple-operations.html
           grep -q "20–50 Beispiele" site/simple-operations.html
-          grep -q "Starten" site/simple-operations.html
-          grep -q "Sieht richtig aus" site/simple-operations.html
-          grep -q "Monatlich weiter" site/simple-operations.html
+          grep -q "STARTEN" site/simple-operations.html
+          grep -q "Richtig" site/simple-operations.html
+          grep -q "ausdrücklich" site/simple-operations.html
           grep -q "Was ist mein nächster Klick" packs/hauspilot/operator/ONE_PAGE.md
       - name: Verify existing role-based pilot command center
         run: |
