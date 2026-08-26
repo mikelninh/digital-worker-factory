@@ -66,10 +66,11 @@ if (!errors.some(e => e.startsWith('missing_file:'))) {
   if ((client.pilot?.mode || 'shadow') !== 'shadow') errors.push('pilot_mode_must_be_shadow');
   if (client.sources?.message?.type && !['manual_upload','file'].includes(client.sources.message.type)) errors.push('v1_requires_file_or_manual_message_source');
 
-  const gates = ['scope_confirmed','data_authorised','shadow_only_confirmed','operator_named','reviewer_named','retention_confirmed'];
+  const gates = ['scope_confirmed','data_authorised','shadow_only_confirmed','operator_named','retention_confirmed'];
   for (const gate of gates) if (approval[gate] !== true) errors.push(`approval_gate_false:${gate}`);
   const modes = ['synthetic','anonymised','pseudonymised_personal_data','authorised_personal_data'];
   if (!modes.includes(approval.data_mode)) errors.push('invalid_data_mode');
+  if (approval.data_mode !== 'synthetic' && approval.reviewer_named !== true) errors.push('approval_gate_false:reviewer_named');
 
   if (approval.data_mode === 'anonymised') {
     if (approval.anonymisation_confirmed !== true) errors.push('anonymised_data_requires_anonymisation_confirmation');
