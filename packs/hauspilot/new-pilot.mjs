@@ -20,11 +20,28 @@ const out = path.resolve('deployments', id);
 if (fs.existsSync(out)) throw new Error(`deployment already exists: ${out}`);
 fs.mkdirSync(out, { recursive: true });
 
+const sourcePresets = {
+  repair_intake: {
+    message: { type: 'manual_upload' },
+    properties: { type: 'csv', file: 'properties.csv' },
+    contractors: { type: 'csv', file: 'contractors.csv' }
+  },
+  tenant_inbox: {
+    message: { type: 'manual_upload' },
+    properties: { type: 'csv', file: 'properties.csv' }
+  },
+  invoice_review: {
+    invoice: { type: 'manual_upload' },
+    properties: { type: 'csv', file: 'properties.csv' },
+    vendors: { type: 'csv', file: 'vendors.csv' }
+  }
+};
+
 const client = {
   company: { id, name: company, timezone: 'Europe/Berlin' },
   pilot: { template, mode: 'shadow', baseline_cases: 20, success: { min_gold_accuracy_percent: 90, max_unsafe_external_actions: 0 } },
-  sources: { message: { type: 'manual_upload' }, properties: { type: 'csv', file: 'properties.csv' }, contractors: { type: 'csv', file: 'contractors.csv' } },
-  policy: { external_reply: 'human_approval', contractor_assignment: 'human_approval', appointment_commitment: 'human_approval', spend_commitment: 'blocked', payment: 'blocked', legal_commitment: 'blocked' },
+  sources: sourcePresets[template],
+  policy: { external_reply: 'human_approval', contractor_assignment: 'human_approval', appointment_commitment: 'human_approval', accounting_write: 'human_approval', vendor_contact: 'human_approval', spend_commitment: 'blocked', payment: 'blocked', bank_detail_change: 'blocked', legal_commitment: 'blocked' },
   privacy: { retention_days: 14, production_requires_customer_privacy_review: true }
 };
 const approval = {
@@ -38,6 +55,7 @@ fs.writeFileSync(path.join(out,'pilot-approval.json'), JSON.stringify(approval,n
 fs.writeFileSync(path.join(out,'cases.json'), JSON.stringify({ synthetic:false, cases:[] },null,2));
 fs.writeFileSync(path.join(out,'measurement.json'), JSON.stringify(measurement,null,2));
 fs.writeFileSync(path.join(out,'properties.csv'), 'property_id,address,unit\n');
-fs.writeFileSync(path.join(out,'contractors.csv'), 'contractor_id,name,trade,service_area\n');
+if (template === 'repair_intake') fs.writeFileSync(path.join(out,'contractors.csv'), 'contractor_id,name,trade,service_area\n');
+if (template === 'invoice_review') fs.writeFileSync(path.join(out,'vendors.csv'), 'vendor_id,name\n');
 fs.writeFileSync(path.join(out,'START_HERE.md'), `# ${company} — HausPilot Pilot\n\n1. Confirm one workflow: \`${template}\`.\n2. Complete \`pilot-approval.json\`.\n3. Add 20–50 authorised/anonymised historic cases to \`cases.json\`.\n4. Add property master data to \`properties.csv\`.\n5. Run preflight:\n\n\`\`\`bash\nnode packs/hauspilot/runtime/preflight.mjs ${out}\n\`\`\`\n\n6. Configure \`OPENAI_API_KEY\` outside the repository.\n7. Run end-to-end:\n\n\`\`\`bash\nnode packs/hauspilot/run-pilot.mjs ${out}\n\`\`\`\n`);
-console.log(JSON.stringify({ ok:true, deployment:out, template }, null, 2));
+console.log(JSON.stringify({ ok:true, deployment:out, template, sources:Object.keys(client.sources) }, null, 2));
