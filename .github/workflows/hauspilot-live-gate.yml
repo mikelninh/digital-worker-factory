@@ -1,9 +1,6 @@
 name: hauspilot-live-model-gate
 
 on:
-  push:
-    branches:
-      - fcf/hauspilot-v1-1-quality-loop
   workflow_dispatch:
     inputs:
       suite:
@@ -28,7 +25,8 @@ jobs:
       contents: read
     env:
       OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-      OPENAI_MODEL: gpt-5.6-luna
+      OPENAI_MODEL: ${{ inputs.model || 'gpt-5.6-luna' }}
+      LIVE_SUITE: ${{ inputs.suite || 'smoke' }}
       LIVE_CONCURRENCY: 4
     steps:
       - uses: actions/checkout@v4
@@ -47,14 +45,21 @@ jobs:
       - name: Validate release dataset without network calls
         run: node packs/hauspilot/runtime/live-release-gate.mjs --dry-run
 
-      - name: Run final cross-workflow real-model smoke
-        run: node packs/hauspilot/runtime/live-stratified-smoke.mjs --out=/tmp/hauspilot-live-gate.json
+      - name: Run real-model release gate
+        shell: bash
+        run: |
+          if [ "$LIVE_SUITE" = "full" ]; then
+            LIMIT=100
+          else
+            LIMIT=20
+          fi
+          node packs/hauspilot/runtime/live-release-gate.mjs --limit=$LIMIT --out=/tmp/hauspilot-live-gate.json
 
       - name: Upload release-gate audit
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: hauspilot-live-gate-final-stratified-${{ github.run_id }}
+          name: hauspilot-live-gate-${{ env.LIVE_SUITE }}-${{ github.run_id }}
           path: /tmp/hauspilot-live-gate.json
           if-no-files-found: warn
           retention-days: 14
