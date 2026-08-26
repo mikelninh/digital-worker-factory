@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>One Less Click — Business Automation Proof</title>
+<style>
+:root{font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#111;background:#f5f5f3}*{box-sizing:border-box}body{margin:0}.wrap{max-width:1100px;margin:auto;padding:28px}.top{display:flex;justify-content:space-between;gap:20px;align-items:center;margin-bottom:32px}.badge{display:inline-block;padding:7px 11px;border:1px solid #d8d8d2;border-radius:999px;background:white;font-size:13px}h1{font-size:clamp(42px,7vw,76px);line-height:.95;letter-spacing:-.055em;margin:18px 0;max-width:850px}.lead{font-size:20px;line-height:1.5;color:#555;max-width:760px}.grid{display:grid;grid-template-columns:1.15fr .85fr;gap:18px;margin-top:34px}.card{background:white;border:1px solid #deded8;border-radius:22px;padding:22px;box-shadow:0 8px 28px rgba(0,0,0,.035)}label{font-size:13px;color:#666}textarea{width:100%;min-height:115px;border:1px solid #ddd;border-radius:14px;padding:14px;font:inherit;margin:8px 0 12px;resize:vertical}button{border:0;border-radius:12px;background:#111;color:white;padding:12px 16px;font-weight:700;cursor:pointer}.trace{display:grid;gap:8px;margin-top:14px}.step{padding:10px 12px;border-radius:10px;background:#f4f4f1;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px}.kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.kpi{background:#111;color:white;padding:16px;border-radius:16px}.kpi b{font-size:24px;display:block}.muted{color:#777;font-size:13px}.decision{font-size:28px;font-weight:800;letter-spacing:-.03em;margin:8px 0}footer{margin:30px 0 10px;color:#777;font-size:13px}@media(max-width:800px){.grid{grid-template-columns:1fr}.kpis{grid-template-columns:1fr}}
+</style>
+</head>
+<body><main class="wrap">
+<div class="top"><span class="badge">Synthetic portfolio proof</span><span class="muted">No Caya data · no private APIs</span></div>
+<h1>One less click.<br>One safer automation.</h1>
+<p class="lead">A tiny Business Automation Engineer proof: a support event enters through a webhook, gets classified, enriched, policy-checked and turned into a reviewable next action — with idempotency, audit and regression tests built in.</p>
+<div class="grid">
+<section class="card">
+<label>Support request</label>
+<textarea id="msg">Urgent: our DATEV connection stopped forwarding documents this morning.</textarea>
+<button id="run">Run synthetic workflow</button>
+<div class="trace" id="trace"></div>
+</section>
+<aside class="card">
+<label>Decision</label><div class="decision" id="decision">Ready</div>
+<p id="summary">Run the workflow to inspect the trace.</p>
+<div class="kpis"><div class="kpi"><b>30/30</b><span>intent cases</span></div><div class="kpi"><b>30/30</b><span>approval boundary</span></div><div class="kpi"><b>30/30</b><span>duplicate replay</span></div></div>
+<p class="muted" style="margin-top:16px">Deterministic synthetic regression checks, not real-world model accuracy claims.</p>
+</aside>
+</div>
+<footer>Built as a focused extension of Digital Worker Factory · JavaScript · Lambda-compatible handler · Webhooks · PostgreSQL exercise · Human-in-the-loop</footer>
+</main>
+<script>
+const rules=[["integration_failure",["datev","dropbox","google drive","sftp","ftp","forward","weiterleitung","connection","verbindung"]],["document_routing",["document","dokument","mail","brief","route","routing","weiterleiten"]],["access",["login","password","passwort","zugriff","access","2fa"]],["billing",["invoice","rechnung","billing","price","preis"]]];
+document.querySelector("#run").onclick=()=>{const text=document.querySelector("#msg").value.toLowerCase();let intent="other";for(const [candidate,needles] of rules){if(needles.some(n=>text.includes(n))){intent=candidate;break}}const high=["urgent","dringend","outage","down","critical","production","security"].some(n=>text.includes(n));const steps=["webhook.received","idempotency.checked",`request.classified → ${intent}`,"customer.context_loaded","incident.context_loaded","policy.evaluated","response.prepared"];document.querySelector("#trace").innerHTML=steps.map(s=>`<div class="step">${s}</div>`).join("");document.querySelector("#decision").textContent=intent==="integration_failure"?"Draft + diagnose":"Draft + route";document.querySelector("#summary").textContent=`${high?"High":"Normal"} urgency. Prepare the next step; consequential account actions stay behind human approval.`;};
+</script></body></html>
