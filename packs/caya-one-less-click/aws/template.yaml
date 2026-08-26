@@ -1,0 +1,26 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: One Less Click synthetic Business Automation proof
+
+Resources:
+  SupportAutomationFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ../
+      Handler: lambda.handler
+      Runtime: nodejs22.x
+      Architectures:
+        - arm64
+      MemorySize: 256
+      Timeout: 10
+      Events:
+        SupportWebhook:
+          Type: Api
+          Properties:
+            Path: /support
+            Method: post
+
+Outputs:
+  SupportAutomationFunctionArn:
+    Description: ARN of the Lambda-compatible proof function after deployment
+    Value: !GetAtt SupportAutomationFunction.Arn
