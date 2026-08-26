@@ -16,8 +16,8 @@ Bevor ein echter bezahlter Kundenpilot gestartet wird:
 4. Repository lokal bereitstellen.
 5. `OPENAI_API_KEY` als lokale Umgebungsvariable oder in der gitignorierten `.env.local` konfigurieren.
 6. `start-hauspilot-ops.cmd` testen.
-7. Einen kundenseitig freigegebenen sicheren Datei-Transferkanal festlegen.
-8. Stripe-Zugriff für Rechnungsstatus und Rechnungsversand geben.
+7. Einen kundenseitig freigegebenen sicheren Datei-Transferkanal festlegen. Für V1 bleibt Upload/Download bewusst ein menschlicher Operations-Schritt; Kundendaten gehen niemals über die öffentliche Demo.
+8. Operations erhält Stripe-Zugriff, um Zahlungseingang und Rechnungsversand selbst zu bearbeiten.
 
 Diese Schritte sind **Admin-/Release-Setup, nicht pro Kunde**.
 
@@ -50,6 +50,8 @@ So muss eine nicht-technische Assistenz niemals selbst Rechtsgrundlage, AVV/Proc
 2. **eine Stammdatenliste** als CSV (`property_id,address,unit`, optional `aliases`)
 3. **eine fachlich prüfende Person**
 
+Vorlagen liegen unter `packs/hauspilot/first-customer/templates/`.
+
 Für Reparatur/Postfach kann die Beispiele-CSV sehr einfach sein:
 
 ```csv
@@ -67,7 +69,8 @@ case_id,invoice_number,amount_eur,vendor,property_reference,po_amount_eur,po_ven
 
 ### 3. Daten einlesen
 
-- Beispiele auswählen.
+- Dateien über den vereinbarten sicheren Kanal erhalten.
+- Beispiele in der Console auswählen.
 - Stammdatenliste auswählen.
 - Kundenfreigabe bestätigen.
 - Bei anonymisierten Daten: Anonymisierung bestätigen.
