@@ -28,6 +28,22 @@ function walk(value, fn, keyPath = '') {
   if (value && typeof value === 'object') return Object.entries(value).forEach(([k,v]) => walk(v, fn, keyPath ? `${keyPath}.${k}` : k));
   fn(value, keyPath);
 }
+function directIdentifierFindings(value) {
+  const findings = [];
+  const directKeys = /(?:^|\.)(tenant_name|owner_name|resident_name|contact_name|first_name|last_name|email|e_mail|phone|telephone|mobile|iban|birthdate|date_of_birth)$/i;
+  const patterns = [
+    [/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i, 'email'],
+    [/\bDE\d{20}\b/i, 'german_iban'],
+    [/(?:\+49|0049|0)[\s()/-]*\d(?:[\s()/-]*\d){7,}/, 'phone_like']
+  ];
+  walk(value, (v, key) => {
+    if (directKeys.test(key) && v != null && String(v).trim() !== '') findings.push(`${key}:direct_identifier_field`);
+    if (typeof v !== 'string') return;
+    for (const [rx,label] of patterns) if (rx.test(v)) findings.push(`${key}:${label}`);
+    if (/\b(Herr|Frau)\s+[A-ZÄÖÜ][A-Za-zÄÖÜäöüß-]{2,}\b/.test(v)) warnings.push(`possible_name_in_free_text:${key}`);
+  });
+  return [...new Set(findings)];
+}
 
 if (!errors.some(e => e.startsWith('missing_file:'))) {
   const client = readJson('client.json');
@@ -43,12 +59,29 @@ if (!errors.some(e => e.startsWith('missing_file:'))) {
 
   const gates = ['scope_confirmed','data_authorised','shadow_only_confirmed','operator_named','retention_confirmed'];
   for (const gate of gates) if (approval[gate] !== true) errors.push(`approval_gate_false:${gate}`);
-  const modes = ['synthetic','anonymised','authorised_personal_data'];
+  const modes = ['synthetic','anonymised','pseudonymised_personal_data','authorised_personal_data'];
   if (!modes.includes(approval.data_mode)) errors.push('invalid_data_mode');
-  if (approval.data_mode === 'authorised_personal_data') {
-    if (approval.privacy_review_confirmed !== true) errors.push('personal_data_requires_privacy_review');
-    if (approval.processor_terms_reviewed !== true) errors.push('personal_data_requires_processor_terms_review');
+
+  if (approval.data_mode === 'anonymised') {
+    if (approval.anonymisation_confirmed !== true) errors.push('anonymised_data_requires_anonymisation_confirmation');
+    for (const finding of directIdentifierFindings(input)) errors.push(`anonymised_mode_direct_identifier:${finding}`);
   }
+
+  if (['pseudonymised_personal_data','authorised_personal_data'].includes(approval.data_mode)) {
+    const privacyGates = [
+      'privacy_review_confirmed',
+      'processor_terms_reviewed',
+      'legal_basis_confirmed',
+      'subprocessor_review_confirmed',
+      'data_residency_decision_recorded'
+    ];
+    for (const gate of privacyGates) if (approval[gate] !== true) errors.push(`personal_data_requires_gate:${gate}`);
+    if (approval.special_category_data_present === true && approval.special_category_review_confirmed !== true) errors.push('special_category_data_requires_specific_review');
+  }
+
+  const retentionDays = Number(client.privacy?.retention_days);
+  if (!Number.isFinite(retentionDays) || retentionDays < 1) errors.push('invalid_retention_days');
+  else if (retentionDays > 14) warnings.push(`pilot_retention_above_recommended_14_days:${retentionDays}`);
 
   const cases = Array.isArray(input) ? input : input.cases;
   if (!Array.isArray(cases)) errors.push('cases_not_array');
