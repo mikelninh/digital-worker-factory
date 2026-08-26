@@ -28,7 +28,7 @@
 
 ## Wenn der Kunde weitermacht
 
-Kein neues Projekt. Derselbe Ablauf wiederholt sich:
+Kein neues Projekt und keine zweite Bedienwelt. Derselbe Ablauf wiederholt sich:
 
 `Neue Fälle → Starten → nur Ausnahmen prüfen → Ergebnis`
 
