@@ -27,6 +27,6 @@ for(const c of cases){
   const k=`${c.expected.classification} -> ${r.classification}`;confusion[k]=(confusion[k]||0)+1;
 }
 const accuracy=passed/cases.length*100;
-const result={suite:'HausPilot tenant inbox gold set',cases:cases.length,passed,failures:failures.length,accuracy_percent:Number(accuracy.toFixed(1)),ambiguous_cases:10,unknown_cases:5,confusion};
+const result={suite:'HausPilot tenant inbox gold set',cases:cases.length,passed,failures:failures.length,accuracy_percent:Number(accuracy.toFixed(1)),ambiguous_cases:10,unknown_cases:5,confusion,failure_samples:failures};
 console.log(JSON.stringify(result,null,2));
 if(cases.length!==100||accuracy<90||failures.length) process.exit(1);
