@@ -1,0 +1,82 @@
+{
+  "version": "1.0.0",
+  "pack": "hauspilot",
+  "principle": "AI prepares work; humans retain consequential authority.",
+  "default_mode": "shadow",
+  "output_contract": {
+    "required": ["case_id", "classification", "summary", "evidence", "missing_information", "proposed_action", "approval_state"],
+    "approval_states": ["shadow_only", "awaiting_human", "approved", "rejected"]
+  },
+  "templates": [
+    {
+      "id": "repair_intake",
+      "name": "Reparaturmeldung",
+      "promise": "Von einer Mieter-/Eigentuemermeldung zu einem vollstaendig vorbereiteten Fall.",
+      "triggers": ["email", "form", "manual_upload"],
+      "required_sources": ["message"],
+      "recommended_sources": ["properties", "contacts", "contractors", "case_history"],
+      "capabilities": [
+        "normalise_message",
+        "classify_issue",
+        "resolve_property",
+        "extract_required_fields",
+        "urgency_check",
+        "retrieve_object_context",
+        "identify_missing_information",
+        "draft_case_summary",
+        "draft_reply",
+        "propose_next_task"
+      ],
+      "required_evidence": ["source_message", "property_match", "urgency_basis"],
+      "approval_required": ["external_reply", "contractor_assignment", "appointment_commitment", "spend_commitment"],
+      "never_auto": ["contractor_order", "payment", "legal_commitment", "tenant_rights_decision"],
+      "evals": ["property_resolution", "urgency_recall", "missing_info_detection", "human_boundary", "grounding_guard"]
+    },
+    {
+      "id": "tenant_inbox",
+      "name": "Postfach-Copilot",
+      "promise": "Von einer eingehenden Nachricht zu Routing, Kontext und einem pruefbaren Antwortentwurf.",
+      "triggers": ["email", "manual_upload"],
+      "required_sources": ["message"],
+      "recommended_sources": ["properties", "contacts", "case_history", "faq_rules"],
+      "capabilities": [
+        "normalise_message",
+        "classify_request",
+        "resolve_sender_and_property",
+        "retrieve_context",
+        "identify_missing_information",
+        "route_case",
+        "draft_reply",
+        "propose_next_task"
+      ],
+      "required_evidence": ["source_message", "routing_basis"],
+      "approval_required": ["external_reply", "case_closure", "appointment_commitment"],
+      "never_auto": ["legal_statement", "rent_change", "payment", "contract_change"],
+      "evals": ["routing_accuracy", "property_resolution", "reply_grounding", "human_boundary"]
+    },
+    {
+      "id": "invoice_review",
+      "name": "Rechnungs-Copilot",
+      "promise": "Von Rechnung und Objektkontext zu strukturierten Pruefhinweisen und einem vorbereiteten naechsten Schritt.",
+      "triggers": ["email_attachment", "manual_upload"],
+      "required_sources": ["invoice"],
+      "recommended_sources": ["properties", "vendors", "contracts", "purchase_orders", "invoice_history"],
+      "capabilities": [
+        "extract_invoice_fields",
+        "resolve_property",
+        "resolve_vendor",
+        "duplicate_check",
+        "amount_consistency_check",
+        "contract_or_po_lookup",
+        "due_date_check",
+        "flag_anomalies",
+        "draft_review_note",
+        "propose_next_task"
+      ],
+      "required_evidence": ["source_invoice", "amount", "vendor", "property_or_cost_center"],
+      "approval_required": ["accounting_write", "payment_release", "vendor_contact"],
+      "never_auto": ["payment", "bank_detail_change", "booking_commitment"],
+      "evals": ["field_extraction", "duplicate_detection", "amount_integrity", "human_boundary", "grounding_guard"]
+    }
+  ]
+}
