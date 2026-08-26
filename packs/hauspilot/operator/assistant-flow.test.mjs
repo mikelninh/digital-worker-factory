@@ -39,7 +39,10 @@ test('finalizer requires complete review and creates customer report',()=>{
 test('operations console contract contains complete no-founder standard path',()=>{
   const source=fs.readFileSync(new URL('./ops-console.mjs',import.meta.url),'utf8');
   for(const route of ['/api/create','/api/intake','/api/run','/api/finalize','/api/closeout'])assert.match(source,new RegExp(route.replaceAll('/','\\/')));
-  for(const label of ['Zahlungseingang 1.330 €','Drei Dinge vom Kunden','Starten →','Review-Datei herunterladen','570 € Restzahlung','Kundenreport sicher gesendet','Pilotdaten jetzt gemäß Retention löschen'])assert.ok(source.includes(label),label);
+  for(const label of ['Zahlungseingang 1.330 €','Drei Dinge vom Kunden','Starten →','Review-Datei herunterladen','570 € Restzahlung','Kundenreport sicher gesendet'])assert.ok(source.includes(label),label);
+  assert.match(source,/Transferkopien/);
+  assert.match(source,/delete_pilot_data/);
+  assert.match(source,/Pilotdaten|lokale Pilotdaten/);
   assert.ok(source.includes('Sonderpreis/Sonderscope'));
   assert.ok(source.includes('OPENAI_API_KEY'));
 });
@@ -66,8 +69,9 @@ test('closeout performs application-level deletion and records proof without sec
 
 test('assistant readiness requires real-model smoke and full gate before customer one',()=>{
   const ready=fs.readFileSync(new URL('./ASSISTANT_READY.md',import.meta.url),'utf8');
-  assert.match(ready,/20-Case Smoke/);
-  assert.match(ready,/100-Case Full/);
-  assert.match(ready,/tatsächlich laufen/);
-  assert.match(ready,/nicht pro Kunde/);
+  assert.match(ready,/20-Case Smoke = KEEP/);
+  assert.match(ready,/100-Case Full = KEEP/);
+  assert.match(ready,/activate-release\.mjs/);
+  assert.match(ready,/Nicht pro Kunde|nicht pro Kunde/);
+  assert.match(ready,/Release-Proof/);
 });
