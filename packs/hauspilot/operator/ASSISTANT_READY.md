@@ -2,169 +2,152 @@
 
 ## Ziel
 
-Nach bestätigter Anzahlung kann eine nicht-technische Operations Assistenz einen **Standardpilot** ohne Founder-Intervention abarbeiten.
+Nach bestätigter Anzahlung kann eine nicht-technische Operations Assistenz einen **Standardpilot ohne Founder-Intervention** abarbeiten.
 
 Die Assistenz arbeitet nur in der **Operations Console**. Kein Terminal, kein JSON-Editieren, kein GitHub und kein Prompt Engineering im Tagesgeschäft.
 
-## Einmaliges Release-/Admin-Setup vor Kunde #1
+## Einmaliges Admin-/Release-Setup
 
-Bevor ein echter bezahlter Kundenpilot gestartet wird:
+Nicht pro Kunde:
 
-1. Der aktuelle Release muss die komplette Offline-CI bestehen.
-2. Der manuelle echte Modell-Release-Gate muss zuerst als **20-Case Smoke** und danach als **100-Case Full** tatsächlich laufen und die definierten Schwellen bestehen.
-3. Die beiden Audit-Artefakte herunterladen und einmalig aktivieren:
-   `node packs/hauspilot/operator/activate-release.mjs <smoke.json> <full.json>`.
-   Nur zwei `KEEP`-Audits mit mindestens 20 bzw. 100 vollständig abgeschlossenen Fällen erzeugen `hauspilot-release-proof.local.json`. Ohne diesen Beleg bleibt der Kundenrunner technisch gesperrt.
-4. Node.js 22+ auf dem Operations-Rechner installieren.
-5. Repository lokal bereitstellen.
-6. `OPENAI_API_KEY` als lokale Umgebungsvariable oder in der gitignorierten `.env.local` konfigurieren.
-7. `start-hauspilot-ops.cmd` testen. Der Launcher führt zuerst `admin-ready.mjs` aus und öffnet die Console nur, wenn Node, API-Key, Release-Beleg und Vorlagen vorhanden sind.
-8. Einen kundenseitig freigegebenen sicheren Datei-Transferkanal festlegen. Für V1 bleibt Upload/Download bewusst ein menschlicher Operations-Schritt; Kundendaten gehen niemals über die öffentliche Demo.
-9. Operations erhält Stripe-Zugriff, um Zahlungseingang und Rechnungsversand selbst zu bearbeiten.
+1. aktuelle Offline-CI grün
+2. echter **20-Case Smoke = KEEP**
+3. echter **100-Case Full = KEEP**
+4. beide Audit-Artefakte über `activate-release.mjs` aktivieren
+5. Node 22+, Repo, lokaler `OPENAI_API_KEY`, Release-Proof auf dem Operations-Rechner
+6. `start-hauspilot-ops.cmd` testen
+7. einen sicheren Transferkanal festlegen
+8. Operations mit den nötigen Stripe-/Datei-Zugriffen ausstatten
 
-Diese Schritte sind **Admin-/Release-Setup, nicht pro Kunde**.
+Der Kundenrunner bleibt ohne Release-Proof technisch gesperrt.
 
-## Welche Kunden laufen ohne Eskalation?
+## Standardkunde — was ist erlaubt?
 
-Der delegierte Standardpfad akzeptiert für den Pilot:
+- **ein** vereinbarter Workflow
+- **20–50** Fälle
+- synthetische oder wirklich de-identifizierte/anonymisierte historische Daten
+- ein fachlicher Reviewer
+- keine produktiven Schreib-/Ausführungsrechte
 
-- **synthetische Daten**, oder
-- **wirklich anonymisierte historische Daten** nach Kundenfreigabe und Anonymisierungscheck.
+Wenn reale Objekt-/Wohnungsbezüge Personen für den Kunden rückführbar machen könnten, wird das **nicht automatisch als anonym** behandelt.
 
-Pseudonymisierte oder personenbezogene Daten sind bewusst **kein** Operations-Standardfall:
+Pseudonymisierte/personenbezogene Daten, besondere Kategorien oder unklare Anonymisierung:
 
-**→ STOPP · Privacy/Owner entscheidet.**
+**→ STOPP · Privacy/Owner.**
 
-So muss eine nicht-technische Assistenz niemals selbst Rechtsgrundlage, AVV/Processor Terms oder Transfer-/Residency-Fragen freigeben.
+## Standardablauf
 
-## Standardkunde — komplett durch Operations
+### 1 · Zahlung + Kunde
 
-### 1. Zahlung prüfen
+- **1.330 €** Zahlungseingang in Stripe prüfen.
+- Kunde, vereinbarten Workflow, Reviewer und Operations Assistant eintragen.
+- Kunde/Pilot darf nicht doppelt angelegt werden.
 
-- In Stripe: **1.330 € eingegangen**.
-- `start-hauspilot-ops.cmd` doppelklicken.
-- Operations Console öffnet nur bei grünem Admin-Readiness-Check.
-- Kunde, Workflow, Reviewer und Operations-Namen eintragen.
-- Zahlungseingang bestätigen.
-- `Kunde starten`.
+### 2 · Genau drei Kundendinge
 
-### 2. Genau drei Dinge anfordern
-
-1. **20–50 abgeschlossene Beispiele** (`.csv` oder unser `.json`-Format)
-2. **eine Stammdatenliste** als CSV (`property_id,address,unit`, optional `aliases`)
+1. **20–50 abgeschlossene Beispiele** (`CSV` oder `JSON`)
+2. **eine Stammdatenliste** (`CSV`)
 3. **eine fachlich prüfende Person**
 
-Vorlagen liegen unter `packs/hauspilot/first-customer/templates/`.
+CSV mit Komma oder Semikolon wird unterstützt. XLSX zuerst als CSV exportieren.
 
-Für Reparatur/Postfach kann die Beispiele-CSV sehr einfach sein:
-
-```csv
-case_id,message
-1,"Heizung in der Wohnung komplett kalt"
-2,"Wann kommt die Nebenkostenabrechnung?"
-```
-
-Für Rechnungen unterstützt der Intake u. a.:
-
-```csv
-case_id,invoice_number,amount_eur,vendor,property_reference,po_amount_eur,po_vendor
-1,INV-1,950,Sanitär GmbH,P-1,900,Sanitär GmbH
-```
-
-### 3. Daten einlesen
+### 3 · Intake / Preflight
 
 - Dateien über den vereinbarten sicheren Kanal erhalten.
-- Beispiele in der Console auswählen.
-- Stammdatenliste auswählen.
 - Kundenfreigabe bestätigen.
-- Bei anonymisierten Daten: Anonymisierung bestätigen.
+- bei anonymisiertem Standardpfad: Anonymisierung/de-identification bestätigen.
 - `Prüfen`.
 
-Die Console zeigt nur:
+Die Console zeigt genau:
 
-- **STARTEN** → weiter
-- **ANFORDERN** → genau die fehlenden Daten nachfordern
-- **WARTEN** → erforderliche Freigabe abwarten
-- **STOPP** → nicht improvisieren; zuständige Person übernimmt
+- **STARTEN**
+- **ANFORDERN**
+- **WARTEN**
+- **STOPP**
 
-### 4. Pilot starten
+Mehr als 50 Fälle = Sonderscope → Sales/Founder.
 
-Bei `STARTEN` auf **Starten** klicken.
+### 4 · Start
 
-Im Hintergrund laufen automatisch:
+Bei `STARTEN` einmal klicken.
 
-`Release Lock → Preflight → Privacy Manifest → Konfiguration → echter Modelllauf → Safety Boundary → Ergebnisdatei → Review-Paket`
+Im Hintergrund:
 
-Operations muss diese Schritte nicht einzeln ausführen.
+`Release Lock → Preflight → Privacy Manifest → Konfiguration → Modelllauf → Safety Boundary → Ergebnisse → Review-Paket`
 
-### 5. Fachreview
+### 5 · Reviewer
 
-- `Review-Datei herunterladen`.
-- Über den vereinbarten sicheren Kanal an den Reviewer schicken.
-- Reviewer öffnet die HTML-Datei lokal.
-- Pro Fall nur:
+- Review-Datei sicher senden.
+- Reviewer entscheidet pro Fall nur:
   - **Richtig**
   - **Ändern**
   - **Falsch**
-- Reviewer sendet `review-decisions.json` zurück.
+- bei Ändern/Falsch wird ein kurzer Fehlergrund gewählt.
+- zurückgesendete Review-Datei einlesen.
 
-### 6. Ergebnis erzeugen
+Das System blockiert unvollständige Reviews, fremde/duplizierte Case-IDs, ungültige Entscheidungen oder fehlende Fehlergründe.
 
-In der Console:
+### 6 · Ergebnis
 
-- Review-Datei auswählen.
-- Fälle/Monat eintragen.
-- Minuten/Fall vorher eintragen.
-- Minuten/Fall mit Workflow eintragen.
-- internen Stundenwert eintragen.
-- `Ergebnis erzeugen`.
+Zeit-/ROI-Felder nur ausfüllen, wenn Baseline/Quelle **vom Kunden bestätigt oder gemeinsam gemessen** wurde.
 
-Der Report entsteht automatisch und zeigt vorne nur:
+Wenn keine belastbare Baseline existiert: leer lassen. Der Report zeigt **Noch messen** statt einer erfundenen Einsparung.
+
+Report vorne:
 
 - **Funktioniert es?**
 - **Spart es Zeit?**
 - **Ist es sicher?**
-- **WEITER / VERBESSERN / STOPPEN**
+- **WEITER / VERBESSERN / STOPPEN / WEITER MESSEN**
 
-### 7. Abschluss
+### 7 · Abschluss
 
-- Kundenreport sicher senden.
-- In Stripe die **570-€-Restrechnung** senden.
-- Zahlungseingang bestätigen.
-- Checkbox `Pilotdaten jetzt gemäß Retention löschen` bestätigen.
+- Kundenreport sicher senden
+- **570-€-Restrechnung** senden
+- Zahlung prüfen
+- temporäre Upload-/Transferkopien (z. B. Dropbox) gemäß Retention löschen und bestätigen
+- lokale Pilotdaten über die Console löschen
+- minimaler `deletion-proof.local.json` bleibt erhalten
 
-Beim vollständigen Closeout löscht die Console die Pilot-Rohdaten aus dem lokalen Workspace und erzeugt `deletion-proof.local.json` mit Dateinamen, SHA-256-Hashes und Zeitpunkt. Das ist ein **Application-level Löschbeleg**, ausdrücklich kein forensischer Secure-Wipe-Claim.
+Die Pilot-Retention beträgt standardmäßig **14 Tage ab Dateneingang**. Sie wartet nicht unbegrenzt auf Review oder Restzahlung; bei Fristablauf löscht die Operations Console die lokalen Pilot-Rohdaten fail-closed und setzt `STOPP_RETENTION`.
 
-Wenn Ergebnis = `WEITER`:
+### 8 · Monatlich nur nach ausdrücklichem Kunden-Ja
 
-- Standardangebot für denselben bewiesenen Workflow: **750 €/Monat**.
-- Bei Annahme `Standardbetrieb 750 €/Monat` aktivieren.
-- Die Console legt den wiederkehrenden Operations-Workspace **vor** der Pilotdaten-Löschung an.
+Nur wenn:
 
-## Die drei einzigen Eskalationen
+- Ergebnis = **WEITER / KEEP**
+- gleicher bewiesener Workflow
+- Standardpreis = **750 €/Monat**
+- Kunde hat **ausdrücklich angenommen**
 
-### Datenschutz-Ausnahme
+Dann darf Operations den Standardbetrieb aktivieren.
 
-Personenbezogene/pseudonymisierte Daten, besondere Kategorien oder unklare Privacy-/Processor-Fragen.
+Kein Opt-in → kein Abo.
 
-**→ STOPP. Privacy/Owner entscheidet.**
+## Nur drei Eskalationsklassen
 
-### Technikfehler
+### 1. Privacy / Legal
 
-Console/Runtime/API funktioniert nicht, unerwarteter interner Fehler oder Safety Gate rot.
+Personenbezogene/pseudonymisierte Daten, besondere Kategorien, unklare De-identification oder Datenschutz-/Processor-Fragen.
 
-**→ STOPP. Engineering entscheidet.**
+→ **STOPP · Privacy/Owner**
 
-### Kommerzielle Ausnahme
+### 2. Technik / Safety
 
-anderer Preis, anderer Scope, mehrere Workflows, neue Produktionsrechte oder Sondervertrag.
+Release Lock, API, Runtime, Console, Safety Gate oder unerwarteter interner Fehler.
 
-**→ STOPP. Sales/Founder entscheidet.**
+→ **STOPP · Engineering**
+
+### 3. Commercial / Scope
+
+>50 Fälle, mehrere Workflows, anderer Preis, Sondervertrag, neue Produktionsrechte oder anderer monatlicher Scope.
+
+→ **STOPP · Sales/Founder**
 
 ## Definition „Assistant-ready“
 
-Ein Standardkunde darf vom Zahlungseingang bis zum Closeout ohne Founder-Eingriff laufen.
+Ein normaler bezahlter Standardkunde läuft vom bestätigten Zahlungseingang bis zum Closeout **ohne Founder-Eingriff**.
 
-Der Founder ist **nicht** Teil des Standard-Workflows. Er wird nur über die drei Eskalationspfade hinzugezogen.
+Der Founder ist kein regulärer Delivery-Schritt.
 
-**Release-Regel:** Diese Aussage gilt für Produktion erst, wenn die Assistant-Flow-Tests + vollständige Offline-CI auf dem aktuellen Commit grün sind und der 20-/100-Case-Live-Modell-Gate protokolliert bestanden und über `activate-release.mjs` aktiviert wurde.
+**Release-Regel:** Diese Aussage gilt nur für einen Commit, dessen relevante Assistant-/Stakeholder-/Privacy-/Safety-Tests grün sind und dessen 20/100 Live-Release-Proof aktiviert ist.
