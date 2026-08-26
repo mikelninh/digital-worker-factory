@@ -1,0 +1,43 @@
+import fs from 'node:fs';
+import path from 'node:path';
+
+function arg(name, fallback = null) {
+  const i = process.argv.indexOf(`--${name}`);
+  return i >= 0 ? process.argv[i + 1] : fallback;
+}
+const id = arg('id');
+const company = arg('company');
+const template = arg('template', 'repair_intake');
+if (!id || !company) {
+  console.error('Usage: node packs/hauspilot/new-pilot.mjs --id <slug> --company "<name>" [--template repair_intake]');
+  process.exit(2);
+}
+if (!/^[a-z0-9][a-z0-9-]{1,48}$/.test(id)) throw new Error('id must be a lowercase slug');
+const allowed = new Set(['repair_intake','tenant_inbox','invoice_review']);
+if (!allowed.has(template)) throw new Error(`unknown template: ${template}`);
+
+const out = path.resolve('deployments', id);
+if (fs.existsSync(out)) throw new Error(`deployment already exists: ${out}`);
+fs.mkdirSync(out, { recursive: true });
+
+const client = {
+  company: { id, name: company, timezone: 'Europe/Berlin' },
+  pilot: { template, mode: 'shadow', baseline_cases: 20, success: { min_gold_accuracy_percent: 90, max_unsafe_external_actions: 0 } },
+  sources: { message: { type: 'manual_upload' }, properties: { type: 'csv', file: 'properties.csv' }, contractors: { type: 'csv', file: 'contractors.csv' } },
+  policy: { external_reply: 'human_approval', contractor_assignment: 'human_approval', appointment_commitment: 'human_approval', spend_commitment: 'blocked', payment: 'blocked', legal_commitment: 'blocked' },
+  privacy: { retention_days: 14, production_requires_customer_privacy_review: true }
+};
+const approval = {
+  data_mode: 'anonymised', scope_confirmed: false, data_authorised: false, shadow_only_confirmed: true, operator_named: false, retention_confirmed: false, privacy_review_confirmed: false, processor_terms_reviewed: false,
+  notes: 'Set gates to true only after the corresponding kickoff decision is documented.'
+};
+const measurement = { cases_per_month: null, minutes_before: null, minutes_after: null, internal_hourly_cost_eur: null, reviewed_cases: 0, accepted_without_edit: 0, accepted_after_edit: 0, rejected: 0, notes: '' };
+
+fs.writeFileSync(path.join(out,'client.json'), JSON.stringify(client,null,2));
+fs.writeFileSync(path.join(out,'pilot-approval.json'), JSON.stringify(approval,null,2));
+fs.writeFileSync(path.join(out,'cases.json'), JSON.stringify({ synthetic:false, cases:[] },null,2));
+fs.writeFileSync(path.join(out,'measurement.json'), JSON.stringify(measurement,null,2));
+fs.writeFileSync(path.join(out,'properties.csv'), 'property_id,address,unit\n');
+fs.writeFileSync(path.join(out,'contractors.csv'), 'contractor_id,name,trade,service_area\n');
+fs.writeFileSync(path.join(out,'START_HERE.md'), `# ${company} — HausPilot Pilot\n\n1. Confirm one workflow: \`${template}\`.\n2. Complete \`pilot-approval.json\`.\n3. Add 20–50 authorised/anonymised historic cases to \`cases.json\`.\n4. Add property master data to \`properties.csv\`.\n5. Run preflight:\n\n\`\`\`bash\nnode packs/hauspilot/runtime/preflight.mjs ${out}\n\`\`\`\n\n6. Configure \`OPENAI_API_KEY\` outside the repository.\n7. Run end-to-end:\n\n\`\`\`bash\nnode packs/hauspilot/run-pilot.mjs ${out}\n\`\`\`\n`);
+console.log(JSON.stringify({ ok:true, deployment:out, template }, null, 2));

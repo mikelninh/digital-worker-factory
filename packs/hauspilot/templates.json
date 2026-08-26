@@ -1,17 +1,18 @@
 {
-  "version": "1.0.0",
+  "version": "1.1.0",
   "pack": "hauspilot",
   "principle": "AI prepares work; humans retain consequential authority.",
   "default_mode": "shadow",
   "output_contract": {
     "required": ["case_id", "classification", "summary", "evidence", "missing_information", "proposed_action", "approval_state"],
-    "approval_states": ["shadow_only", "awaiting_human", "approved", "rejected"]
+    "approval_states": ["shadow_only"]
   },
   "templates": [
     {
       "id": "repair_intake",
       "name": "Reparaturmeldung",
       "promise": "Von einer Mieter-/Eigentuemermeldung zu einem vollstaendig vorbereiteten Fall.",
+      "classification_taxonomy": ["heating_failure", "hot_water_failure", "water_leak", "electrical_issue", "elevator_issue", "mold_report", "window_door_issue", "intercom_issue", "sanitary_issue", "other_repair"],
       "triggers": ["email", "form", "manual_upload"],
       "required_sources": ["message"],
       "recommended_sources": ["properties", "contacts", "contractors", "case_history"],
@@ -25,6 +26,7 @@
       "id": "tenant_inbox",
       "name": "Postfach-Copilot",
       "promise": "Von einer eingehenden Nachricht zu Routing, Kontext und einem pruefbaren Antwortentwurf.",
+      "classification_taxonomy": ["service_charge_question", "rent_question", "document_request", "appointment_request", "complaint", "repair_request", "contract_question", "general_question"],
       "triggers": ["email", "manual_upload"],
       "required_sources": ["message"],
       "recommended_sources": ["properties", "contacts", "case_history", "faq_rules"],
@@ -38,6 +40,7 @@
       "id": "invoice_review",
       "name": "Rechnungs-Copilot",
       "promise": "Von Rechnung und Objektkontext zu strukturierten Pruefhinweisen und einem vorbereiteten naechsten Schritt.",
+      "classification_taxonomy": ["invoice_ok_for_review", "duplicate_invoice", "missing_reference", "amount_mismatch", "vendor_mismatch", "due_date_issue", "other_invoice_issue"],
       "triggers": ["email_attachment", "manual_upload"],
       "required_sources": ["invoice"],
       "recommended_sources": ["properties", "vendors", "contracts", "purchase_orders", "invoice_history"],

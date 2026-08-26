@@ -16,3 +16,15 @@ jobs:
         run: node evals/run.mjs
       - name: Run HausPilot template + policy safety suite
         run: node packs/hauspilot/runtime/eval.mjs
+      - name: Run HausPilot runtime contract tests
+        run: node --test packs/hauspilot/runtime/runtime.test.mjs
+      - name: Run 30-scenario adversarial policy suite
+        run: node packs/hauspilot/runtime/adversarial-eval.mjs
+      - name: Generate 20-case first-customer demo
+        run: node packs/hauspilot/first-customer/generate-demo.mjs /tmp/hauspilot-demo
+      - name: Preflight first-customer demo
+        run: node packs/hauspilot/runtime/preflight.mjs /tmp/hauspilot-demo
+      - name: Generate first-customer demo report
+        run: |
+          node packs/hauspilot/runtime/report.mjs /tmp/hauspilot-demo/mock-results.json /tmp/hauspilot-demo/measurement.json /tmp/hauspilot-demo-report.html
+          test -s /tmp/hauspilot-demo-report.html
