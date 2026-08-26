@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { parseCsv } from '../operator/intake.mjs';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const packRoot = path.resolve(here, '..');
@@ -19,9 +20,17 @@ function readJson(name) {
   try { return JSON.parse(fs.readFileSync(path.join(pilotDir, name), 'utf8')); }
   catch (e) { errors.push(`invalid_json:${name}:${e.message}`); return {}; }
 }
+function readCsv(name) {
+  try { return parseCsv(fs.readFileSync(path.join(pilotDir, name), 'utf8')); }
+  catch (e) { errors.push(`invalid_csv:${name}:${e.message}`); return []; }
+}
 function csvHeader(name) {
-  try { return fs.readFileSync(path.join(pilotDir, name), 'utf8').split(/\r?\n/)[0].split(',').map(s => s.trim()); }
-  catch { return []; }
+  try {
+    const text=fs.readFileSync(path.join(pilotDir,name),'utf8').replace(/^\uFEFF/,'');
+    const first=text.split(/\r?\n/).find(x=>x.trim()!=='')||'';
+    const delimiter=(first.match(/;/g)||[]).length>(first.match(/,/g)||[]).length?';':',';
+    return first.split(delimiter).map(s=>s.trim().replace(/^\uFEFF/,''));
+  } catch { return []; }
 }
 function walk(value, fn, keyPath = '') {
   if (Array.isArray(value)) return value.forEach((v,i) => walk(v, fn, `${keyPath}[${i}]`));
@@ -34,13 +43,13 @@ function directIdentifierFindings(value) {
   const patterns = [
     [/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i, 'email'],
     [/\bDE\d{20}\b/i, 'german_iban'],
-    [/(?:\+49|0049|0)[\s()/-]*\d(?:[\s()/-]*\d){7,}/, 'phone_like']
+    [/(?:\+49|0049|0)[\s()/-]*\d(?:[\s()/-]*\d){7,}/, 'phone_like'],
+    [/\b(Herr|Frau)\s+[A-ZÄÖÜ][A-Za-zÄÖÜäöüß-]{2,}\b/, 'salutation_name_like']
   ];
   walk(value, (v, key) => {
     if (directKeys.test(key) && v != null && String(v).trim() !== '') findings.push(`${key}:direct_identifier_field`);
     if (typeof v !== 'string') return;
     for (const [rx,label] of patterns) if (rx.test(v)) findings.push(`${key}:${label}`);
-    if (/\b(Herr|Frau)\s+[A-ZÄÖÜ][A-Za-zÄÖÜäöüß-]{2,}\b/.test(v)) warnings.push(`possible_name_in_free_text:${key}`);
   });
   return [...new Set(findings)];
 }
@@ -61,6 +70,7 @@ if (!errors.some(e => e.startsWith('missing_file:'))) {
   for (const gate of gates) if (approval[gate] !== true) errors.push(`approval_gate_false:${gate}`);
   const modes = ['synthetic','anonymised','pseudonymised_personal_data','authorised_personal_data'];
   if (!modes.includes(approval.data_mode)) errors.push('invalid_data_mode');
+  if (approval.data_mode !== 'synthetic' && approval.reviewer_named !== true) errors.push('approval_gate_false:reviewer_named');
 
   if (approval.data_mode === 'anonymised') {
     if (approval.anonymisation_confirmed !== true) errors.push('anonymised_data_requires_anonymisation_confirmation');
@@ -87,7 +97,7 @@ if (!errors.some(e => e.startsWith('missing_file:'))) {
   if (!Array.isArray(cases)) errors.push('cases_not_array');
   else {
     if (cases.length < 20) errors.push(`too_few_cases:${cases.length}:minimum_20`);
-    if (cases.length > 50) warnings.push(`large_pilot:${cases.length}:recommended_max_50`);
+    if (cases.length > 50) errors.push(`too_many_cases:${cases.length}:standard_max_50`);
     const ids = new Set();
     for (const c of cases) {
       if (!c.id) errors.push('case_missing_id');
@@ -100,6 +110,15 @@ if (!errors.some(e => e.startsWith('missing_file:'))) {
 
   const headers = csvHeader('properties.csv');
   for (const h of ['property_id','address','unit']) if (!headers.includes(h)) errors.push(`properties_csv_missing_header:${h}`);
+  if(headers.includes('property_id')&&headers.includes('address')&&headers.includes('unit')){
+    const rows=readCsv('properties.csv');
+    const ids=new Set();
+    rows.forEach((r,i)=>{
+      const rowNo=i+2;
+      if(!String(r.property_id||'').trim()||!String(r.address||'').trim()||!String(r.unit||'').trim())errors.push(`property_row_invalid:${rowNo}`);
+      if(r.property_id){if(ids.has(r.property_id))errors.push(`duplicate_property_id:${r.property_id}`);ids.add(r.property_id);}
+    });
+  }
 
   const secretPatterns = [
     [/sk-[A-Za-z0-9_-]{12,}/, 'openai_key_like_secret'],
@@ -114,6 +133,6 @@ if (!errors.some(e => e.startsWith('missing_file:'))) {
   }
 }
 
-const result = { ok: errors.length === 0, pilot_dir: pilotDir, errors, warnings };
+const result = { ok: errors.length === 0, pilot_dir: pilotDir, errors:[...new Set(errors)], warnings:[...new Set(warnings)] };
 console.log(JSON.stringify(result, null, 2));
 if (errors.length) process.exit(1);

@@ -51,7 +51,7 @@ const client = {
   policy:{external_reply:'human_approval',contractor_assignment:'human_approval',appointment_commitment:'human_approval',spend_commitment:'blocked',payment:'blocked',legal_commitment:'blocked'},
   privacy:{pilot_data:'synthetic',retention_days:14,production_requires_customer_privacy_review:true}
 };
-const approval = {data_mode:'synthetic',scope_confirmed:true,data_authorised:true,shadow_only_confirmed:true,operator_named:true,retention_confirmed:true,privacy_review_confirmed:false,processor_terms_reviewed:false,notes:'Synthetic CI/demo dataset only.'};
+const approval = {data_mode:'synthetic',scope_confirmed:true,data_authorised:true,shadow_only_confirmed:true,operator_named:true,reviewer_named:true,retention_confirmed:true,privacy_review_confirmed:false,processor_terms_reviewed:false,notes:'Synthetic CI/demo dataset only.'};
 const measurement = {cases_per_month:220,minutes_before:14,minutes_after:6.5,internal_hourly_cost_eur:35,reviewed_cases:20,accepted_without_edit:16,accepted_after_edit:3,rejected:1,notes:'Synthetic demonstration measurement values. Do not present as customer results.'};
 const rows = cases.map(c => ({case_id:c.id,template:c.template,ok:true,gold:{passed:4,total:4,ok:true},result:{classification:c.gold.classification,property_id:c.gold.property_id,urgency:c.gold.urgency,approval_state:'shadow_only',policy:{execution_allowed:false,human_review_required:true,violations:[]}}}));
 const mockResults = {summary:{synthetic_input:true,cases:20,completed:20,errored:0,gold_checks_passed:80,gold_checks_total:80,gold_accuracy_percent:100,unsafe_executions:0,ready_for_human_review:20},rows};

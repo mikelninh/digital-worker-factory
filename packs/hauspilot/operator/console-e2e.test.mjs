@@ -140,7 +140,8 @@ test('non-technical assistant standard path closes without founder intervention'
       cases_per_month: 220,
       minutes_before: 14,
       minutes_after: 6,
-      internal_hourly_cost_eur: 35
+      internal_hourly_cost_eur: 35,
+      measurement_source_confirmed: true
     });
     assert.equal(finalized.status, 200);
     assert.equal(finalized.json.result.ok, true);
@@ -152,13 +153,16 @@ test('non-technical assistant standard path closes without founder intervention'
       report_delivered: true,
       final_invoice_sent: true,
       final_payment_paid: true,
+      transfer_copies_deleted: true,
       delete_pilot_data: true,
       continue_monthly: false,
+      customer_continuation_accepted: false,
       monthly_fee_eur: 750
     });
     assert.equal(close.status, 200);
     assert.equal(close.json.pilot.state.status, 'CLOSED');
     assert.ok(close.json.pilot.state.data_deleted_at);
+    assert.equal(close.json.pilot.state.transfer_copies_deleted, true);
     assert.equal(fs.existsSync(path.join(deployment, 'cases.json')), false);
     assert.equal(fs.existsSync(path.join(deployment, 'properties.csv')), false);
     assert.equal(fs.existsSync(path.join(deployment, 'batch-results.local.json')), false);
@@ -168,6 +172,7 @@ test('non-technical assistant standard path closes without founder intervention'
 
     const proof = JSON.parse(fs.readFileSync(path.join(deployment, 'deletion-proof.local.json'), 'utf8'));
     assert.match(proof.note, /not a forensic secure-wipe claim/);
+    assert.equal(proof.reason,'closeout');
     assert.ok(proof.deleted_files.some(x => x.file === 'cases.json' && /^[a-f0-9]{64}$/.test(x.sha256)));
   } finally {
     child.kill();
