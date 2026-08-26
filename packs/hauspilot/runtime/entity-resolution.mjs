@@ -6,14 +6,14 @@ export function normaliseGerman(value='') {
   let s=String(value).trim().toLowerCase();
   for(const [rx,to] of GERMAN_FOLDS) s=s.replace(rx,to);
   s=s
-    .replace(/str\.(?=\s|$)/g,'strasse')
+    .replace(/str\./g,'strasse')
     .replace(/straße/g,'strasse')
     .replace(/\bstr\b/g,'strasse')
-    .replace(/\bwohnung\b|\bwhg\.?\b|\bwe\b/g,'we')
-    .replace(/\bvorderhaus\b|\bvh\b/g,'vh')
-    .replace(/\bhinterhaus\b|\bhh\b/g,'hh')
-    .replace(/\bseitenfluegel\b|\bsf\b/g,'sf')
-    .replace(/[^a-z0-9@.+-]+/g,' ')
+    .replace(/\b(?:wohnung|whg|we)\b\.?/g,'we')
+    .replace(/\b(?:vorderhaus|vh)\b\.?/g,'vh')
+    .replace(/\b(?:hinterhaus|hh)\b\.?/g,'hh')
+    .replace(/\b(?:seitenfluegel|sf)\b\.?/g,'sf')
+    .replace(/[^a-z0-9@+-]+/g,' ')
     .replace(/\s+/g,' ')
     .trim();
   return s;
