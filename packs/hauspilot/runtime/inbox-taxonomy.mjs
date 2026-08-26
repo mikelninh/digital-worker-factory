@@ -1,13 +1,13 @@
 import { normaliseGerman } from './entity-resolution.mjs';
 
 const RULES=[
-  {classification:'repair_request',route:'maintenance',rx:/heizung|warmwasser|leck|wasser|strom|sicherung|schimmel|aufzug|fenster|tuer|reparatur|kaputt/},
-  {classification:'contract_question',route:'contracts',rx:/kuendig|kundig|mietvertrag|vertrag|frist|nachtrag|termination|notice/},
+  {classification:'repair_request',route:'maintenance',rx:/heizung|warmwasser|leck|wasser|strom|sicherung|schimmel|aufzug|elevator|fenster|reparatur|kaputt|broken/},
+  {classification:'contract_question',route:'contracts',rx:/\b(?:kuendig\w*|kundig\w*|mietvertrag|vertrag|frist|nachtrag|termination|terminate|notice)\b/},
   {classification:'service_charge_question',route:'billing',rx:/betriebskosten|nebenkosten|abrechnung|service charge|utility bill/},
   {classification:'rent_question',route:'rent',rx:/miethoehe|miet hoehe|miete|mieterhoeh|rent|indexmiete|staffelmiete/},
   {classification:'document_request',route:'documents',rx:/bescheinigung|dokument|kopie|protokoll|energieausweis|mietbescheinigung|document|certificate/},
-  {classification:'access_key_request',route:'access',rx:/schluessel|schlussel|transponder|chip|zugang|key|access card/},
-  {classification:'appointment_request',route:'scheduling',rx:/termin|besichtigung|zeitfenster|wann.*kommen|appointment|schedule/},
+  {classification:'access_key_request',route:'access',rx:/schluessel|schlussel|transponder|chip|zugang|\bkey\b|access card/},
+  {classification:'appointment_request',route:'scheduling',rx:/\btermin(?:e|s)?\b|besichtigung|zeitfenster|wann\s+(?:kann|koennen).*kommen|\bappointment\b|\bschedule\b/},
   {classification:'complaint',route:'complaints',rx:/laerm|larm|laut|beschwerde|nachbar|geruch|muell|mull|noise|complaint/}
 ];
 
