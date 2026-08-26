@@ -6,6 +6,19 @@ Digital Worker Factory is a reusable architecture for AI workers that can interp
 
 **[Open the live demo →](https://digital-worker-factory-hallochupi-7378s-projects.vercel.app/)** · [Portfolio](https://mikelninh.github.io/)
 
+## Commercial wedge — HausPilot
+
+The first productised commercial offer is **HausPilot: a €1,900 net, 7-day AI Operations Sprint for property managers**.
+
+The sprint deliberately starts with one repeated workflow — for example maintenance-request triage, contractor coordination or document/invoice review — and measures the before/after result. AI prepares work; consequential actions remain behind a human approval gate.
+
+- Landing page: [`site/hauspilot.html`](site/hauspilot.html)
+- Sales + delivery playbook: [`sales/PLAYBOOK.md`](sales/PLAYBOOK.md)
+- First Berlin target accounts: [`sales/TARGETS_BERLIN_2026-08-26.md`](sales/TARGETS_BERLIN_2026-08-26.md)
+- Human-supervised FCF agent system: [`agents/FCF_ENGINE.md`](agents/FCF_ENGINE.md)
+
+**Commercial north star: collected cash and measured client value, not agent count or demo complexity.**
+
 ## The contract
 
 ```text
