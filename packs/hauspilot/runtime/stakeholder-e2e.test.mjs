@@ -86,6 +86,8 @@ test('result report preserves internal verdicts but translates the visible decis
 test('operator standard path is the prepared browser console with only bounded escalations', () => {
   assert.match(operator, /start-hauspilot-ops\.cmd/);
   assert.match(operator, /Kein Terminal, kein GitHub, kein JSON-Editieren/);
+  assert.match(operator, /20-Case Live-Smoke/);
+  assert.match(operator, /100-Case Live-Gate/);
   assert.match(operator, /STARTEN.*ANFORDERN.*WARTEN.*STOPP/s);
   assert.match(operator, /Datenschutz/);
   assert.match(operator, /Technik/);
