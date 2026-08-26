@@ -19,6 +19,7 @@ export function createHandler({
   seen = new Set(),
   customerLookup = async () => ({ plan: "synthetic", integrations: [] }),
   incidentLookup = async () => [],
+  safeAction = async ({ classification }) => ({ status: "simulated", intent: classification.intent }),
   audit = async () => {}
 } = {}) {
   return async function handler(event) {
@@ -35,27 +36,42 @@ export function createHandler({
     const incidents = await incidentLookup(classification.intent);
     const policy = policyFor({ intent: classification.intent, requestedAction: payload.requested_action || "" });
 
+    const proposed_next_step = classification.intent === "integration_failure"
+      ? "Check latest successful delivery, connection state and known incidents; prepare troubleshooting reply."
+      : classification.intent === "access"
+        ? "Verify identity-safe recovery path; prepare instructions without changing credentials."
+        : classification.intent === "document_routing"
+          ? "Apply the configured internal routing/tagging rule."
+          : classification.intent === "billing"
+            ? "Prepare a billing response for review."
+            : "Route to the responsible queue and prepare a concise response draft.";
+
+    const trace = [
+      "webhook.received",
+      "idempotency.checked",
+      "request.classified",
+      "customer.context_loaded",
+      "incident.context_loaded",
+      "policy.evaluated",
+      "response.prepared"
+    ];
+
+    let execution = null;
+    if (policy.mode === "auto_execute") {
+      execution = await safeAction({ payload, classification, customer, incidents, proposed_next_step });
+      trace.push(execution?.status === "executed" ? "safe_action.executed" : "safe_action.simulated");
+    }
+
     const result = {
-      status: "prepared",
+      status: execution?.status === "executed" ? "executed" : "prepared",
       ticket_id: payload.ticket_id,
       idempotency_key: key,
       classification,
       context: { customer, matching_incidents: incidents },
-      proposed_next_step: classification.intent === "integration_failure"
-        ? "Check latest successful delivery, connection state and known incidents; prepare troubleshooting reply."
-        : classification.intent === "access"
-          ? "Verify identity-safe recovery path; prepare instructions without changing credentials."
-          : "Route to the responsible queue and prepare a concise response draft.",
+      proposed_next_step,
       policy,
-      trace: [
-        "webhook.received",
-        "idempotency.checked",
-        "request.classified",
-        "customer.context_loaded",
-        "incident.context_loaded",
-        "policy.evaluated",
-        "response.prepared"
-      ]
+      execution,
+      trace
     };
 
     await audit(result);

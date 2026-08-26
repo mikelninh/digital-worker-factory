@@ -35,6 +35,13 @@ export function policyFor({ intent, requestedAction = "" }) {
     };
   }
 
+  if (intent === "document_routing") {
+    return {
+      mode: "auto_execute",
+      reason: "Low-risk internal routing can execute automatically when the configured rule matches."
+    };
+  }
+
   if (intent === "integration_failure" || intent === "access") {
     return {
       mode: "draft_only",
@@ -44,6 +51,6 @@ export function policyFor({ intent, requestedAction = "" }) {
 
   return {
     mode: "draft_only",
-    reason: "Automation may prepare work, but external communication remains reviewable in this proof."
+    reason: "Prepare reviewable work when the proof has no explicit safe executor for this intent."
   };
 }

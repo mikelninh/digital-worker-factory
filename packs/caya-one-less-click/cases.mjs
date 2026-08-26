@@ -14,6 +14,12 @@ const templates = [
 export const cases = Array.from({ length: 30 }, (_, index) => {
   const [expected_intent, message, expected_urgency] = templates[index % templates.length];
   const requested_action = [4, 14, 24].includes(index) ? "change account settings" : "";
+  const expected_policy_mode = requested_action
+    ? "human_approval"
+    : expected_intent === "document_routing"
+      ? "auto_execute"
+      : "draft_only";
+
   return {
     id: `case-${String(index + 1).padStart(2, "0")}`,
     ticket_id: `T-${1000 + index}`,
@@ -23,6 +29,7 @@ export const cases = Array.from({ length: 30 }, (_, index) => {
     expected_intent,
     expected_urgency,
     requested_action,
-    expect_human_approval: Boolean(requested_action)
+    expected_policy_mode,
+    expect_human_approval: expected_policy_mode === "human_approval"
   };
 });
