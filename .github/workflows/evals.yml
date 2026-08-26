@@ -26,6 +26,8 @@ jobs:
         run: node packs/hauspilot/runtime/inbox-gold-eval.mjs
       - name: Run human review queue contract tests
         run: node --test packs/hauspilot/runtime/review.test.mjs
+      - name: Validate 100-case real-model release dataset
+        run: node packs/hauspilot/runtime/live-release-gate.mjs --dry-run
       - name: Generate 20-case first-customer demo
         run: node packs/hauspilot/first-customer/generate-demo.mjs /tmp/hauspilot-demo
       - name: Preflight first-customer demo
