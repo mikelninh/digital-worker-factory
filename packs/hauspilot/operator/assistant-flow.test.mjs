@@ -63,3 +63,11 @@ test('closeout performs application-level deletion and records proof without sec
   assert.match(source,/final_payment_paid===true/);
   assert.match(source,/delete_pilot_data===true/);
 });
+
+test('assistant readiness requires real-model smoke and full gate before customer one',()=>{
+  const ready=fs.readFileSync(new URL('./ASSISTANT_READY.md',import.meta.url),'utf8');
+  assert.match(ready,/20-Case Smoke/);
+  assert.match(ready,/100-Case Full/);
+  assert.match(ready,/tatsächlich laufen/);
+  assert.match(ready,/nicht pro Kunde/);
+});
