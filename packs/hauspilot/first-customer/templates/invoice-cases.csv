@@ -1,0 +1,2 @@
+case_id,invoice_number,amount_eur,vendor,property_reference,po_amount_eur,po_vendor,expected_classification
+1,INV-1001,950,Sanitär Beispiel GmbH,P-1,900,Sanitär Beispiel GmbH,
