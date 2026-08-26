@@ -32,6 +32,17 @@ jobs:
         run: node --test packs/hauspilot/runtime/stakeholder-e2e.test.mjs
       - name: Run simple next-action tests
         run: node --test packs/hauspilot/runtime/next-action.test.mjs
+      - name: Run assistant end-to-end operator tests
+        run: |
+          node --check packs/hauspilot/operator/ops-console.mjs
+          node --check packs/hauspilot/operator/review-package.mjs
+          node --test packs/hauspilot/operator/assistant-flow.test.mjs
+          test -s start-hauspilot-ops.cmd
+          test -s packs/hauspilot/operator/ASSISTANT_READY.md
+          test -s packs/hauspilot/first-customer/templates/repair-cases.csv
+          test -s packs/hauspilot/first-customer/templates/inbox-cases.csv
+          test -s packs/hauspilot/first-customer/templates/invoice-cases.csv
+          test -s packs/hauspilot/first-customer/templates/properties.csv
       - name: Validate 100-case real-model release dataset
         run: node packs/hauspilot/runtime/live-release-gate.mjs --dry-run
       - name: Generate 20-case first-customer demo
