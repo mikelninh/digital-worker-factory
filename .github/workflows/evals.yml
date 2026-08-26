@@ -36,8 +36,10 @@ jobs:
         run: |
           node --check packs/hauspilot/operator/ops-console.mjs
           node --check packs/hauspilot/operator/review-package.mjs
+          node --check packs/hauspilot/operator/activate-release.mjs
           node --test packs/hauspilot/operator/assistant-flow.test.mjs
           node --test packs/hauspilot/operator/console-e2e.test.mjs
+          node --test packs/hauspilot/operator/release-lock.test.mjs
           test -s start-hauspilot-ops.cmd
           test -s packs/hauspilot/operator/ASSISTANT_READY.md
           test -s packs/hauspilot/first-customer/templates/repair-cases.csv
