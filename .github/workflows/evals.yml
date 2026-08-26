@@ -49,6 +49,14 @@ jobs:
           test -s site/hauspilot-privacy.html
           grep -q "Erst beweisen" site/hauspilot.html
           grep -q "Datenschutz ist ein Gate" site/hauspilot-privacy.html
+      - name: Verify role-based pilot command center
+        run: |
+          test -s site/pilot-command-center.html
+          test -s packs/hauspilot/operator/PLAYBOOK.md
+          grep -q "Operations Assistant" site/pilot-command-center.html
+          grep -q "Customer package → preflight → shadow run" packs/hauspilot/operator/PLAYBOOK.md
+          grep -q "ACCEPT" site/pilot-command-center.html
+          grep -q "KEEP" site/pilot-command-center.html
       - name: Run HausPilot V1.1 five-customer regression
         run: |
           node packs/hauspilot/simulations/five-customers-v1-1.mjs /tmp/hauspilot-five-v11
