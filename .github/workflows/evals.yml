@@ -16,3 +16,40 @@ jobs:
         run: node evals/run.mjs
       - name: Run HausPilot template + policy safety suite
         run: node packs/hauspilot/runtime/eval.mjs
+      - name: Run HausPilot runtime contract tests
+        run: node --test packs/hauspilot/runtime/runtime.test.mjs
+      - name: Run 30-scenario adversarial policy suite
+        run: node packs/hauspilot/runtime/adversarial-eval.mjs
+      - name: Run 60-case entity resolution benchmark
+        run: node packs/hauspilot/runtime/entity-resolution-eval.mjs
+      - name: Run 100-case tenant inbox gold set
+        run: node packs/hauspilot/runtime/inbox-gold-eval.mjs
+      - name: Run human review queue contract tests
+        run: node --test packs/hauspilot/runtime/review.test.mjs
+      - name: Run privacy fail-closed contract tests
+        run: node --test packs/hauspilot/privacy/privacy.test.mjs
+      - name: Validate 100-case real-model release dataset
+        run: node packs/hauspilot/runtime/live-release-gate.mjs --dry-run
+      - name: Generate 20-case first-customer demo
+        run: node packs/hauspilot/first-customer/generate-demo.mjs /tmp/hauspilot-demo
+      - name: Preflight first-customer demo
+        run: node packs/hauspilot/runtime/preflight.mjs /tmp/hauspilot-demo
+      - name: Generate first-customer privacy proof
+        run: |
+          node packs/hauspilot/privacy/manifest.mjs /tmp/hauspilot-demo /tmp/hauspilot-demo/privacy-manifest.json
+          test -s /tmp/hauspilot-demo/privacy-manifest.json
+      - name: Generate first-customer demo report
+        run: |
+          node packs/hauspilot/runtime/report.mjs /tmp/hauspilot-demo/mock-results.json /tmp/hauspilot-demo/measurement.json /tmp/hauspilot-demo-report.html
+          test -s /tmp/hauspilot-demo-report.html
+      - name: Verify customer-facing explainer pages
+        run: |
+          test -s site/hauspilot.html
+          test -s site/hauspilot-onepager.html
+          test -s site/hauspilot-privacy.html
+          grep -q "Erst beweisen" site/hauspilot.html
+          grep -q "Datenschutz ist ein Gate" site/hauspilot-privacy.html
+      - name: Run HausPilot V1.1 five-customer regression
+        run: |
+          node packs/hauspilot/simulations/five-customers-v1-1.mjs /tmp/hauspilot-five-v11
+          test -s /tmp/hauspilot-five-v11/summary.json
