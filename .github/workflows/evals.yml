@@ -37,6 +37,7 @@ jobs:
           node --check packs/hauspilot/operator/ops-console.mjs
           node --check packs/hauspilot/operator/review-package.mjs
           node --check packs/hauspilot/operator/activate-release.mjs
+          node --check packs/hauspilot/operator/admin-ready.mjs
           node --test packs/hauspilot/operator/assistant-flow.test.mjs
           node --test packs/hauspilot/operator/console-e2e.test.mjs
           node --test packs/hauspilot/operator/release-lock.test.mjs
