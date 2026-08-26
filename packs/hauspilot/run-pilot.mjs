@@ -17,12 +17,14 @@ function run(args) {
 const client = path.join(pilotDir,'client.json');
 const cases = path.join(pilotDir,'cases.json');
 const measurement = path.join(pilotDir,'measurement.json');
+const privacyManifest = path.join(pilotDir,'privacy-manifest.json');
 const results = path.join(pilotDir,'batch-results.local.json');
 const report = path.join(pilotDir,'pilot-report.local.html');
 
 run(['packs/hauspilot/runtime/preflight.mjs',pilotDir]);
+run(['packs/hauspilot/privacy/manifest.mjs',pilotDir,privacyManifest]);
 run(['packs/hauspilot/compile.mjs',client]);
 run(['packs/hauspilot/runtime/batch.mjs',cases,client,results]);
 run(['packs/hauspilot/runtime/report.mjs',results,measurement,report]);
 
-console.log(`\nHausPilot complete.\nResults: ${results}\nReport:  ${report}\nNext: human review → measurement.json → rerun report → KEEP / FIX / STOP`);
+console.log(`\nHausPilot complete.\nPrivacy: ${privacyManifest}\nResults: ${results}\nReport:  ${report}\nNext: human review → measurement.json → rerun report → KEEP / FIX / STOP`);
