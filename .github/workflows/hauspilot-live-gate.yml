@@ -1,0 +1,63 @@
+name: hauspilot-live-model-gate
+
+on:
+  workflow_dispatch:
+    inputs:
+      suite:
+        description: "Run 20-case smoke or full 100-case gate"
+        required: true
+        default: "smoke"
+        type: choice
+        options:
+          - smoke
+          - full
+      model:
+        description: "OpenAI model"
+        required: true
+        default: "gpt-5.6-luna"
+        type: string
+
+jobs:
+  live-gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    env:
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      OPENAI_MODEL: ${{ inputs.model }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Require dedicated API key secret
+        shell: bash
+        run: |
+          if [ -z "$OPENAI_API_KEY" ]; then
+            echo "OPENAI_API_KEY repository secret is not configured."
+            exit 1
+          fi
+
+      - name: Validate release dataset without network calls
+        run: node packs/hauspilot/runtime/live-release-gate.mjs --dry-run
+
+      - name: Run real-model release gate
+        shell: bash
+        run: |
+          if [ "${{ inputs.suite }}" = "full" ]; then
+            LIMIT=100
+          else
+            LIMIT=20
+          fi
+          node packs/hauspilot/runtime/live-release-gate.mjs --limit=$LIMIT --out=/tmp/hauspilot-live-gate.json
+
+      - name: Upload release-gate audit
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: hauspilot-live-gate-${{ inputs.suite }}-${{ github.run_id }}
+          path: /tmp/hauspilot-live-gate.json
+          if-no-files-found: warn
+          retention-days: 14
