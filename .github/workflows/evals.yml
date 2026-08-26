@@ -1,7 +1,7 @@
 name: factory-evals
 on:
   push:
-    branches: [main, fcf/stakeholder-e2e-audit]
+    branches: [main]
   pull_request:
 
 jobs:
