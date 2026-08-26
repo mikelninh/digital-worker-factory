@@ -12,12 +12,25 @@ Die Assistenz arbeitet nur in der **Operations Console**. Kein Terminal, kein JS
 2. Repository lokal bereitstellen.
 3. `OPENAI_API_KEY` als lokale Umgebungsvariable oder in der gitignorierten `.env.local` konfigurieren.
 4. `start-hauspilot-ops.cmd` testen.
-5. Sicheren Datei-Transferkanal festlegen (z. B. kundenseitig freigegebener Upload/File Request).
+5. Einen kundenseitig freigegebenen sicheren Datei-Transferkanal festlegen.
 6. Stripe-Zugriff für Rechnungsstatus und Rechnungsversand geben.
 
 Diese Schritte sind **Admin-Setup, nicht pro Kunde**.
 
-## Standardkunde — danach komplett durch Operations
+## Welche Kunden laufen ohne Eskalation?
+
+Der delegierte Standardpfad akzeptiert für den Pilot:
+
+- **synthetische Daten**, oder
+- **wirklich anonymisierte historische Daten** nach Kundenfreigabe und Anonymisierungscheck.
+
+Pseudonymisierte oder personenbezogene Daten sind bewusst **kein** Operations-Standardfall:
+
+**→ STOPP · Privacy/Owner entscheidet.**
+
+So muss eine nicht-technische Assistenz niemals selbst Rechtsgrundlage, AVV/Processor Terms oder Transfer-/Residency-Fragen freigeben.
+
+## Standardkunde — komplett durch Operations
 
 ### 1. Zahlung prüfen
 
@@ -53,7 +66,7 @@ case_id,invoice_number,amount_eur,vendor,property_reference,po_amount_eur,po_ven
 - Beispiele auswählen.
 - Stammdatenliste auswählen.
 - Kundenfreigabe bestätigen.
-- Bei wirklich anonymisierten Daten: Anonymisierung bestätigen.
+- Bei anonymisierten Daten: Anonymisierung bestätigen.
 - `Prüfen`.
 
 Die Console zeigt nur:
@@ -61,7 +74,7 @@ Die Console zeigt nur:
 - **STARTEN** → weiter
 - **ANFORDERN** → genau die fehlenden Daten nachfordern
 - **WARTEN** → erforderliche Freigabe abwarten
-- **STOPP** → nicht improvisieren; eskalieren
+- **STOPP** → nicht improvisieren; zuständige Person übernimmt
 
 ### 4. Pilot starten
 
@@ -104,22 +117,24 @@ Der Report entsteht automatisch und zeigt vorne nur:
 
 ### 7. Abschluss
 
-- Kundenreport senden.
+- Kundenreport sicher senden.
 - In Stripe die **570-€-Restrechnung** senden.
 - Zahlungseingang bestätigen.
-- vereinbarte Löschung/Retention dokumentieren.
+- Checkbox `Pilotdaten jetzt gemäß Retention löschen` bestätigen.
+
+Beim vollständigen Closeout löscht die Console die Pilot-Rohdaten aus dem lokalen Workspace und erzeugt `deletion-proof.local.json` mit Dateinamen, SHA-256-Hashes und Zeitpunkt. Das ist ein **Application-level Löschbeleg**, ausdrücklich kein forensischer Secure-Wipe-Claim.
 
 Wenn Ergebnis = `WEITER`:
 
 - Standardangebot für denselben bewiesenen Workflow: **750 €/Monat**.
-- Bei Annahme Checkbox `Standardbetrieb 750 €/Monat` aktivieren.
-- Die Console legt den wiederkehrenden Operations-Workspace an.
+- Bei Annahme `Standardbetrieb 750 €/Monat` aktivieren.
+- Die Console legt den wiederkehrenden Operations-Workspace **vor** der Pilotdaten-Löschung an.
 
 ## Die drei einzigen Eskalationen
 
 ### Datenschutz-Ausnahme
 
-Personenbezogene/pseudonymisierte Daten ohne vollständige dokumentierte Gates, besondere Kategorien oder unklare Rechts-/Processor-Fragen.
+Personenbezogene/pseudonymisierte Daten, besondere Kategorien oder unklare Privacy-/Processor-Fragen.
 
 **→ STOPP. Privacy/Owner entscheidet.**
 
