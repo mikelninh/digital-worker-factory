@@ -162,3 +162,5 @@ anderer Preis, anderer Scope, mehrere Workflows, neue Produktionsrechte oder Son
 Ein Standardkunde darf vom Zahlungseingang bis zum Closeout ohne Founder-Eingriff laufen.
 
 Der Founder ist **nicht** Teil des Standard-Workflows. Er wird nur über die drei Eskalationspfade hinzugezogen.
+
+**Release-Regel:** Diese Aussage gilt für Produktion erst, wenn die Assistant-Flow-Tests + vollständige Offline-CI auf dem aktuellen Commit grün sind und der 20-/100-Case-Live-Modell-Gate protokolliert bestanden wurde.
