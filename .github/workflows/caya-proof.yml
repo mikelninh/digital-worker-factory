@@ -9,13 +9,42 @@ on:
     branches: [main]
     paths:
       - "packs/caya-one-less-click/**"
+      - ".github/workflows/caya-proof.yml"
 
 jobs:
   eval:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: caya_proof
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d caya_proof"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/caya_proof
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - run: node packs/caya-one-less-click/run-evals.mjs
+      - name: Deterministic workflow regression
+        run: node packs/caya-one-less-click/run-evals.mjs
+      - name: Real HTTP end-to-end regression
+        run: node packs/caya-one-less-click/run-http-e2e.mjs
+      - name: Ensure PostgreSQL client
+        run: |
+          if ! command -v psql >/dev/null 2>&1; then
+            sudo apt-get update
+            sudo apt-get install -y postgresql-client
+          fi
+          psql --version
+      - name: Real PostgreSQL execution proof
+        run: bash packs/caya-one-less-click/run-postgres-e2e.sh
