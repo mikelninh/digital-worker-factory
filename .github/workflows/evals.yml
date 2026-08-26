@@ -57,6 +57,15 @@ jobs:
           grep -q "Customer package → preflight → shadow run" packs/hauspilot/operator/PLAYBOOK.md
           grep -q "ACCEPT" site/pilot-command-center.html
           grep -q "KEEP" site/pilot-command-center.html
+      - name: Verify managed operations retainer flow
+        run: |
+          test -s site/retainer-command-center.html
+          test -s packs/hauspilot/operator/RETAINER_PLAYBOOK.md
+          grep -q "Managed AI Operations" site/retainer-command-center.html
+          grep -q "ACTIVE_MANAGED_OPS" packs/hauspilot/operator/RETAINER_PLAYBOOK.md
+          grep -q "STOP / escalation rules" packs/hauspilot/operator/RETAINER_PLAYBOOK.md
+          grep -q "Operations Assistant" site/retainer-command-center.html
+          grep -q "ACCEPT" site/retainer-command-center.html
       - name: Run HausPilot V1.1 five-customer regression
         run: |
           node packs/hauspilot/simulations/five-customers-v1-1.mjs /tmp/hauspilot-five-v11
