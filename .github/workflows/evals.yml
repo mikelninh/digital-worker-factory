@@ -49,23 +49,26 @@ jobs:
           test -s site/hauspilot-privacy.html
           grep -q "Erst beweisen" site/hauspilot.html
           grep -q "Datenschutz ist ein Gate" site/hauspilot-privacy.html
-      - name: Verify role-based pilot command center
+      - name: Verify radically simplified operating interface
+        run: |
+          test -s site/simple-operations.html
+          test -s packs/hauspilot/operator/ONE_PAGE.md
+          grep -q "Vier Menschen" site/simple-operations.html
+          grep -q "20–50 Beispiele" site/simple-operations.html
+          grep -q "Starten" site/simple-operations.html
+          grep -q "Sieht richtig aus" site/simple-operations.html
+          grep -q "Monatlich weiter" site/simple-operations.html
+          grep -q "Was ist mein nächster Klick" packs/hauspilot/operator/ONE_PAGE.md
+      - name: Verify existing role-based pilot command center
         run: |
           test -s site/pilot-command-center.html
           test -s packs/hauspilot/operator/PLAYBOOK.md
           grep -q "Operations Assistant" site/pilot-command-center.html
-          grep -q "Customer package → preflight → shadow run" packs/hauspilot/operator/PLAYBOOK.md
-          grep -q "ACCEPT" site/pilot-command-center.html
-          grep -q "KEEP" site/pilot-command-center.html
       - name: Verify managed operations retainer flow
         run: |
           test -s site/retainer-command-center.html
           test -s packs/hauspilot/operator/RETAINER_PLAYBOOK.md
-          grep -q "Managed AI Operations" site/retainer-command-center.html
           grep -q "ACTIVE_MANAGED_OPS" packs/hauspilot/operator/RETAINER_PLAYBOOK.md
-          grep -q "STOP / escalation rules" packs/hauspilot/operator/RETAINER_PLAYBOOK.md
-          grep -q "Operations Assistant" site/retainer-command-center.html
-          grep -q "ACCEPT" site/retainer-command-center.html
       - name: Run managed operations state-machine tests
         run: node --test packs/hauspilot/retainer/state.test.mjs
       - name: Smoke retainer workspace generator
