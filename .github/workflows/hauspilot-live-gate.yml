@@ -1,6 +1,9 @@
 name: hauspilot-live-model-gate
 
 on:
+  push:
+    branches:
+      - fcf/hauspilot-v1-1-quality-loop
   workflow_dispatch:
     inputs:
       suite:
@@ -25,7 +28,8 @@ jobs:
       contents: read
     env:
       OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-      OPENAI_MODEL: ${{ inputs.model }}
+      OPENAI_MODEL: ${{ inputs.model || 'gpt-5.6-luna' }}
+      LIVE_SUITE: ${{ inputs.suite || 'smoke' }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -46,7 +50,7 @@ jobs:
       - name: Run real-model release gate
         shell: bash
         run: |
-          if [ "${{ inputs.suite }}" = "full" ]; then
+          if [ "$LIVE_SUITE" = "full" ]; then
             LIMIT=100
           else
             LIMIT=20
@@ -57,7 +61,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: hauspilot-live-gate-${{ inputs.suite }}-${{ github.run_id }}
+          name: hauspilot-live-gate-${{ env.LIVE_SUITE }}-${{ github.run_id }}
           path: /tmp/hauspilot-live-gate.json
           if-no-files-found: warn
           retention-days: 14
