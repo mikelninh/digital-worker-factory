@@ -21,6 +21,7 @@ function makePilot({dataMode='synthetic', approvalExtra={}, message='Weserstraß
     data_authorised:true,
     shadow_only_confirmed:true,
     operator_named:true,
+    reviewer_named:true,
     retention_confirmed:true,
     anonymisation_confirmed:false,
     privacy_review_confirmed:false,
@@ -53,6 +54,13 @@ test('anonymised mode blocks obvious direct identifier and requires confirmation
   const r=preflight(dir);
   assert.notEqual(r.status,0);
   assert.match(r.stdout,/anonymised_mode_direct_identifier/);
+});
+
+test('anonymised mode blocks salutation plus likely personal name',()=>{
+  const dir=makePilot({dataMode:'anonymised',approvalExtra:{anonymisation_confirmed:true},message:'Frau Müller meldet: Heizung kalt.'});
+  const r=preflight(dir);
+  assert.notEqual(r.status,0);
+  assert.match(r.stdout,/salutation_name_like/);
 });
 
 test('personal/pseudonymised data fail closed until all extra gates are documented',()=>{
