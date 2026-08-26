@@ -1,4 +1,5 @@
 import { enforceShadowPolicy } from './policy.mjs';
+import { applyUrgencyFloor } from './urgency-policy.mjs';
 
 export const OUTPUT_SCHEMA = {
   type: 'object',
@@ -69,6 +70,7 @@ export async function runShadow({ caseData, template, clientConfig = {}, fetchIm
     'Never claim that an external action was executed.',
     'The environment is shadow-only. Every result must have approval_state=shadow_only.',
     'classification MUST be one of classification_taxonomy in the workflow template. If uncertain, use the explicit unknown/ambiguous class when available.',
+    'urgency is a preliminary assessment. A deterministic operational policy may raise it after your output; never downplay clearly complete outages or safety signals.',
     `Workflow template: ${JSON.stringify(template)}`,
     `Client policy: ${JSON.stringify(clientConfig.policy || {})}`
   ].join('\n');
@@ -95,5 +97,17 @@ export async function runShadow({ caseData, template, clientConfig = {}, fetchIm
   parsed.template_id = template.id;
   parsed.approval_state = 'shadow_only';
 
-  return { ...enforceShadowPolicy(parsed, template, clientConfig.policy || {}), runtime: { model, latency_ms: Date.now() - started, stored_by_openai_request: false } };
+  const urgency = applyUrgencyFloor(parsed, caseData, template);
+  const governed = enforceShadowPolicy(urgency.result, template, clientConfig.policy || {});
+  return {
+    ...governed,
+    runtime: {
+      model,
+      latency_ms: Date.now() - started,
+      stored_by_openai_request: false,
+      model_urgency: urgency.model_urgency,
+      urgency_floor: urgency.floor,
+      urgency_floor_applied: urgency.changed
+    }
+  };
 }
