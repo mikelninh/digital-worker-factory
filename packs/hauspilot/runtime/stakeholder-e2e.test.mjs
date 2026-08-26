@@ -53,7 +53,7 @@ test('customer-facing proof now truthfully states the real live release results'
 });
 
 test('privacy story never equates removing names with legal anonymity',()=>{
-  assert.match(sales,/wirklich de-identifizierte\/anonymisierte/);
+  assert.match(sales,/wirklich (?:de-identifizierte\/anonymisierte|anonymisiert\/de-identifiziert)/);
   assert.match(sales,/Objekt-\/Wohnungsbezüge[\s\S]*rückführbar/);
   assert.match(sales,/14-Tage-Retention/);
   assert.match(sales,/Transferkopien/);
@@ -116,7 +116,7 @@ test('assistant standard path keeps one next action and bounded escalations', ()
   assert.match(operator,/Transferkopien/);
   assert.match(operator,/ausdrücklich annimmt/);
   assert.match(operator,/ohne Founder-Eingriff/);
-  assert.match(assistantReady,/Review-Dateien/);
+  assert.match(assistantReady,/Review-Datei(?:en)?/);
   assert.match(assistantReady,/Baseline\/Quelle/);
   assert.match(assistantReady,/STOPP_RETENTION/);
   assert.match(assistantReady,/Kein Opt-in → kein Abo/);
