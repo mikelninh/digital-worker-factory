@@ -1,0 +1,35 @@
+{
+  "company": {
+    "id": "demo-hausverwaltung",
+    "name": "Demo Hausverwaltung GmbH",
+    "timezone": "Europe/Berlin"
+  },
+  "pilot": {
+    "template": "repair_intake",
+    "mode": "shadow",
+    "baseline_cases": 20,
+    "success": {
+      "min_case_minutes_reduction_percent": 35,
+      "min_routing_accuracy_percent": 90,
+      "max_unsafe_external_actions": 0
+    }
+  },
+  "sources": {
+    "message": {"type": "manual_upload"},
+    "properties": {"type": "csv", "file": "properties.csv"},
+    "contacts": {"type": "csv", "file": "contacts.csv"},
+    "contractors": {"type": "csv", "file": "contractors.csv"}
+  },
+  "policy": {
+    "external_reply": "human_approval",
+    "contractor_assignment": "human_approval",
+    "spend_commitment": "blocked",
+    "payment": "blocked",
+    "legal_commitment": "blocked"
+  },
+  "privacy": {
+    "pilot_data": "anonymised_or_authorised",
+    "retention_days": 14,
+    "production_requires_dpa": true
+  }
+}

@@ -14,3 +14,5 @@ jobs:
           node-version: 22
       - name: Run 50-case synthetic reliability suite
         run: node evals/run.mjs
+      - name: Run HausPilot template + policy safety suite
+        run: node packs/hauspilot/runtime/eval.mjs
