@@ -21,6 +21,13 @@ export const OUTPUT_SCHEMA = {
   additionalProperties: false
 };
 
+export function buildOutputSchema(template){
+  const schema=JSON.parse(JSON.stringify(OUTPUT_SCHEMA));
+  const taxonomy=Array.isArray(template?.classification_taxonomy)?template.classification_taxonomy.filter(Boolean):[];
+  if(taxonomy.length) schema.properties.classification={type:'string',enum:taxonomy};
+  return schema;
+}
+
 function extractOutputText(response) {
   for (const item of response?.output || []) {
     for (const content of item?.content || []) {
@@ -34,6 +41,14 @@ function extractOutputText(response) {
 function cleanCase(caseData) {
   const { gold, human_review, ...withoutEvalData } = caseData || {};
   return withoutEvalData;
+}
+
+function validateParsed(parsed,template){
+  const taxonomy=template?.classification_taxonomy||[];
+  if(taxonomy.length&&!taxonomy.includes(parsed?.classification)) throw new Error(`Model classification outside template taxonomy: ${parsed?.classification}`);
+  if(parsed?.approval_state!=='shadow_only') throw new Error('Model approval_state must be shadow_only');
+  if(!Array.isArray(parsed?.evidence)||!Array.isArray(parsed?.missing_information)||!Array.isArray(parsed?.flags)) throw new Error('Model output missing required arrays');
+  const c=Number(parsed?.confidence);if(!Number.isFinite(c)||c<0||c>1) throw new Error('Model confidence outside 0..1');
 }
 
 export async function runShadow({ caseData, template, clientConfig = {}, fetchImpl = fetch }) {
@@ -53,6 +68,7 @@ export async function runShadow({ caseData, template, clientConfig = {}, fetchIm
     'Evidence must identify which supplied source supports each material claim.',
     'Never claim that an external action was executed.',
     'The environment is shadow-only. Every result must have approval_state=shadow_only.',
+    'classification MUST be one of classification_taxonomy in the workflow template. If uncertain, use the explicit unknown/ambiguous class when available.',
     `Workflow template: ${JSON.stringify(template)}`,
     `Client policy: ${JSON.stringify(clientConfig.policy || {})}`
   ].join('\n');
@@ -65,7 +81,7 @@ export async function runShadow({ caseData, template, clientConfig = {}, fetchIm
       model,
       store: false,
       input: [{ role: 'system', content: system }, { role: 'user', content: JSON.stringify(payloadForModel) }],
-      text: { format: { type: 'json_schema', name: 'hauspilot_shadow_result', strict: true, schema: OUTPUT_SCHEMA } },
+      text: { format: { type: 'json_schema', name: 'hauspilot_shadow_result', strict: true, schema: buildOutputSchema(template) } },
       max_output_tokens: 1200
     })
   });
@@ -74,6 +90,7 @@ export async function runShadow({ caseData, template, clientConfig = {}, fetchIm
   if (!apiResponse.ok) throw new Error(data?.error?.message || `OpenAI request failed with ${apiResponse.status}`);
 
   const parsed = JSON.parse(extractOutputText(data));
+  validateParsed(parsed,template);
   parsed.case_id = caseData.id;
   parsed.template_id = template.id;
   parsed.approval_state = 'shadow_only';
