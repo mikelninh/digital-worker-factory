@@ -20,6 +20,12 @@ jobs:
         run: node --test packs/hauspilot/runtime/runtime.test.mjs
       - name: Run 30-scenario adversarial policy suite
         run: node packs/hauspilot/runtime/adversarial-eval.mjs
+      - name: Run 60-case entity resolution benchmark
+        run: node packs/hauspilot/runtime/entity-resolution-eval.mjs
+      - name: Run 100-case tenant inbox gold set
+        run: node packs/hauspilot/runtime/inbox-gold-eval.mjs
+      - name: Run human review queue contract tests
+        run: node --test packs/hauspilot/runtime/review.test.mjs
       - name: Generate 20-case first-customer demo
         run: node packs/hauspilot/first-customer/generate-demo.mjs /tmp/hauspilot-demo
       - name: Preflight first-customer demo
@@ -28,7 +34,7 @@ jobs:
         run: |
           node packs/hauspilot/runtime/report.mjs /tmp/hauspilot-demo/mock-results.json /tmp/hauspilot-demo/measurement.json /tmp/hauspilot-demo-report.html
           test -s /tmp/hauspilot-demo-report.html
-      - name: Simulate 5 customers end-to-end
+      - name: Run HausPilot V1.1 five-customer regression
         run: |
-          node packs/hauspilot/simulations/five-customers.mjs /tmp/hauspilot-five
-          test -s /tmp/hauspilot-five/five-customer-summary.json
+          node packs/hauspilot/simulations/five-customers-v1-1.mjs /tmp/hauspilot-five-v11
+          test -s /tmp/hauspilot-five-v11/summary.json
