@@ -1,9 +1,6 @@
 name: hauspilot-live-model-gate
 
 on:
-  push:
-    branches:
-      - fcf/hauspilot-v1-1-quality-loop
   workflow_dispatch:
     inputs:
       suite:
