@@ -18,6 +18,8 @@ jobs:
         run: node packs/hauspilot/runtime/eval.mjs
       - name: Run HausPilot runtime contract tests
         run: node --test packs/hauspilot/runtime/runtime.test.mjs
+      - name: Run shared capability gateway contracts
+        run: node --test core/agent-gateway.test.mjs
       - name: Run 30-scenario adversarial policy suite
         run: node packs/hauspilot/runtime/adversarial-eval.mjs
       - name: Run 60-case entity resolution benchmark
