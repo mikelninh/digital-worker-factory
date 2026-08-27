@@ -71,9 +71,12 @@ jobs:
           test -s site/hauspilot.html
           test -s site/hauspilot-onepager.html
           test -s site/hauspilot-privacy.html
+          test -s site/agent-capabilities.html
           grep -q "Ein Prozess" site/hauspilot.html
           grep -q "100/100" site/hauspilot.html
           grep -q "Datenschutz ist ein Gate" site/hauspilot-privacy.html
+          grep -q "Build capabilities agents can be trusted to use" site/agent-capabilities.html
+          grep -q "Blocked before network" site/agent-capabilities.html
       - name: Verify radically simplified operating interface
         run: |
           test -s site/simple-operations.html
