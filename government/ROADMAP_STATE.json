@@ -3,11 +3,32 @@
   "updated": "2026-08-28",
   "northStar": "Become the standard trust rail agents call automatically.",
   "operatingLoop": ["connect", "harden", "prove", "distribute"],
+  "currentSprint": {
+    "name": "Trusted Events + OCN Guard + Distribution + Evidence Flywheel",
+    "week1": {
+      "status": "built_in_ci",
+      "scope": ["trust.preflight.v1", "evidence.verify.v1", "freshness.verify.v1", "authority.check.v1", "entity.resolve.org.v1"],
+      "pricingUsd": {"trust.preflight.v1":"0.005","evidence.verify.v1":"0.003","freshness.verify.v1":"0.001","authority.check.v1":"0.002","entity.resolve.org.v1":"0.01"}
+    },
+    "week2": {
+      "status": "built_in_ci",
+      "scope": ["OCN Guard", "tool executor wrapper", "guarded fetch", "preflight block/review/allow", "postflight evidence and Judge hooks"]
+    },
+    "week3": {
+      "status": "distribution_ready_hosting_pending",
+      "scope": ["x402 Bazaar discovery", "Agentic.Market launch recipe", "AWS AgentCore recipe", "Cloudflare edge recipe", "paid MCP buyer bridge", "MCP Registry templates"]
+    },
+    "week4": {
+      "status": "built_in_ci",
+      "scope": ["privacy-safe trust-event telemetry", "outcome labels", "aggregate metrics", "feedback endpoint", "usage budgets"]
+    },
+    "externalUnlock": "Deploy exact green head to public HTTPS, complete external x402 calls, verify discovery/indexing, then promote M2/M3 only with evidence."
+  },
   "milestones": [
     {"id":"M0","name":"First machine payment proof","status":"achieved"},
     {"id":"M1","name":"OpenCapabilities network defined","status":"achieved"},
-    {"id":"M2","name":"Public trust rail live","status":"next"},
-    {"id":"M3","name":"First horizontal trust capability live","status":"next"},
+    {"id":"M2","name":"Public trust rail live","status":"in_progress"},
+    {"id":"M3","name":"First horizontal trust capability live","status":"in_progress"},
     {"id":"M4","name":"First external agent user","status":"planned"},
     {"id":"M5","name":"First government/public-IT buyer conversation","status":"planned"},
     {"id":"M6","name":"First paid institutional pilot","status":"planned"},
