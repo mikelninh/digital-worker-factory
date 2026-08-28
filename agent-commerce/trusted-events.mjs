@@ -1,11 +1,14 @@
 import crypto from 'node:crypto'
 
+import { paymentIntentPreflight } from './payment-intent.mjs'
+
 export const TRUSTED_EVENT_OFFERS = Object.freeze({
   'trust.preflight.v1': Object.freeze({ priceUsd: '0.005', description: 'Deterministic preflight over evidence, freshness, authority and risk before a consequential agent action.' }),
   'evidence.verify.v1': Object.freeze({ priceUsd: '0.003', description: 'Verify evidence coverage, provenance shape and claim binding without asserting source truth.' }),
   'freshness.verify.v1': Object.freeze({ priceUsd: '0.001', description: 'Check whether time-sensitive evidence satisfies an explicit freshness policy.' }),
   'authority.check.v1': Object.freeze({ priceUsd: '0.002', description: 'Check whether an explicit grant covers a requested capability, scope and action.' }),
   'entity.resolve.org.v1': Object.freeze({ priceUsd: '0.01', description: 'Resolve an organisation candidate using bounded identifiers and return match evidence or ambiguity.' }),
+  'payment.intent.preflight.v1': Object.freeze({ priceUsd: '0.005', description: 'Verify that a proposed payment remains bound to the supplied merchant, beneficiary, amount, currency, mandate/approval and replay constraints. Never executes payment.' }),
 })
 
 const URL_RE = /^https:\/\/[^\s]+$/i
@@ -287,6 +290,7 @@ export function executeTrustedEvent(id, input, options = {}) {
     case 'freshness.verify.v1': return verifyFreshness(input, options)
     case 'authority.check.v1': return checkAuthority(input)
     case 'entity.resolve.org.v1': return resolveOrganisation(input)
+    case 'payment.intent.preflight.v1': return paymentIntentPreflight(input, options)
     default: throw new Error('trusted_event_not_found')
   }
 }
