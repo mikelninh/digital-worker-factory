@@ -108,7 +108,11 @@ FinishExecution ==
                     amountMatches, currencyMatches, intentFresh, replayDetected,
                     mandateCovered, humanApproved, paid >>
 
-Next == VerifyGood \/ VerifyBlock \/ Authorize \/ NeedsReview \/ HumanApprove \/ StartExecution \/ FinishExecution
+TerminalStutter ==
+    /\ phase \in {"blocked", "executed"}
+    /\ UNCHANGED vars
+
+Next == VerifyGood \/ VerifyBlock \/ Authorize \/ NeedsReview \/ HumanApprove \/ StartExecution \/ FinishExecution \/ TerminalStutter
 
 Spec == Init /\ [][Next]_vars
 
