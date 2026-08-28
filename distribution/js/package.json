@@ -1,0 +1,23 @@
+{
+  "name": "@mikelninh/ocn",
+  "version": "0.1.0",
+  "description": "Wrap agent tools with paid Open Capability Network trust preflight and verification.",
+  "type": "module",
+  "license": "MIT",
+  "engines": {"node": ">=22"},
+  "exports": {".": "./index.mjs"},
+  "scripts": {
+    "check": "node --check index.mjs",
+    "test": "node --test index.test.mjs"
+  },
+  "dependencies": {
+    "@x402/evm": "2.23.0",
+    "@x402/fetch": "2.23.0",
+    "viem": "2.48.11"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mikelninh/digital-worker-factory.git",
+    "directory": "distribution/js"
+  }
+}
