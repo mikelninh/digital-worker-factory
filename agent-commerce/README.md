@@ -57,7 +57,7 @@ npm run check
 
 The test payment mode is an explicit test double. It is refused unless `allowMock: true` is passed by the test harness.
 
-## Base Sepolia x402 smoke
+## Base Sepolia x402 seller smoke
 
 Create/control an EVM receiving address, then:
 
@@ -76,9 +76,69 @@ The server uses the public x402 test facilitator by default:
 https://x402.org/facilitator
 ```
 
-An unpaid valid request should return the real x402 `402 Payment Required` response. A compatible funded Base Sepolia buyer can then settle and retry automatically.
+An unpaid valid request should return the real x402 `402 Payment Required` response.
 
 Do **not** put a private key in this repository or in browser code. The seller only needs a receiving address for this RC0 server.
+
+## Autonomous buyer smoke
+
+The buyer harness performs the full `request → 402 → sign → retry → settlement → result` flow using the official x402 fetch client.
+
+Safety defaults:
+
+- Base Sepolia only;
+- Circle Base Sepolia USDC only (`0x036CbD53842c5426634e7929541eC2318f3dCF7e`);
+- `exact` payment scheme only;
+- default spend ceiling **20,000 atomic USDC = $0.02**;
+- remote seller must use HTTPS;
+- the $0.01 RC0 endpoint therefore has 2× headroom but an unexpected larger charge is rejected before signing;
+- no mainnet buyer scheme is registered.
+
+Fund a dedicated **testnet-only** buyer wallet with Base Sepolia USDC, then keep its key outside Git:
+
+```bash
+cd agent-commerce
+npm install
+BUYER_EVM_KEY=0xYOUR_TESTNET_PRIVATE_KEY \
+AGENT_COMMERCE_URL=https://YOUR_HOSTED_RC0 \
+npm run smoke:buyer
+```
+
+For a local seller:
+
+```bash
+BUYER_EVM_KEY=0xYOUR_TESTNET_PRIVATE_KEY \
+AGENT_COMMERCE_URL=http://127.0.0.1:4021 \
+npm run smoke:buyer
+```
+
+Optional tighter/larger testnet ceiling, expressed in 6-decimal USDC atomic units:
+
+```bash
+MAX_PAYMENT_USDC_ATOMIC=15000 npm run smoke:buyer
+```
+
+RC0 refuses a buyer ceiling above `1000000` ($1) even if configured. That is a test-harness guard, not a future product limit.
+
+A successful smoke prints:
+
+- buyer address;
+- paid endpoint;
+- HTTP status;
+- end-to-end latency;
+- decoded `PAYMENT-RESPONSE` settlement data when present;
+- our service receipt;
+- bounded triage result.
+
+## Portable container
+
+Build the exact production server artifact from the repository root:
+
+```bash
+docker build -f agent-commerce/Dockerfile -t agent-commerce-rc0 .
+```
+
+The image contains the seller runtime only. Buyer-only signing dependencies are dev dependencies and are omitted from the production image.
 
 ## Mainnet lock
 
