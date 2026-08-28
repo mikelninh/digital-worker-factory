@@ -1,3 +1,5 @@
+import { resolve } from 'node:path'
+import { pathToFileURL } from 'node:url'
 import express from 'express'
 import { paymentMiddleware } from '@x402/express'
 import { HTTPFacilitatorClient, x402ResourceServer } from '@x402/core/server'
@@ -28,6 +30,10 @@ export const TRIAGE_OFFER = Object.freeze({
   evidenceReturned: true,
   tests: 'adversarial-contract-suite',
 })
+
+function isDirectRun(metaUrl = import.meta.url, argv1 = process.argv[1]) {
+  return Boolean(argv1) && metaUrl === pathToFileURL(resolve(argv1)).href
+}
 
 function assertReceiverAddress(payTo) {
   if (!/^0x[a-fA-F0-9]{40}$/.test(payTo ?? '')) throw new Error('PAY_TO_must_be_an_EVM_address')
@@ -127,8 +133,6 @@ export function createApp({
     res.json({ schema: 'agent-commerce.catalog/1', capabilities: [descriptor] })
   })
 
-  // Fail before payment for malformed/oversized payloads or requests that the policy
-  // would never allow. A payment never upgrades the caller's role or authority.
   app.use('/v1/triage', (req, res, next) => {
     if (req.method !== 'POST') return next()
     try {
@@ -186,4 +190,4 @@ export function startServer(options = {}) {
   })
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) startServer()
+if (isDirectRun()) startServer()
