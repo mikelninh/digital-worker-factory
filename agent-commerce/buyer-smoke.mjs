@@ -1,3 +1,5 @@
+import { resolve } from 'node:path'
+import { pathToFileURL } from 'node:url'
 import { wrapFetchWithPaymentFromConfig, decodePaymentResponseHeader } from '@x402/fetch'
 import { ExactEvmScheme } from '@x402/evm'
 import { privateKeyToAccount } from 'viem/accounts'
@@ -9,6 +11,10 @@ export const DEFAULT_MAX_PAYMENT_ATOMIC = 20_000n // $0.02 USDC (6 decimals)
 
 function normalizeAddress(value) {
   return String(value ?? '').toLowerCase()
+}
+
+function isDirectRun(metaUrl = import.meta.url, argv1 = process.argv[1]) {
+  return Boolean(argv1) && metaUrl === pathToFileURL(resolve(argv1)).href
 }
 
 export function selectSafePaymentRequirement(_version, accepts, {
@@ -112,7 +118,7 @@ async function main() {
   console.log(JSON.stringify(result, null, 2))
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (isDirectRun()) {
   main().catch((error) => {
     console.error(error instanceof Error ? error.message : String(error))
     if (error?.details) console.error(JSON.stringify(error.details, null, 2))
