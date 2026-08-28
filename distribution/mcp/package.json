@@ -11,6 +11,10 @@
   "engines": {
     "node": ">=22"
   },
+  "scripts": {
+    "check": "node --check index.mjs",
+    "test": "node --test index.test.mjs"
+  },
   "dependencies": {
     "@modelcontextprotocol/server": "2.0.0",
     "@x402/evm": "2.23.0",
