@@ -84,6 +84,7 @@ export function idempotencyMiddleware({
         return res.status(409).json({ error: 'idempotency_request_in_progress', requestId: res.locals.requestId ?? null })
       }
       res.locals.idempotency = state
+      res.locals.idempotencyStore = store
       return next()
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error)
@@ -95,10 +96,10 @@ export function idempotencyMiddleware({
 
 export function completeIdempotency(res, { status = 200, body }) {
   const state = res.locals.idempotency
-  if (state?.status === 'started') res.app.locals.idempotencyStore?.complete(state.storeKey, { status, body })
+  if (state?.status === 'started') res.locals.idempotencyStore?.complete(state.storeKey, { status, body })
 }
 
 export function failIdempotency(res) {
   const state = res.locals.idempotency
-  if (state?.status === 'started') res.app.locals.idempotencyStore?.fail(state.storeKey)
+  if (state?.status === 'started') res.locals.idempotencyStore?.fail(state.storeKey)
 }
