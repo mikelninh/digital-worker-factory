@@ -16,8 +16,9 @@ function normalizeAddress(value) {
   return String(value ?? '').toLowerCase()
 }
 
-export function isDirectRun(metaUrl = import.meta.url, argv1 = process.argv[1]) {
-  return Boolean(argv1) && metaUrl === pathToFileURL(resolve(argv1)).href
+export function isDirectRun(metaUrl = import.meta.url, argv1) {
+  const candidate = arguments.length < 2 ? process.argv[1] : argv1
+  return Boolean(candidate) && metaUrl === pathToFileURL(resolve(candidate)).href
 }
 
 export function readBridgeConfig(env = process.env) {
