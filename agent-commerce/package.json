@@ -8,10 +8,11 @@
   },
   "scripts": {
     "start": "node server.mjs",
+    "start:network": "node network-server.mjs",
     "setup:buyer": "node setup-buyer-wallet.mjs",
     "smoke:buyer": "node --env-file=.env.buyer buyer-smoke.mjs",
-    "test": "node --test commerce-core.test.mjs open-capabilities.test.mjs capability-adapter.test.mjs request-context.test.mjs idempotency.test.mjs server.test.mjs setup-buyer-wallet.test.mjs buyer-smoke.test.mjs",
-    "check": "node --check commerce-core.mjs && node --check open-capabilities.mjs && node --check capability-adapter.mjs && node --check request-context.mjs && node --check idempotency.mjs && node --check usage-budget.mjs && node --check triage-capability.mjs && node --check server.mjs && node --check setup-buyer-wallet.mjs && node --check buyer-smoke.mjs"
+    "test": "node --test commerce-core.test.mjs open-capabilities.test.mjs capability-adapter.test.mjs request-context.test.mjs idempotency.test.mjs network-server.test.mjs server.test.mjs setup-buyer-wallet.test.mjs buyer-smoke.test.mjs",
+    "check": "node --check commerce-core.mjs && node --check open-capabilities.mjs && node --check capability-adapter.mjs && node --check request-context.mjs && node --check idempotency.mjs && node --check usage-budget.mjs && node --check triage-capability.mjs && node --check server.mjs && node --check network-server.mjs && node --check setup-buyer-wallet.mjs && node --check buyer-smoke.mjs"
   },
   "dependencies": {
     "@x402/core": "2.23.0",
