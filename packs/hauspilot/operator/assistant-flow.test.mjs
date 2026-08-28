@@ -39,10 +39,13 @@ test('finalizer requires complete review and creates customer report',()=>{
 test('operations console contract contains complete no-founder standard path',()=>{
   const source=fs.readFileSync(new URL('./ops-console.mjs',import.meta.url),'utf8');
   for(const route of ['/api/create','/api/intake','/api/run','/api/finalize','/api/closeout'])assert.match(source,new RegExp(route.replaceAll('/','\\/')));
-  for(const label of ['Zahlungseingang 1.330 €','Drei Dinge vom Kunden','Starten →','Review-Datei herunterladen','570 € Restzahlung','Kundenreport sicher gesendet'])assert.ok(source.includes(label),label);
+  for(const label of ['Proof Week · 990 € Zahlungseingang geprüft','Drei Dinge vom Kunden','Starten →','Review-Datei herunterladen','Proof Week bereits bezahlt · 990 €','Kundenreport sicher gesendet','Mara für 1.500 €/Monat aktivieren'])assert.ok(source.includes(label),label);
+  assert.match(source,/PROOF_WEEK_EUR=990/);
+  assert.match(source,/MONTHLY_EUR=1500/);
+  assert.match(source,/MONTH_ONE_CREDIT_EUR=990/);
   assert.match(source,/Transferkopien/);
   assert.match(source,/delete_pilot_data/);
-  assert.match(source,/Pilotdaten|lokale Pilotdaten/);
+  assert.match(source,/Proof-Daten|lokale Proof-Daten/);
   assert.ok(source.includes('Sonderpreis/Sonderscope'));
   assert.ok(source.includes('OPENAI_API_KEY'));
 });
@@ -63,6 +66,7 @@ test('closeout performs application-level deletion and records proof without sec
   assert.match(source,/fs\.rmSync/);
   assert.match(source,/not a forensic secure-wipe claim/);
   assert.match(source,/report_delivered===true/);
+  assert.match(source,/monthlyCommercialReady/);
   assert.match(source,/final_payment_paid===true/);
   assert.match(source,/delete_pilot_data===true/);
 });
