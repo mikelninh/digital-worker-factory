@@ -15,13 +15,13 @@ services:
       - key: NODE_ENV
         value: production
       - key: PAY_TO
-        value: 0x82dfA57a7CAfE1056fDc97595A472Cf68AABEB75
+        value: "0x82dfA57a7CAfE1056fDc97595A472Cf68AABEB75"
       - key: PAYMENTS_MODE
         value: x402
       - key: X402_NETWORK
-        value: eip155:84532
+        value: "eip155:84532"
       - key: X402_FACILITATOR_URL
-        value: https://x402.org/facilitator
+        value: "https://x402.org/facilitator"
       - key: OCN_USAGE_LIMIT_PER_MINUTE
         value: "600"
       - key: OCN_PUBLIC_BASE_URL
