@@ -33,10 +33,33 @@ jobs:
         run: npm run check
       - name: Safety contract tests
         run: npm test
+
+  js-guard-sdk:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: distribution/js
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Fresh install
+        run: npm install --ignore-scripts --no-audit --no-fund
+      - name: Syntax check
+        run: npm run check
+      - name: Safety contract tests
+        run: npm test
+
+  secret-guard:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
       - name: Verify no buyer key committed
-        working-directory: .
         run: |
-          if git grep -nE 'OCN_BUYER_EVM_KEY=0x[a-fA-F0-9]{64}' -- ':!distribution/mcp/index.test.mjs'; then
-            echo 'A buyer private key appears to be committed.' >&2
+          if git grep -nE 'OCN_BUYER_EVM_KEY=0x[a-fA-F0-9]{64}'; then
+            echo 'An OCN buyer private key appears to be committed.' >&2
             exit 1
           fi
