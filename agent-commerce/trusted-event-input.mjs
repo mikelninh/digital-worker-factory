@@ -40,6 +40,16 @@ export function prevalidateTrustedEventInput(capabilityId, input) {
       if (!Array.isArray(input.candidates) || input.candidates.length < 1 || input.candidates.length > 25) invalid('entity_candidates_invalid')
       break
     }
+    case 'payment.intent.preflight.v1': {
+      if (!isObject(input.intent)) invalid('payment_intent_required')
+      if (!isObject(input.request)) invalid('payment_request_required')
+      if (!isObject(input.merchant)) invalid('payment_merchant_required')
+      if (input.mandate !== undefined && !isObject(input.mandate)) invalid('payment_mandate_invalid')
+      for (const field of ['intentId', 'merchantId', 'beneficiary', 'amount', 'currency']) if (input.intent[field] === undefined) invalid(`intent_${field}_required`)
+      for (const field of ['merchantId', 'beneficiary', 'amount', 'currency']) if (input.request[field] === undefined) invalid(`request_${field}_required`)
+      if (input.merchant.id === undefined) invalid('merchant_id_required')
+      break
+    }
     default: invalid('trusted_event_not_found')
   }
   return input
