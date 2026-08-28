@@ -1,4 +1,6 @@
 #!/usr/bin/env node
+import { resolve } from 'node:path'
+import { pathToFileURL } from 'node:url'
 import { McpServer } from '@modelcontextprotocol/server'
 import { serveStdio } from '@modelcontextprotocol/server/stdio'
 import { wrapFetchWithPaymentFromConfig } from '@x402/fetch'
@@ -6,27 +8,41 @@ import { ExactEvmScheme } from '@x402/evm'
 import { privateKeyToAccount } from 'viem/accounts'
 import * as z from 'zod/v4'
 
-const BASE_SEPOLIA = 'eip155:84532'
-const BASE_SEPOLIA_USDC = '0x036CbD53842c5426634e7929541eC2318f3dCF7e'
-const DEFAULT_MAX_PAYMENT_ATOMIC = 20_000n
+export const BASE_SEPOLIA = 'eip155:84532'
+export const BASE_SEPOLIA_USDC = '0x036CbD53842c5426634e7929541eC2318f3dCF7e'
+export const DEFAULT_MAX_PAYMENT_ATOMIC = 20_000n
 
 function normalizeAddress(value) {
   return String(value ?? '').toLowerCase()
 }
 
-function config(env = process.env) {
+export function isDirectRun(metaUrl = import.meta.url, argv1 = process.argv[1]) {
+  return Boolean(argv1) && metaUrl === pathToFileURL(resolve(argv1)).href
+}
+
+export function readBridgeConfig(env = process.env) {
   const privateKey = env.OCN_BUYER_EVM_KEY
   if (!/^0x[a-fA-F0-9]{64}$/.test(privateKey ?? '')) throw new Error('OCN_BUYER_EVM_KEY_invalid')
-  const baseUrl = new URL(env.OCN_BASE_URL ?? '')
+  let baseUrl
+  try {
+    baseUrl = new URL(env.OCN_BASE_URL ?? '')
+  } catch {
+    throw new Error('OCN_BASE_URL_invalid')
+  }
   const local = ['127.0.0.1', 'localhost', '::1'].includes(baseUrl.hostname)
   if (!local && baseUrl.protocol !== 'https:') throw new Error('OCN_BASE_URL_requires_https')
   if ((env.OCN_NETWORK ?? BASE_SEPOLIA) !== BASE_SEPOLIA) throw new Error('ocn_mcp_v0_1_is_base_sepolia_only')
-  const maxPaymentAtomic = env.OCN_MAX_PAYMENT_USDC_ATOMIC ? BigInt(env.OCN_MAX_PAYMENT_USDC_ATOMIC) : DEFAULT_MAX_PAYMENT_ATOMIC
+  let maxPaymentAtomic
+  try {
+    maxPaymentAtomic = env.OCN_MAX_PAYMENT_USDC_ATOMIC ? BigInt(env.OCN_MAX_PAYMENT_USDC_ATOMIC) : DEFAULT_MAX_PAYMENT_ATOMIC
+  } catch {
+    throw new Error('OCN_MAX_PAYMENT_USDC_ATOMIC_invalid')
+  }
   if (maxPaymentAtomic <= 0n || maxPaymentAtomic > 1_000_000n) throw new Error('OCN_MAX_PAYMENT_USDC_ATOMIC_invalid')
   return { privateKey, baseUrl: baseUrl.toString().replace(/\/$/, ''), maxPaymentAtomic }
 }
 
-function selectSafePaymentRequirement(_version, accepts, maxPaymentAtomic) {
+export function selectSafePaymentRequirement(_version, accepts, maxPaymentAtomic = DEFAULT_MAX_PAYMENT_ATOMIC) {
   const candidates = (Array.isArray(accepts) ? accepts : [])
     .filter((item) => item?.scheme === 'exact' && item?.network === BASE_SEPOLIA)
     .filter((item) => normalizeAddress(item?.asset) === normalizeAddress(BASE_SEPOLIA_USDC))
@@ -39,17 +55,17 @@ function selectSafePaymentRequirement(_version, accepts, maxPaymentAtomic) {
   return selected
 }
 
-function createPaidFetch(env = process.env) {
-  const c = config(env)
+export function createPaidFetch({ env = process.env, fetchImpl = fetch } = {}) {
+  const c = readBridgeConfig(env)
   const account = privateKeyToAccount(c.privateKey)
-  const paidFetch = wrapFetchWithPaymentFromConfig(fetch, {
+  const paidFetch = wrapFetchWithPaymentFromConfig(fetchImpl, {
     schemes: [{ network: BASE_SEPOLIA, client: new ExactEvmScheme(account) }],
     paymentRequirementsSelector: (version, accepts) => selectSafePaymentRequirement(version, accepts, c.maxPaymentAtomic),
   })
   return { c, paidFetch, account }
 }
 
-async function callJson(fetchImpl, url, body) {
+export async function callJson(fetchImpl, url, body) {
   const response = await fetchImpl(url, {
     method: 'POST',
     headers: { 'content-type': 'application/json', 'x-agent-id': 'ocn-mcp-bridge' },
@@ -64,15 +80,15 @@ function textResult(value) {
   return { content: [{ type: 'text', text: JSON.stringify(value, null, 2) }] }
 }
 
-function buildServer() {
-  const { c, paidFetch, account } = createPaidFetch()
+export function buildServer({ env = process.env, fetchImpl = fetch } = {}) {
+  const { c, paidFetch, account } = createPaidFetch({ env, fetchImpl })
   const server = new McpServer({ name: 'open-capability-network', version: '0.1.0' })
 
   server.registerTool('ocn_list_trusted_events', {
     description: 'List OCN trusted events, prices and trust boundaries. This discovery call is free.',
     inputSchema: z.object({}),
   }, async () => {
-    const response = await fetch(`${c.baseUrl}/.well-known/trusted-events.json`)
+    const response = await fetchImpl(`${c.baseUrl}/.well-known/trusted-events.json`)
     const body = await response.json().catch(() => ({}))
     if (!response.ok) throw new Error(`ocn_catalog_http_${response.status}`)
     return textResult({ buyerAddress: account.address, ...body })
@@ -121,4 +137,4 @@ function buildServer() {
   return server
 }
 
-serveStdio(buildServer)
+if (isDirectRun()) serveStdio(() => buildServer())
