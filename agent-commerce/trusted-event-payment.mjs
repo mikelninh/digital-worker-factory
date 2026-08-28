@@ -12,6 +12,7 @@ export const TRUSTED_EVENT_ROUTES = Object.freeze({
   'POST /v1/freshness/verify': 'freshness.verify.v1',
   'POST /v1/authority/check': 'authority.check.v1',
   'POST /v1/entity/resolve': 'entity.resolve.org.v1',
+  'POST /v1/payment/intent/preflight': 'payment.intent.preflight.v1',
 })
 
 const DISCOVERY = Object.freeze({
@@ -56,6 +57,25 @@ const DISCOVERY = Object.freeze({
     inputSchema: {
       properties: { query: { type: 'object' }, candidates: { type: 'array' } },
       required: ['query', 'candidates'],
+    },
+  },
+  'payment.intent.preflight.v1': {
+    input: {
+      intent: { intentId: 'intent-1', merchantId: 'merchant-7', beneficiary: 'wallet-abc', amount: '10.00', currency: 'USD', validUntil: '2026-08-29T01:00:00Z' },
+      request: { merchantId: 'merchant-7', beneficiary: 'wallet-abc', amount: '10.00', currency: 'USD' },
+      merchant: { id: 'merchant-7', verified: true },
+      humanApproval: true,
+    },
+    inputSchema: {
+      properties: {
+        intent: { type: 'object' },
+        request: { type: 'object' },
+        merchant: { type: 'object' },
+        mandate: { type: 'object' },
+        humanApproval: { type: 'boolean' },
+        replayDetected: { type: 'boolean' },
+      },
+      required: ['intent', 'request', 'merchant'],
     },
   },
 })
