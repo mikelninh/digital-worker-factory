@@ -10,6 +10,7 @@ import { CapabilityRegistry, RISK_LEVELS } from '../core/capability-registry.mjs
 import { evaluateCapabilityPolicy } from '../core/policy-gate.mjs'
 import { BASE_MAINNET, BASE_SEPOLIA, makeServiceReceipt, publicCapabilityDescriptor } from './commerce-core.mjs'
 import { buildOpenCapabilitiesCatalog, OPEN_CAPABILITIES } from './open-capabilities.mjs'
+import { requestContextMiddleware } from './request-context.mjs'
 import { triageCase, validateTriageInput } from './triage-capability.mjs'
 
 export const TRIAGE_CAPABILITY_ID = 'hauspilot.triage.v1'
@@ -69,6 +70,7 @@ function mockPaymentGate({ allowMock }) {
         price: TRIAGE_OFFER.priceUsd,
         asset: TRIAGE_OFFER.asset,
         network: TRIAGE_OFFER.network,
+        requestId: res.locals.requestId ?? null,
       })
     }
     res.locals.payment = { settlementRef: `mock:${req.get('x-test-payment-id') ?? 'settled'}` }
@@ -117,6 +119,7 @@ export function createApp({
   const { registry, gateway } = createRuntime()
   const app = express()
   app.disable('x-powered-by')
+  app.use(requestContextMiddleware)
   app.use(express.json({ limit: '16kb' }))
 
   app.get('/health', (_req, res) => {
@@ -128,22 +131,23 @@ export function createApp({
       mainnetEnabled: network === BASE_MAINNET,
       capabilities: [TRIAGE_CAPABILITY_ID],
       openCapabilities: OPEN_CAPABILITIES.length,
+      requestId: res.locals.requestId,
     })
   })
 
   app.get('/.well-known/agent-capabilities.json', (_req, res) => {
-    res.json({ schema: 'agent-commerce.catalog/1', capabilities: [descriptor] })
+    res.json({ schema: 'agent-commerce.catalog/1', capabilities: [descriptor], requestId: res.locals.requestId })
   })
 
   app.get('/.well-known/open-capabilities.json', (_req, res) => {
     res.set('cache-control', 'public, max-age=60, stale-while-revalidate=300')
-    res.json(buildOpenCapabilitiesCatalog())
+    res.json({ ...buildOpenCapabilitiesCatalog(), requestId: res.locals.requestId })
   })
 
   app.get('/v1/capabilities/:id', (req, res) => {
     const capability = OPEN_CAPABILITIES.find((item) => item.id === req.params.id)
-    if (!capability) return res.status(404).json({ error: 'capability_not_found' })
-    return res.json({ schema: 'open-capabilities.detail/1', capability })
+    if (!capability) return res.status(404).json({ error: 'capability_not_found', requestId: res.locals.requestId })
+    return res.json({ schema: 'open-capabilities.detail/1', capability, requestId: res.locals.requestId })
   })
 
   app.use('/v1/triage', (req, res, next) => {
@@ -152,11 +156,16 @@ export function createApp({
       validateTriageInput(req.body)
       const actor = { id: req.get('x-agent-id')?.slice(0, 100) || 'external-agent', role: 'external_agent' }
       const policy = evaluateCapabilityPolicy({ registry, actor, capabilityId: TRIAGE_CAPABILITY_ID, mode: 'execute' })
-      if (!policy.allowed || !policy.executionAllowed) return res.status(403).json({ error: 'policy_blocked', policy })
+      if (!policy.allowed || !policy.executionAllowed) {
+        return res.status(403).json({ error: 'policy_blocked', policy, requestId: res.locals.requestId })
+      }
       res.locals.actor = actor
       return next()
     } catch (error) {
-      return res.status(400).json({ error: error instanceof Error ? error.message : String(error) })
+      return res.status(400).json({
+        error: error instanceof Error ? error.message : String(error),
+        requestId: res.locals.requestId,
+      })
     }
   })
 
@@ -169,11 +178,14 @@ export function createApp({
   app.post('/v1/triage', async (req, res) => {
     const actor = res.locals.actor ?? { id: 'external-agent', role: 'external_agent' }
     const result = await gateway.invoke({ actor, capabilityId: TRIAGE_CAPABILITY_ID, input: req.body })
-    if (!result.ok) return res.status(403).json({ error: 'capability_blocked', result })
+    if (!result.ok) {
+      return res.status(403).json({ error: 'capability_blocked', result, requestId: res.locals.requestId })
+    }
 
     const receipt = makeServiceReceipt({
       descriptor,
       request: req.body,
+      requestId: res.locals.requestId,
       traceId: result.traceId,
       output: result.output,
       payment: res.locals.payment ?? { settlementRef: null },
@@ -181,6 +193,7 @@ export function createApp({
 
     return res.json({
       ok: true,
+      requestId: res.locals.requestId,
       capability: descriptor,
       result: result.output,
       receipt,
@@ -189,7 +202,7 @@ export function createApp({
 
   app.use((error, _req, res, _next) => {
     const message = error instanceof Error ? error.message : String(error)
-    res.status(500).json({ error: 'internal_error', message })
+    res.status(500).json({ error: 'internal_error', message, requestId: res.locals.requestId ?? null })
   })
 
   return app
