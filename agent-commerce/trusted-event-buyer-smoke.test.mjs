@@ -1,7 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 
-import { isDirectRun, validateTrustedBuyerConfig } from './trusted-event-buyer-smoke.mjs'
+import { isDirectRun, TRUST_EVENT_SMOKES, validateTrustedBuyerConfig } from './trusted-event-buyer-smoke.mjs'
 
 const TEST_KEY = `0x${'11'.repeat(32)}`
 
@@ -22,6 +22,25 @@ test('trusted buyer smoke keeps per-call spend and repeat count bounded', () => 
   assert.equal(config.repeats, 20)
   assert.throws(() => validateTrustedBuyerConfig({ BUYER_EVM_KEY: TEST_KEY, OCN_BASE_URL: 'https://ocn.example', OCN_SMOKE_REPEATS: '21' }), /OCN_SMOKE_REPEATS_invalid/)
   assert.throws(() => validateTrustedBuyerConfig({ BUYER_EVM_KEY: TEST_KEY, OCN_BASE_URL: 'https://ocn.example', MAX_PAYMENT_USDC_ATOMIC: '1000001' }), /buyer_spend_cap_invalid/)
+})
+
+test('trusted buyer smoke supports freshness and payment-intent targets only', () => {
+  assert.equal(validateTrustedBuyerConfig({ BUYER_EVM_KEY: TEST_KEY, OCN_BASE_URL: 'https://ocn.example' }).event, 'freshness')
+  assert.equal(validateTrustedBuyerConfig({ BUYER_EVM_KEY: TEST_KEY, OCN_BASE_URL: 'https://ocn.example', OCN_SMOKE_EVENT: 'payment-intent' }).event, 'payment-intent')
+  assert.equal(TRUST_EVENT_SMOKES['payment-intent'].capabilityId, 'payment.intent.preflight.v1')
+  assert.throws(() => validateTrustedBuyerConfig({ BUYER_EVM_KEY: TEST_KEY, OCN_BASE_URL: 'https://ocn.example', OCN_SMOKE_EVENT: 'unknown' }), /OCN_SMOKE_EVENT_invalid/)
+})
+
+test('payment-intent smoke body is exact, time-bounded and approval-observed', () => {
+  const now = Date.parse('2026-08-29T00:00:00Z')
+  const body = TRUST_EVENT_SMOKES['payment-intent'].body(now)
+  assert.equal(body.intent.merchantId, body.request.merchantId)
+  assert.equal(body.intent.beneficiary, body.request.beneficiary)
+  assert.equal(body.intent.amount, body.request.amount)
+  assert.equal(body.intent.currency, body.request.currency)
+  assert.equal(body.merchant.verified, true)
+  assert.equal(body.humanApproval, true)
+  assert.equal(Date.parse(body.intent.validUntil), now + 3_600_000)
 })
 
 test('trusted buyer smoke can reuse existing AGENT_COMMERCE_URL config', () => {
