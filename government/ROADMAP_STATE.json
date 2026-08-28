@@ -1,0 +1,19 @@
+{
+  "schema": "ocn.roadmap-state/1",
+  "updated": "2026-08-28",
+  "northStar": "Become the standard trust rail agents call automatically.",
+  "operatingLoop": ["connect", "harden", "prove", "distribute"],
+  "milestones": [
+    {"id":"M0","name":"First machine payment proof","status":"achieved"},
+    {"id":"M1","name":"OpenCapabilities network defined","status":"achieved"},
+    {"id":"M2","name":"Public trust rail live","status":"next"},
+    {"id":"M3","name":"First horizontal trust capability live","status":"next"},
+    {"id":"M4","name":"First external agent user","status":"planned"},
+    {"id":"M5","name":"First government/public-IT buyer conversation","status":"planned"},
+    {"id":"M6","name":"First paid institutional pilot","status":"planned"},
+    {"id":"M7","name":"First repeat deployment","status":"planned"},
+    {"id":"M8","name":"First measured scale proof","status":"planned"},
+    {"id":"M9","name":"Sovereign/customer-controlled deployment validated","status":"planned"},
+    {"id":"M10","name":"Network business proof","status":"planned"}
+  ]
+}
