@@ -66,21 +66,28 @@ jobs:
           test -s /tmp/hauspilot-demo-report.html
           grep -q "Drei Antworten" /tmp/hauspilot-demo-report.html
           grep -q "Technische Details & Audit öffnen" /tmp/hauspilot-demo-report.html
-      - name: Verify customer-facing explainer pages
+      - name: Verify launch sales and onboarding surfaces
         run: |
           test -s site/hauspilot.html
+          test -s site/hauspilot-try.html
           test -s site/hauspilot-setup.html
           test -s site/hauspilot-onepager.html
           test -s site/hauspilot-privacy.html
           test -s site/agent-capabilities.html
-          grep -q "Ein Prozess" site/hauspilot.html
-          grep -q "100/100" site/hauspilot.html
+          grep -q "Hire Mara" site/hauspilot.html
+          grep -q "€0 Demo" site/hauspilot.html
+          grep -q "€990" site/hauspilot.html
+          grep -q "€1.500" site/hauspilot.html
           grep -q "Nichts installieren" site/hauspilot.html
-          grep -q "Sie öffnen nur einen Startlink" site/hauspilot.html
-          grep -q "Kein Download" site/hauspilot-setup.html
-          grep -q "Im ersten Test: nichts nach außen" site/hauspilot-setup.html
+          grep -q "€0 · keine Kreditkarte" site/hauspilot-try.html
+          grep -q "vollständig im Browser" site/hauspilot-try.html
+          grep -q "Proof Week · €990 netto" site/hauspilot-setup.html
+          grep -q "Im Proof: nichts nach außen" site/hauspilot-setup.html
           ! grep -q "client.json" site/hauspilot-setup.html
+          ! grep -q "OPENAI_API_KEY" site/hauspilot-setup.html
+          grep -q '"source": "/try"' site/vercel.json
           grep -q '"source": "/start"' site/vercel.json
+          grep -q '"source": "/employee"' site/vercel.json
           grep -q "Datenschutz ist ein Gate" site/hauspilot-privacy.html
           grep -q "Build capabilities agents can be trusted to use" site/agent-capabilities.html
           grep -q "Blocked before network" site/agent-capabilities.html
@@ -94,6 +101,8 @@ jobs:
           grep -q "Richtig" site/simple-operations.html
           grep -q "ausdrücklich" site/simple-operations.html
           grep -q "Was ist mein nächster Klick" packs/hauspilot/operator/ONE_PAGE.md
+          grep -q "€990" packs/hauspilot/operator/ONE_PAGE.md
+          grep -q "€1.500/Monat" packs/hauspilot/operator/ONE_PAGE.md
       - name: Verify existing role-based pilot command center
         run: |
           test -s site/pilot-command-center.html
@@ -116,9 +125,10 @@ jobs:
           grep -q "Mara is working" site/hauspilot-digital-employee.html
           grep -q "Self-service setup" site/hauspilot-digital-employee.html
           grep -q "Autonomy is earned from evidence" site/hauspilot-digital-employee.html
-      - name: Smoke retainer workspace generator
+          grep -q "€1.500 / Monat" site/hauspilot-digital-employee.html
+      - name: Smoke standard monthly workspace generator
         run: |
-          node packs/hauspilot/retainer/new-retainer.mjs --id ci-demo --customer "CI Demo GmbH" --reviewer "Reviewer" --operator "Ops" --workflow repair_intake --fee 750
+          node packs/hauspilot/retainer/new-retainer.mjs --id ci-demo --customer "CI Demo GmbH" --reviewer "Reviewer" --operator "Ops" --workflow repair_intake --fee 1500
           test -s retainers/ci-demo/retainer.json
           test -s retainers/ci-demo/cycles/$(date +%Y-%m)/cycle.json
           grep -q "ACTIVE_MANAGED_OPS" retainers/ci-demo/retainer.json
