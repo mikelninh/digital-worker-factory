@@ -1,0 +1,26 @@
+FROM node:22-alpine
+
+WORKDIR /app
+
+COPY agent-commerce/package.json ./agent-commerce/package.json
+WORKDIR /app/agent-commerce
+RUN npm install --omit=dev --ignore-scripts --no-audit --no-fund
+
+WORKDIR /app
+COPY core ./core
+COPY agent-commerce ./agent-commerce
+
+WORKDIR /app/agent-commerce
+ENV NODE_ENV=production
+ENV PORT=4021
+ENV PAYMENTS_MODE=x402
+ENV X402_NETWORK=eip155:84532
+EXPOSE 4021
+
+RUN chown -R node:node /app
+USER node
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+  CMD wget -qO- http://127.0.0.1:4021/v1/network/health >/dev/null || exit 1
+
+CMD ["node", "network-server.mjs"]
