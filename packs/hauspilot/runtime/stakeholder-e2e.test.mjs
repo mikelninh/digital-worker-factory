@@ -67,11 +67,14 @@ test('customer-facing proof stays truthful and separates release proof from cust
 
 test('privacy truth remains available without cluttering the simple onboarding',()=>{
   assert.match(sales,/href="hauspilot-privacy\.html"/);
-  assert.match(privacy,/wirklich (?:de-identifizierte\/anonymisierte|anonymisiert\/de-identifiziert)/);
-  assert.match(privacy,/Objekt-\/Wohnungsbezüge[\s\S]*rückführbar/);
-  assert.match(privacy,/14-Tage-Retention/);
-  assert.match(privacy,/Transferkopien/);
-  assert.match(privacy,/kein falscher „Secure Wipe“-Claim/);
+  assert.match(privacy,/Wirklich anonymisiert/i);
+  assert.match(privacy,/Pseudonymisierung schützt, beendet aber die Personenbeziehbarkeit nicht automatisch/);
+  assert.match(privacy,/Kein Live-Postfach für V1/);
+  assert.match(privacy,/"retention_days": 14/);
+  assert.match(privacy,/ZDR/);
+  assert.match(privacy,/EU-only/);
+  assert.match(privacy,/DSGVO-konform/);
+  assert.match(privacy,/ersetzt keine kundenspezifische rechtliche Prüfung/);
 });
 
 test('60-second one-pager matches the canonical flow and current live proof', () => {
