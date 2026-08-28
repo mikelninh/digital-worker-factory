@@ -10,7 +10,7 @@ import { createBuyerWallet, isDirectRun } from './setup-buyer-wallet.mjs'
 
 test('portable entrypoint detection recognizes the current module path', () => {
   assert.equal(isDirectRun(import.meta.url, fileURLToPath(import.meta.url)), true)
-  assert.equal(isDirectRun(import.meta.url, undefined), false)
+  assert.equal(isDirectRun(import.meta.url, null), false)
 })
 
 test('setup creates a valid local testnet buyer file and returns only its public address', async () => {
