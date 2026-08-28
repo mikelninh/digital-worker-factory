@@ -100,11 +100,12 @@ jobs:
       - name: Run managed operations state-machine tests
         run: node --test packs/hauspilot/retainer/state.test.mjs
       - name: Run digital employee authority and durable-state tests
-        run: node --test packs/hauspilot/digital-employee/digital-employee.test.mjs packs/hauspilot/digital-employee/durability.test.mjs
+        run: node --test packs/hauspilot/digital-employee/digital-employee.test.mjs packs/hauspilot/digital-employee/durability.test.mjs packs/hauspilot/digital-employee/supabase-schema.test.mjs
       - name: Verify digital employee self-service UI
         run: |
           test -s site/hauspilot-digital-employee.html
           test -s packs/hauspilot/digital-employee/README.md
+          test -s packs/hauspilot/digital-employee/supabase-schema.sql
           grep -q "Mara is working" site/hauspilot-digital-employee.html
           grep -q "Self-service setup" site/hauspilot-digital-employee.html
           grep -q "Autonomy is earned from evidence" site/hauspilot-digital-employee.html
