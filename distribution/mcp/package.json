@@ -1,0 +1,26 @@
+{
+  "name": "@mikelninh/ocn-mcp",
+  "version": "0.1.0",
+  "description": "MCP bridge that lets agents call Open Capability Network trusted events and pay via x402.",
+  "type": "module",
+  "license": "MIT",
+  "mcpName": "io.github.mikelninh/open-capability-network",
+  "bin": {
+    "ocn-mcp": "./index.mjs"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/server": "2.0.0",
+    "@x402/evm": "2.23.0",
+    "@x402/fetch": "2.23.0",
+    "viem": "2.48.11",
+    "zod": "4.4.3"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mikelninh/digital-worker-factory.git",
+    "directory": "distribution/mcp"
+  }
+}
