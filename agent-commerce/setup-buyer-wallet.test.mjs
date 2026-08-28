@@ -3,9 +3,15 @@ import assert from 'node:assert/strict'
 import { mkdtemp, readFile, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { privateKeyToAccount } from 'viem/accounts'
 
-import { createBuyerWallet } from './setup-buyer-wallet.mjs'
+import { createBuyerWallet, isDirectRun } from './setup-buyer-wallet.mjs'
+
+test('portable entrypoint detection recognizes the current module path', () => {
+  assert.equal(isDirectRun(import.meta.url, fileURLToPath(import.meta.url)), true)
+  assert.equal(isDirectRun(import.meta.url, undefined), false)
+})
 
 test('setup creates a valid local testnet buyer file and returns only its public address', async () => {
   const dir = await mkdtemp(join(tmpdir(), 'agent-commerce-buyer-'))
