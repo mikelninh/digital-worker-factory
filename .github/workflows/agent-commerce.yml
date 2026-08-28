@@ -31,6 +31,8 @@ jobs:
       - name: Run payment and authority contract tests
         working-directory: agent-commerce
         run: npm test
+      - name: Build portable production container
+        run: docker build -f agent-commerce/Dockerfile -t agent-commerce-rc0:test .
       - name: Verify no private keys or mainnet defaults were committed
         run: |
           ! grep -R -E "(EVM_PRIVATE_KEY|0x[0-9a-fA-F]{64})" agent-commerce \
