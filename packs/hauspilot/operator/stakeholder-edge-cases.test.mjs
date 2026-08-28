@@ -31,7 +31,6 @@ function preflightDir({count=20,reviewer=true,operator=true,dataMode='anonymised
 }
 function preflight(d){const r=spawnSync(process.execPath,['packs/hauspilot/runtime/preflight.mjs',d],{cwd:root,encoding:'utf8'});return{status:r.status,text:r.stdout+r.stderr};}
 
-// Real-world file intake
 for(const [name,fn] of [
   ['German Excel semicolon CSV',()=>{assert.equal(detectCsvDelimiter('a;b\n1;2'),';');assert.equal(parseCsv('case_id;message\n1;"kalt, heute"')[0].message,'kalt, heute')}],
   ['UTF-8 BOM',()=>assert.equal(parseCsv('\uFEFFproperty_id;address;unit\nP-1;A;1')[0].property_id,'P-1')],
@@ -50,7 +49,6 @@ test('master data requires unique id, address and unit',()=>{
   assert.throws(()=>validateProperties([{property_id:'P',address:'A',unit:'1'},{property_id:'P',address:'B',unit:'2'}]),/doppelt/);
 });
 
-// Reviewer integrity
 for(const [name,reviews,rx] of [
   ['incomplete',[accept('a')],/unvollständig/],
   ['unknown id',[accept('a'),accept('x')],/unbekannten Fall x/],
@@ -66,7 +64,6 @@ test('measurement rejects impossible values and valid evidence still produces re
   const d=finalizeDir();try{const r=finalizePilot({pilotDir:d,reviewDoc:{reviews:[accept('a'),{case_id:'b',decision:'EDIT',error_class:'bad_draft'}]},measurementInput:{cases_per_month:100,minutes_before:10,minutes_after:5,internal_hourly_cost_eur:35}});assert.equal(r.ok,true);assert.ok(fs.existsSync(r.reportPath))}finally{fs.rmSync(d,{recursive:true,force:true})}
 });
 
-// Preflight and scope routing
 for(const [name,opts,rx,status] of [
   ['19 cases',{count:19},/too_few_cases/,1],
   ['51 cases',{count:51},/too_many_cases/,1],
@@ -89,7 +86,7 @@ async function withServer(port,fn){
   }finally{child.kill()}
 }
 
-test('HTTP console catches founder/assistant handoff edge cases end to end',async()=>{
+test('HTTP console catches owner/operations handoff edge cases end to end',async()=>{
   const createdIds=[];
   await withServer(4497,async({base,post})=>{
     const stem=`edge-${Date.now()}`;
@@ -107,8 +104,8 @@ test('HTTP console catches founder/assistant handoff edge cases end to end',asyn
     const d=path.join(root,'deployments',proofId);fs.writeFileSync(path.join(d,'batch-results.local.json'),JSON.stringify(batch(ids(20))));const reviews=ids(20).map(accept);
     r=await post('/api/finalize',{id:proofId,review_text:JSON.stringify({reviews}),cases_per_month:100,minutes_before:10,minutes_after:5,internal_hourly_cost_eur:35,measurement_source_confirmed:false});assert.equal(r.status,400);assert.match(r.json.error,/Baseline\/Quelle/);
     r=await post('/api/finalize',{id:proofId,review_text:JSON.stringify({reviews}),cases_per_month:100,minutes_before:10,minutes_after:5,internal_hourly_cost_eur:35,measurement_source_confirmed:true});assert.equal(r.status,200);assert.equal(r.json.result.summary.verdict,'KEEP');
-    r=await post('/api/closeout',{id:proofId,report_delivered:true,final_invoice_sent:true,final_payment_paid:true,transfer_copies_deleted:true,delete_pilot_data:true,continue_monthly:true,customer_continuation_accepted:false,monthly_fee_eur:750});assert.equal(r.status,400);assert.match(r.json.error,/ausdrücklich angenommen/);
-    r=await post('/api/closeout',{id:proofId,report_delivered:true,final_invoice_sent:true,final_payment_paid:true,transfer_copies_deleted:false,delete_pilot_data:true,continue_monthly:false,customer_continuation_accepted:false,monthly_fee_eur:750});assert.equal(r.status,200);assert.equal(r.json.pilot.state.status,'CLOSEOUT_OPEN');
+    r=await post('/api/closeout',{id:proofId,report_delivered:true,final_invoice_sent:true,final_payment_paid:true,transfer_copies_deleted:true,delete_pilot_data:true,continue_monthly:true,customer_continuation_accepted:false,monthly_fee_eur:1500});assert.equal(r.status,400);assert.match(r.json.error,/ausdrücklich angenommen/);
+    r=await post('/api/closeout',{id:proofId,report_delivered:true,final_invoice_sent:false,final_payment_paid:false,transfer_copies_deleted:false,delete_pilot_data:true,continue_monthly:false,customer_continuation_accepted:false,monthly_fee_eur:1500});assert.equal(r.status,200);assert.equal(r.json.pilot.state.status,'CLOSEOUT_OPEN');
 
     const retId=stem+'-ret';createdIds.push(retId);
     assert.equal((await post('/api/create',{id:retId,company:'Retention GmbH',reviewer_name:'Reviewer',operator_name:'Ops',deposit_paid:true})).status,200);

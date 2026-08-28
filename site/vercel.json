@@ -1,6 +1,9 @@
 {
   "rewrites": [
     { "source": "/agents", "destination": "/agent-capabilities.html" },
+    { "source": "/employee", "destination": "/hauspilot-digital-employee.html" },
+    { "source": "/try", "destination": "/hauspilot-try.html" },
+    { "source": "/start", "destination": "/hauspilot-setup.html" },
     { "source": "/proof/interloom", "destination": "/interloom.html" },
     { "source": "/proof/:slug", "destination": "/index.html" }
   ],

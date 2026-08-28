@@ -1,4 +1,4 @@
-# One Simple Flow — Operations Assistant
+# One Simple Flow — HausPilot Operations
 
 ## Deine ganze Aufgabe
 
@@ -21,16 +21,23 @@ Kein Terminal, kein GitHub, kein JSON-Editieren und kein Prompt Engineering im T
 - echter 100-Case Live-Full-Gate: `KEEP`
 - Operations-Rechner + API-Key + Release-Proof eingerichtet
 - sicherer Datei-Transferkanal festgelegt
-- Stripe-Zugriff für Operations vorhanden
+- Zahlungsweg für die **€990 Proof Week** vorhanden
 
 ## Der Standardkunde
 
-### 1 · Zahlung + Kunde
+### 0 · Free Demo
 
-- **1.330 €** Zahlungseingang in Stripe prüfen.
-- Kunde, **einen** vereinbarten Workflow, Reviewer und dich als Operations Assistant eintragen.
+Die öffentliche Demo ist **€0**, synthetisch und sammelt keine Kundendaten.
+
+Sie ist Marketing/Produktverständnis — noch kein Kunden-Pilot.
+
+### 1 · Proof Week bezahlt + Kunde
+
+- **€990** Zahlungseingang für die 7-Tage Proof Week prüfen.
+- Kunde, **einen** vereinbarten Workflow, Reviewer und dich als Operations eintragen.
 - Kein Reviewer → nicht starten.
 - Kunde/Pilot existiert bereits → bestehenden Eintrag verwenden, nicht überschreiben.
+- Kein automatisches Abo anlegen.
 
 ### 2 · Kunde gibt genau drei Dinge
 
@@ -40,7 +47,7 @@ Kein Terminal, kein GitHub, kein JSON-Editieren und kein Prompt Engineering im T
 
 CSV aus deutschem Excel darf Komma oder Semikolon verwenden. XLSX zuerst als CSV exportieren.
 
-### 3 · Prüfen + Starten
+### 3 · Prüfen + Proof starten
 
 Console zeigt immer nur:
 
@@ -51,7 +58,7 @@ Console zeigt immer nur:
 
 Vor dem Start laufen Release Lock, Daten-/Privacy-/Safety-Preflight und Scope-Gates.
 
-Standardpilot = maximal 50 Fälle. Mehr Fälle / mehrere Workflows / andere Rechte → Sales/Founder.
+Standard Proof Week = maximal 50 Fälle. Mehr Fälle / mehrere Workflows / andere Rechte → Sales/Owner.
 
 ### 4 · Reviewer prüft
 
@@ -63,7 +70,7 @@ Pro Fall nur:
 - **Ändern**
 - **Falsch**
 
-Bei Ändern/Falsch wird kurz der Fehlergrund gewählt. Die Console akzeptiert nur vollständige, zum Pilot passende Review-Dateien.
+Bei Ändern/Falsch wird kurz der Fehlergrund gewählt. Die Console akzeptiert nur vollständige, zum Proof passende Review-Dateien.
 
 ### 5 · Ergebnis
 
@@ -81,19 +88,24 @@ Der Report beantwortet zuerst:
 ### 6 · Abschluss
 
 - Kundenreport sicher senden
-- **570-€-Restrechnung** in Stripe senden
-- Zahlungseingang prüfen
-- Upload-/Transferkopien (z. B. Dropbox) gemäß Retention löschen und bestätigen
-- lokale Pilotdaten über die Console löschen
+- Proof-Week-Zahlung als vollständig bestätigen
+- Upload-/Transferkopien gemäß Retention löschen und bestätigen
+- lokale Proof-Daten über die Console löschen
 - minimaler Löschbeleg bleibt erhalten
 
-Die 14-Tage-Retention läuft ab Dateneingang. Sie wartet nicht unbegrenzt auf Reviewer oder Restzahlung.
+Die 14-Tage-Retention läuft ab Dateneingang. Sie wartet nicht unbegrenzt auf Reviewer oder Commercial Closeout.
 
 ### 7 · Nur bei ausdrücklichem Ja
 
-Wenn Ergebnis **WEITER** und der Kunde **750 €/Monat ausdrücklich annimmt**, darfst du den Standardbetrieb für **denselben** bewiesenen Workflow aktivieren.
+Wenn Ergebnis **WEITER** und der Kunde **€1.500/Monat ausdrücklich annimmt**, darf der Standardbetrieb für **denselben** bewiesenen Workflow vorbereitet werden.
+
+Bei direkter Fortsetzung wird die bereits gezahlte **€990 Proof Week vollständig auf Monat 1 angerechnet**.
 
 Kein Kunden-Opt-in → kein monatlicher Betrieb.
+
+Die Produktionsreihenfolge bleibt:
+
+**Microsoft 365 read-only → Live Shadow → Copilot → bewiesene Low-Risk-Automation → bounded workflow ownership**
 
 ## Du eskalierst nur drei Arten von Fällen
 
@@ -111,13 +123,13 @@ Runtime/API/Console defekt, Safety Gate rot, Release Lock nicht ready oder unerw
 
 ### Kommerziell / Scope
 
-Sonderpreis, mehr als 50 Fälle, mehrere Workflows, neue Produktionsrechte, Sondervertrag oder Preis ≠ 750 €/Monat für den Standardbetrieb.
+Sonderpreis, mehr als 50 Fälle, mehrere Workflows, neue Produktionsrechte, Sondervertrag oder Preis ≠ **€1.500/Monat** für den Standardbetrieb.
 
-→ **STOPP · Sales/Founder**
+→ **STOPP · Sales/Owner**
 
 ## Erfolgsdefinition
 
-Ein normaler bezahlter Standardkunde läuft vom bestätigten Zahlungseingang bis zum Closeout **ohne Founder-Eingriff**.
+Ein normaler bezahlter Proof-Week-Kunde läuft vom bestätigten Zahlungseingang bis zum Closeout **ohne Founder-Eingriff**.
 
 > **Was ist mein nächster Klick?**
 
