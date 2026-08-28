@@ -1,5 +1,5 @@
 {
-  "schema": "ocn.trust-proof-registry/1",
+  "schema": "ocn.trust-proof-registry/2",
   "asOf": "2026-08-29",
   "status": "pre-public-validation",
   "principle": "Verifiable assurance for specific claims in a specific context at a specific time; never a universal trust score.",
@@ -13,24 +13,30 @@
   },
   "globalProofs": [
     {
-      "id": "authority-kernel-formal-v1",
+      "id": "trust-kernel-formal-v2",
       "type": "bounded_exhaustive_model_check",
-      "status": "ci-gated",
+      "status": "green_ci",
+      "source": "formal/ocn-kernel-model.mjs",
       "scope": [
         "explicit-grant authority",
         "payment never grants authority",
         "stale evidence blocks",
         "insufficient evidence blocks",
         "write/consequential human-review invariant",
-        "review/block do not execute",
+        "payment intent merchant binding",
+        "payment intent beneficiary binding",
+        "payment intent amount/currency binding",
+        "payment intent expiry and replay blocking",
+        "payment intent mandate-or-human-approval invariant",
+        "review/block do not execute in mediator model",
         "idempotency replay mediator invariant"
       ],
-      "source": "formal/ocn-kernel-model.mjs",
       "limitations": [
-        "bounded finite-state verification",
-        "does not prove external-world truth",
+        "bounded finite-state verification, not proof of every possible program/environment state",
+        "does not prove external-world truth or upstream registry integrity",
         "does not prove arbitrary LLM correctness",
-        "does not yet prove every downstream adapter is equivalent to the abstract execution mediator"
+        "does not yet prove every downstream execution adapter is equivalent to the abstract mediator",
+        "does not guarantee zero fraud"
       ]
     },
     {
@@ -95,20 +101,27 @@
     },
     {
       "id": "payment.intent.preflight.v1",
-      "readiness": "design_and_formalization_in_progress",
-      "claimFamilies": ["intent", "counterparty", "beneficiary", "amount", "authority", "replay"],
-      "assurance": {"operational": "A0"},
-      "targetProof": "requested payment exactly satisfies the verified user/company mandate and has not been replayed",
-      "doesNotProve": ["merchant fulfilment", "zero fraud", "recovery/chargeback outcome"]
+      "readiness": "built_formally_model_checked_green_ci_public_hosting_pending",
+      "claimFamilies": ["intent", "counterparty", "beneficiary", "amount", "currency", "authority", "replay"],
+      "assurance": {"deterministicIntentKernel": "A3", "merchantOrRegistryTruth": "A0", "operational": "A0"},
+      "formalCoverage": "bounded exhaustive combinations of merchant verification/identity, beneficiary, amount, currency, intent expiry, mandate/human approval and replay",
+      "proves": [
+        "proposed payment remains exactly bound to supplied merchant/beneficiary/amount/currency intent",
+        "expired intent and detected replay block",
+        "allow requires verified mandate or observed human approval",
+        "the assurance check itself never executes payment and payment never grants authority"
+      ],
+      "doesNotProve": ["merchant fulfilment or honesty", "upstream registry integrity", "zero fraud", "recovery/chargeback outcome"]
     }
   ],
   "nextPromotionGates": [
     "stable public HTTPS endpoint",
-    "public proof card for each live event",
+    "bind exact public build SHA into proof registry",
     "1 then 10 then 20 repeated external settlements",
+    "first external repeat-paying agent",
     "first external Shadow Mode workflow",
-    "measured useful trust-gap finding",
-    "buyer adjudication of false positive/false negative",
+    "measured buyer-confirmed useful trust-gap finding",
+    "buyer adjudication of false positives and false negatives",
     "hosted latency/reliability baseline",
     "real operational outcomes for A4",
     "independent audit/attestation for A5"
