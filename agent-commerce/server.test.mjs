@@ -28,6 +28,43 @@ test('machine-readable catalog advertises the paid capability and trust boundary
   })
 })
 
+test('OpenCapabilities discovery exposes portfolio readiness without pretending everything is live', async () => {
+  await withServer(async (base) => {
+    const response = await fetch(`${base}/.well-known/open-capabilities.json`)
+    assert.equal(response.status, 200)
+    assert.match(response.headers.get('cache-control'), /max-age=60/)
+    const body = await response.json()
+    assert.equal(body.schema, 'open-capabilities.catalog/1')
+    assert.ok(body.capabilities.length >= 10)
+    assert.equal(body.counts.live, 0)
+    assert.ok(body.counts.adapter_ready > 0)
+    assert.ok(body.counts.pilot > 0)
+    assert.equal(body.capabilities.some((item) => item.id === 'openproof.verify.v1'), true)
+  })
+})
+
+test('capability detail endpoint returns one exact trust contract', async () => {
+  await withServer(async (base) => {
+    const response = await fetch(`${base}/v1/capabilities/document.preflight.v1`)
+    assert.equal(response.status, 200)
+    const body = await response.json()
+    assert.equal(body.schema, 'open-capabilities.detail/1')
+    assert.equal(body.capability.id, 'document.preflight.v1')
+    assert.equal(body.capability.readiness, 'adapter_ready')
+    assert.equal(body.capability.authority.canExecuteConsequentialAction, false)
+    assert.equal(body.capability.trust.evidenceReturned, true)
+  })
+})
+
+test('unknown capability detail fails explicitly', async () => {
+  await withServer(async (base) => {
+    const response = await fetch(`${base}/v1/capabilities/not.real.v1`)
+    assert.equal(response.status, 404)
+    const body = await response.json()
+    assert.equal(body.error, 'capability_not_found')
+  })
+})
+
 test('valid unpaid request returns 402', async () => {
   await withServer(async (base) => {
     const response = await fetch(`${base}/v1/triage`, {
