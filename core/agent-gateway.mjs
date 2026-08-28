@@ -1,4 +1,5 @@
 import { evaluateCapabilityPolicy } from './policy-gate.mjs'
+import { assertOutcomeReceipt, createOutcomeReceipt } from './outcome-receipt.mjs'
 
 export class AgentGateway {
   #registry
@@ -12,7 +13,24 @@ export class AgentGateway {
   }
 
   auditLog() {
-    return this.#audit.map((entry) => ({ ...entry }))
+    return this.#audit.map((entry) => structuredClone(entry))
+  }
+
+  #record({ traceId, at, actor, capabilityId, mode, approvedBy, policy, status, error = null }) {
+    const receipt = createOutcomeReceipt({
+      traceId,
+      at,
+      actor,
+      capabilityId,
+      mode,
+      approvedBy,
+      policy,
+      status,
+      error,
+    })
+    assertOutcomeReceipt(receipt)
+    this.#audit.push(receipt)
+    return receipt
   }
 
   async invoke({ actor, capabilityId, input = {}, approvedBy = null, mode = 'execute', traceId = crypto.randomUUID() }) {
@@ -23,40 +41,29 @@ export class AgentGateway {
       approvedBy,
       mode,
     })
-
-    const baseAudit = {
-      traceId,
-      at: new Date().toISOString(),
-      actorId: actor?.id ?? null,
-      role: actor?.role ?? null,
-      capabilityId,
-      provider: policy.capability?.provider ?? null,
-      mode,
-      approvedBy,
-      policy,
-    }
+    const at = new Date().toISOString()
 
     if (!policy.allowed || !policy.executionAllowed) {
       const status = mode === 'shadow' && policy.allowed ? 'shadowed' : 'blocked'
-      this.#audit.push({ ...baseAudit, status })
-      return { ok: false, status, traceId, policy }
+      const receipt = this.#record({ traceId, at, actor, capabilityId, mode, approvedBy, policy, status })
+      return { ok: false, status, traceId, policy, receipt }
     }
 
     const executor = this.#executors[capabilityId]
     if (typeof executor !== 'function') {
       const error = 'executor_not_configured'
-      this.#audit.push({ ...baseAudit, status: 'blocked', error })
-      return { ok: false, status: 'blocked', traceId, policy, error }
+      const receipt = this.#record({ traceId, at, actor, capabilityId, mode, approvedBy, policy, status: 'blocked', error })
+      return { ok: false, status: 'blocked', traceId, policy, error, receipt }
     }
 
     try {
       const output = await executor({ input, actor, approvedBy, traceId })
-      this.#audit.push({ ...baseAudit, status: 'executed' })
-      return { ok: true, status: 'executed', traceId, policy, output }
+      const receipt = this.#record({ traceId, at, actor, capabilityId, mode, approvedBy, policy, status: 'executed' })
+      return { ok: true, status: 'executed', traceId, policy, output, receipt }
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error)
-      this.#audit.push({ ...baseAudit, status: 'failed', error: message })
-      return { ok: false, status: 'failed', traceId, policy, error: message }
+      const receipt = this.#record({ traceId, at, actor, capabilityId, mode, approvedBy, policy, status: 'failed', error: message })
+      return { ok: false, status: 'failed', traceId, policy, error: message, receipt }
     }
   }
 }
