@@ -7,7 +7,36 @@ import { privateKeyToAccount } from 'viem/accounts'
 import { BASE_SEPOLIA } from './commerce-core.mjs'
 import { BASE_SEPOLIA_USDC, DEFAULT_MAX_PAYMENT_ATOMIC, selectSafePaymentRequirement } from './buyer-smoke.mjs'
 
-export const DEFAULT_TRUST_EVENT_PATH = '/v1/freshness/verify'
+export const TRUST_EVENT_SMOKES = Object.freeze({
+  freshness: Object.freeze({
+    path: '/v1/freshness/verify',
+    capabilityId: 'freshness.verify.v1',
+    body: (now) => ({ observedAt: new Date(now).toISOString(), maxAgeSeconds: 60 }),
+  }),
+  'payment-intent': Object.freeze({
+    path: '/v1/payment/intent/preflight',
+    capabilityId: 'payment.intent.preflight.v1',
+    body: (now) => ({
+      intent: {
+        intentId: `smoke-intent-${now}`,
+        merchantId: 'ocn-smoke-merchant',
+        beneficiary: 'ocn-smoke-beneficiary',
+        amount: '0.01',
+        currency: 'USD',
+        validUntil: new Date(now + 3_600_000).toISOString(),
+      },
+      request: {
+        merchantId: 'ocn-smoke-merchant',
+        beneficiary: 'ocn-smoke-beneficiary',
+        amount: '0.01',
+        currency: 'USD',
+      },
+      merchant: { id: 'ocn-smoke-merchant', verified: true },
+      humanApproval: true,
+      replayDetected: false,
+    }),
+  }),
+})
 
 export function isDirectRun(metaUrl = import.meta.url, argv1) {
   const candidate = arguments.length < 2 ? process.argv[1] : argv1
@@ -26,16 +55,20 @@ export function validateTrustedBuyerConfig(env = process.env) {
   if (maxPaymentAtomic <= 0n || maxPaymentAtomic > 1_000_000n) throw new Error('buyer_spend_cap_invalid')
   const repeats = env.OCN_SMOKE_REPEATS ? Number(env.OCN_SMOKE_REPEATS) : 1
   if (!Number.isInteger(repeats) || repeats < 1 || repeats > 20) throw new Error('OCN_SMOKE_REPEATS_invalid')
+  const event = env.OCN_SMOKE_EVENT ?? 'freshness'
+  if (!TRUST_EVENT_SMOKES[event]) throw new Error('OCN_SMOKE_EVENT_invalid')
   return {
     privateKey,
     baseUrl: baseUrl.toString().replace(/\/$/, ''),
     maxPaymentAtomic,
     repeats,
+    event,
   }
 }
 
 export async function runTrustedEventBuyerSmoke({ env = process.env, fetchImpl = fetch, now = () => Date.now() } = {}) {
   const config = validateTrustedBuyerConfig(env)
+  const target = TRUST_EVENT_SMOKES[config.event]
   const account = privateKeyToAccount(config.privateKey)
   const paidFetch = wrapFetchWithPaymentFromConfig(fetchImpl, {
     schemes: [{ network: BASE_SEPOLIA, client: new ExactEvmScheme(account) }],
@@ -48,16 +81,16 @@ export async function runTrustedEventBuyerSmoke({ env = process.env, fetchImpl =
 
   const calls = []
   for (let i = 0; i < config.repeats; i += 1) {
-    const startedAt = now()
-    const observedAt = new Date(now()).toISOString()
-    const response = await paidFetch(`${config.baseUrl}${DEFAULT_TRUST_EVENT_PATH}`, {
+    const callNow = now()
+    const startedAt = callNow
+    const response = await paidFetch(`${config.baseUrl}${target.path}`, {
       method: 'POST',
       headers: {
         'content-type': 'application/json',
         'x-agent-id': 'ocn-trusted-event-smoke-buyer',
-        'x-request-id': `ocn-smoke-${Date.now()}-${i}`,
+        'x-request-id': `ocn-smoke-${callNow}-${i}`,
       },
-      body: JSON.stringify({ observedAt, maxAgeSeconds: 60 }),
+      body: JSON.stringify(target.body(callNow)),
     })
     const latencyMs = Math.max(0, now() - startedAt)
     const body = await response.json().catch(() => ({}))
@@ -68,7 +101,10 @@ export async function runTrustedEventBuyerSmoke({ env = process.env, fetchImpl =
     }
     if (body?.receipt?.authority?.paymentGrantedAuthority !== false) throw new Error('receipt_authority_boundary_failed')
     if (body?.receipt?.authority?.consequentialActionExecuted !== false) throw new Error('unexpected_consequential_action')
-    if (body?.capabilityId !== 'freshness.verify.v1') throw new Error('unexpected_trusted_event_capability')
+    if (body?.capabilityId !== target.capabilityId) throw new Error('unexpected_trusted_event_capability')
+    if (config.event === 'payment-intent' && body?.result?.authority?.paymentExecutionPerformed !== false) {
+      throw new Error('payment_intent_unexpected_execution')
+    }
 
     const settlementHeader = response.headers.get('PAYMENT-RESPONSE')
     const settlement = settlementHeader ? decodePaymentResponseHeader(settlementHeader) : null
@@ -86,7 +122,9 @@ export async function runTrustedEventBuyerSmoke({ env = process.env, fetchImpl =
 
   return {
     buyerAddress: account.address,
-    endpoint: `${config.baseUrl}${DEFAULT_TRUST_EVENT_PATH}`,
+    event: config.event,
+    capabilityId: target.capabilityId,
+    endpoint: `${config.baseUrl}${target.path}`,
     repeats: config.repeats,
     successfulCalls: calls.length,
     settlements: calls.map((call) => call.settlement?.transaction ?? null),
