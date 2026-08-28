@@ -69,6 +69,7 @@ export function publicCapabilityDescriptor(offer) {
 export function makeServiceReceipt({ descriptor, request, traceId, output, payment = null }) {
   const requestHash = fingerprint(request)
   const outputHash = fingerprint(output)
+  const settlementRef = payment?.settlementRef ?? null
   return Object.freeze({
     schema: 'agent-commerce.receipt/1',
     capabilityId: descriptor.id,
@@ -78,12 +79,17 @@ export function makeServiceReceipt({ descriptor, request, traceId, output, payme
     outputHash,
     payment: payment
       ? {
-          status: 'settled',
+          // x402 Express verifies before the handler and settles after the handler returns.
+          // Therefore a body receipt may only claim `settled` when it already has a
+          // concrete settlement reference (e.g. the explicit mock test double).
+          // Real x402 settlement proof is returned later in the PAYMENT-RESPONSE header.
+          status: settlementRef ? 'settled' : 'verified',
           scheme: 'x402',
           asset: descriptor.pricing.asset,
           network: descriptor.pricing.network,
           amountUsd: descriptor.pricing.amountUsd,
-          settlementRef: payment.settlementRef ?? null,
+          settlementRef,
+          settlementProof: settlementRef ? 'inline' : 'PAYMENT-RESPONSE',
         }
       : null,
     authority: {
