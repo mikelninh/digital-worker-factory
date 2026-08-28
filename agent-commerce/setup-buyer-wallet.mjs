@@ -1,6 +1,7 @@
 import { writeFile, access } from 'node:fs/promises'
 import { constants as fsConstants } from 'node:fs'
 import { resolve } from 'node:path'
+import { pathToFileURL } from 'node:url'
 import { generatePrivateKey, privateKeyToAccount } from 'viem/accounts'
 
 const DEFAULT_FILE = resolve(process.cwd(), '.env.buyer')
@@ -12,6 +13,10 @@ async function fileExists(path) {
   } catch {
     return false
   }
+}
+
+export function isDirectRun(metaUrl = import.meta.url, argv1 = process.argv[1]) {
+  return Boolean(argv1) && metaUrl === pathToFileURL(resolve(argv1)).href
 }
 
 export async function createBuyerWallet({ file = DEFAULT_FILE } = {}) {
@@ -40,7 +45,7 @@ async function main() {
   console.log('Do not paste the private key or .env.buyer contents into chat, GitHub, tickets, or browser code.')
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (isDirectRun()) {
   main().catch((error) => {
     console.error(error instanceof Error ? error.message : String(error))
     process.exitCode = 1
