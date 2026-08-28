@@ -19,6 +19,16 @@ The sprint deliberately starts with one repeated workflow — for example mainte
 
 **Commercial north star: collected cash and measured client value, not agent count or demo complexity.**
 
+## Focused role proof — One Less Click
+
+[`packs/caya-one-less-click/`](packs/caya-one-less-click/) is a synthetic Business Automation Engineer proof built around one support workflow:
+
+**webhook → Lambda-compatible handler → idempotency → classification → Postgres-oriented context query → policy gate → prepared action → audit.**
+
+It includes a Zapier webhook adapter example, a SQL/index optimisation exercise, a 30-case regression suite and a small interactive trace UI at [`site/caya-one-less-click.html`](site/caya-one-less-click.html).
+
+The proof is not affiliated with Caya and uses no Caya systems, customer data, private APIs or production schemas.
+
 ## The contract
 
 ```text
