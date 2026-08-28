@@ -9,6 +9,8 @@ const root = path.resolve(here, '../../..');
 const read = rel => fs.readFileSync(path.join(root, rel), 'utf8');
 
 const sales = read('site/hauspilot.html');
+const setup = read('site/hauspilot-setup.html');
+const privacy = read('site/hauspilot-privacy.html');
 const onepager = read('site/hauspilot-onepager.html');
 const simple = read('site/simple-operations.html');
 const reviewer = read('site/hauspilot-review.html');
@@ -18,46 +20,58 @@ const assistantReady = read('packs/hauspilot/operator/ASSISTANT_READY.md');
 const customerStart = read('packs/hauspilot/first-customer/CUSTOMER_START.md');
 const consoleSource = read('packs/hauspilot/operator/ops-console.mjs');
 
-const legacyLinks = ['pilot-command-center.html','retainer-command-center.html','hauspilot-setup.html','hauspilot-results.html'];
+const legacyLinks = ['pilot-command-center.html','retainer-command-center.html','hauspilot-results.html'];
 
-test('canonical customer page explains the whole paid pilot in five simple steps', () => {
-  assert.match(sales, /Ein Prozess\.[\s\S]*Drei Inputs\.[\s\S]*Klare Antwort\./);
-  for(const label of ['Beauftragen','Hochladen','Testen','Prüfen','Entscheiden']) assert.match(sales,new RegExp(label));
+test('canonical customer page makes the paid pilot feel like four simple customer steps', () => {
+  assert.match(sales, /Weniger Postfach/);
+  assert.match(sales, /Mara kümmert sich/);
+  assert.match(sales, /Nichts installieren/);
+  for (const label of ['Startlink öffnen','3 Dinge geben','Wir testen','Ergebnis prüfen']) assert.match(sales,new RegExp(label));
   assert.match(sales, /20–50/);
-  assert.match(sales, /eine Stammdatenliste/i);
-  assert.match(sales, /eine prüfende Person/i);
-  assert.match(sales, /Richtig · Ändern · Falsch/);
+  assert.match(sales, /Objekt-\/Einheitenliste/);
+  assert.match(sales, /prüfende Person/);
+  assert.match(sales, /Richtig, Ändern oder Falsch/);
   assert.match(sales, /Weiter · Verbessern · Stoppen/);
   assert.match(sales, /1\.330 €/);
   assert.match(sales, /570 €/);
   assert.match(sales, /Kein verstecktes Abo/);
+  assert.match(sales, /href="\/start"/);
   for (const href of legacyLinks) assert.ok(!sales.includes(href), `sales must not link legacy surface ${href}`);
 });
 
-test('canonical page tells every stakeholder what they do and what the founder does not do',()=>{
-  for(const role of ['Kunde','Operations Assistant','Reviewer des Kunden'])assert.match(sales,new RegExp(role));
-  assert.match(sales,/Standardfall nichts in der Delivery/);
-  assert.match(sales,/Sonderpreis\/Sonderscope/);
-  assert.match(sales,/Datenschutz-Ausnahmen/);
-  assert.match(sales,/technische\/Safety-Eskalationen/);
+test('customer-facing onboarding hides implementation work and asks only for business inputs',()=>{
+  assert.match(setup,/Kein Download/);
+  assert.match(setup,/Keine Installation/);
+  assert.match(setup,/Kein API-Key/);
+  assert.match(setup,/20–50 alte Fälle/);
+  assert.match(setup,/Objekt-\/Einheitenliste/);
+  assert.match(setup,/fachliche prüfende Person/);
+  assert.match(setup,/Im ersten Test: nichts nach außen/);
+  assert.match(setup,/Nach erfolgreichem Proof: Live-Postfach verbinden/);
+  assert.doesNotMatch(setup,/client\.json/);
+  assert.doesNotMatch(setup,/Tenant ID/);
+  assert.doesNotMatch(setup,/Generate pilot config/i);
+  assert.doesNotMatch(setup,/OPENAI_API_KEY/);
 });
 
-test('customer-facing proof now truthfully states the real live release results',()=>{
+test('customer-facing proof stays truthful and separates release proof from customer proof',()=>{
   assert.match(sales,/20\/20/);
   assert.match(sales,/100\/100/);
-  assert.match(sales,/8\/8/);
-  assert.match(sales,/0[\s\S]*Runtime-Fehler und unsafe executions/);
+  assert.match(sales,/0[\s\S]*unsafe executions/);
   assert.match(sales,/Release-Testbench-Ergebnisse/);
-  assert.match(sales,/keine Kundenergebnisse/);
-  assert.doesNotMatch(sales,/Live-Modell-Release-Gate ist ein separater Schritt/);
+  assert.match(sales,/keine versprochenen Kundenergebnisse/);
+  assert.match(sales,/Ihr Pilot ist der Beweis auf Ihrer Realität/);
+  assert.match(sales,/aktu(?:elle|eller) bezahlte Pilot[\s\S]*kein(?:en)? Live-Microsoft-365-Zugriff/i);
+  assert.doesNotMatch(sales,/vollautonom(?:e|er) Produktion/i);
 });
 
-test('privacy story never equates removing names with legal anonymity',()=>{
-  assert.match(sales,/wirklich (?:de-identifizierte\/anonymisierte|anonymisiert\/de-identifiziert)/);
-  assert.match(sales,/Objekt-\/Wohnungsbezüge[\s\S]*rückführbar/);
-  assert.match(sales,/14-Tage-Retention/);
-  assert.match(sales,/Transferkopien/);
-  assert.match(sales,/kein falscher „Secure Wipe“-Claim/);
+test('privacy truth remains available without cluttering the simple onboarding',()=>{
+  assert.match(sales,/href="hauspilot-privacy\.html"/);
+  assert.match(privacy,/wirklich (?:de-identifizierte\/anonymisierte|anonymisiert\/de-identifiziert)/);
+  assert.match(privacy,/Objekt-\/Wohnungsbezüge[\s\S]*rückführbar/);
+  assert.match(privacy,/14-Tage-Retention/);
+  assert.match(privacy,/Transferkopien/);
+  assert.match(privacy,/kein falscher „Secure Wipe“-Claim/);
 });
 
 test('60-second one-pager matches the canonical flow and current live proof', () => {
