@@ -100,7 +100,7 @@ jobs:
       - name: Run managed operations state-machine tests
         run: node --test packs/hauspilot/retainer/state.test.mjs
       - name: Run digital employee authority and durable-state tests
-        run: node --test packs/hauspilot/digital-employee/digital-employee.test.mjs
+        run: node --test packs/hauspilot/digital-employee/digital-employee.test.mjs packs/hauspilot/digital-employee/durability.test.mjs
       - name: Verify digital employee self-service UI
         run: |
           test -s site/hauspilot-digital-employee.html
