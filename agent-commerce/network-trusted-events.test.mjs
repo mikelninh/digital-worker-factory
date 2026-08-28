@@ -16,17 +16,19 @@ async function withServer(app, fn) {
 
 const PAID = { 'content-type': 'application/json', 'x-test-payment': 'valid', 'x-agent-id': 'test-agent' }
 
-test('trusted-event catalog is free and exposes five micropriced events', async () => {
+test('trusted-event catalog is free and exposes six micropriced events', async () => {
   const app = createNetworkApp({ paymentsMode: 'mock', allowMock: true })
   await withServer(app, async (base) => {
     const response = await fetch(`${base}/.well-known/trusted-events.json`)
     assert.equal(response.status, 200)
     const body = await response.json()
-    assert.equal(body.capabilities.length, 5)
+    assert.equal(body.capabilities.length, 6)
     const freshness = body.capabilities.find((item) => item.id === 'freshness.verify.v1')
     assert.equal(freshness.pricing.amountUsd, '0.001')
     assert.equal(freshness.readiness, 'implemented_not_public')
     assert.equal(freshness.trust.paymentBuysTrust, false)
+    const paymentIntent = body.capabilities.find((item) => item.id === 'payment.intent.preflight.v1')
+    assert.equal(paymentIntent.pricing.amountUsd, '0.005')
   })
 })
 
@@ -74,6 +76,30 @@ test('paid trusted event returns receipt, trust event id and aggregate telemetry
     assert.equal(metrics.paidEvents, 1)
     assert.equal(metrics.byCapability['freshness.verify.v1'].calls, 1)
     assert.match(metrics.privacy, /raw request\/result payloads are not stored/i)
+  })
+})
+
+test('paid payment-intent preflight blocks beneficiary-switch fraud and never executes payment', async () => {
+  const app = createNetworkApp({ paymentsMode: 'mock', allowMock: true })
+  await withServer(app, async (base) => {
+    const response = await fetch(`${base}/v1/payment/intent/preflight`, {
+      method: 'POST',
+      headers: PAID,
+      body: JSON.stringify({
+        intent: { intentId: 'intent-1', merchantId: 'merchant-7', beneficiary: 'wallet-approved', amount: '10.00', currency: 'USD', validUntil: '2099-01-01T00:00:00Z' },
+        request: { merchantId: 'merchant-7', beneficiary: 'wallet-attacker', amount: '10.00', currency: 'USD' },
+        merchant: { id: 'merchant-7', verified: true },
+        humanApproval: true,
+      }),
+    })
+    assert.equal(response.status, 200)
+    const body = await response.json()
+    assert.equal(body.capabilityId, 'payment.intent.preflight.v1')
+    assert.equal(body.result.decision, 'block')
+    assert.ok(body.result.blockers.includes('beneficiary:intent_mismatch'))
+    assert.equal(body.result.authority.paymentGrantedAuthority, false)
+    assert.equal(body.result.authority.paymentExecutionPerformed, false)
+    assert.equal(body.receipt.authority.paymentGrantedAuthority, false)
   })
 })
 
