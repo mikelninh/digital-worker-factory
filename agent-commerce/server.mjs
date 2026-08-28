@@ -9,6 +9,7 @@ import { AgentGateway } from '../core/agent-gateway.mjs'
 import { CapabilityRegistry, RISK_LEVELS } from '../core/capability-registry.mjs'
 import { evaluateCapabilityPolicy } from '../core/policy-gate.mjs'
 import { BASE_MAINNET, BASE_SEPOLIA, makeServiceReceipt, publicCapabilityDescriptor } from './commerce-core.mjs'
+import { buildOpenCapabilitiesCatalog, OPEN_CAPABILITIES } from './open-capabilities.mjs'
 import { triageCase, validateTriageInput } from './triage-capability.mjs'
 
 export const TRIAGE_CAPABILITY_ID = 'hauspilot.triage.v1'
@@ -126,11 +127,23 @@ export function createApp({
       network,
       mainnetEnabled: network === BASE_MAINNET,
       capabilities: [TRIAGE_CAPABILITY_ID],
+      openCapabilities: OPEN_CAPABILITIES.length,
     })
   })
 
   app.get('/.well-known/agent-capabilities.json', (_req, res) => {
     res.json({ schema: 'agent-commerce.catalog/1', capabilities: [descriptor] })
+  })
+
+  app.get('/.well-known/open-capabilities.json', (_req, res) => {
+    res.set('cache-control', 'public, max-age=60, stale-while-revalidate=300')
+    res.json(buildOpenCapabilitiesCatalog())
+  })
+
+  app.get('/v1/capabilities/:id', (req, res) => {
+    const capability = OPEN_CAPABILITIES.find((item) => item.id === req.params.id)
+    if (!capability) return res.status(404).json({ error: 'capability_not_found' })
+    return res.json({ schema: 'open-capabilities.detail/1', capability })
   })
 
   app.use('/v1/triage', (req, res, next) => {
