@@ -1,0 +1,31 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.mikelninh/open-capability-network",
+  "title": "Open Capability Network",
+  "description": "Trust infrastructure for agents: preflight, evidence, freshness, authority, entity resolution and independent evaluation with explicit receipts and authority boundaries.",
+  "repository": {
+    "url": "https://github.com/mikelninh/digital-worker-factory",
+    "source": "github"
+  },
+  "version": "0.1.0",
+  "remotes": [
+    {
+      "type": "streamable-http",
+      "url": "https://REPLACE_WITH_PUBLIC_OCN_HOST/mcp"
+    }
+  ],
+  "_meta": {
+    "io.modelcontextprotocol.registry/publisher-provided": {
+      "capabilities": [
+        "trust.preflight.v1",
+        "evidence.verify.v1",
+        "freshness.verify.v1",
+        "authority.check.v1",
+        "entity.resolve.org.v1",
+        "judge.output.v1"
+      ],
+      "payment": ["x402", "institutional-invoice"],
+      "trustInvariant": "Payment buys computation, not permission or trust."
+    }
+  }
+}
