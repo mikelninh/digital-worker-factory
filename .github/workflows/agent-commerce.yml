@@ -33,6 +33,8 @@ jobs:
         run: npm test
       - name: Verify no private keys or mainnet defaults were committed
         run: |
-          ! grep -R -E "(EVM_PRIVATE_KEY|0x[0-9a-fA-F]{64})" agent-commerce --exclude='*.md'
+          ! grep -R -E "(EVM_PRIVATE_KEY|0x[0-9a-fA-F]{64})" agent-commerce \
+            --exclude='*.md' \
+            --exclude-dir=node_modules
           grep -q "eip155:84532" agent-commerce/server.mjs
           grep -q "mainnet_requires_explicit_ALLOW_MAINNET" agent-commerce/server.mjs
