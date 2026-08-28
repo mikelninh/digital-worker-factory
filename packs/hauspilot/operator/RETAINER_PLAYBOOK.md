@@ -1,21 +1,32 @@
-# Managed Operations Retainer — Operator Playbook
+# Mara Managed Operations — Operator Playbook
 
 ## Mission
 
-After a pilot reaches **KEEP**, turn the proven workflow into a repeatable managed service without giving the AI new authority.
+After a Proof Week reaches **KEEP** and the customer explicitly opts in, turn the proven workflow into a repeatable monthly service without giving the AI unearned authority.
 
-> Receive the recurring customer input, work the checklist, surface exceptions, coordinate review, produce the monthly proof, and escalate anything outside the approved boundary.
+> Receive recurring customer input, work the checklist, surface exceptions, coordinate review, produce monthly proof, and escalate anything outside the approved boundary.
+
+## Commercial contract
+
+Standard launch offer for one proven workflow:
+
+- **€1,500 net/month**
+- only after explicit customer opt-in
+- when the customer continues directly after the €990 Proof Week, the **€990 is credited in full against month 1**
+- no automatic continuation after the Proof Week
+- additional workflows / unusual scope go to Sales/Owner
 
 ## Retainer state
 
 A customer may enter `ACTIVE_MANAGED_OPS` only when:
 
-- pilot verdict is `KEEP`
-- commercial retainer scope is agreed
+- Proof Week verdict is `KEEP`
+- customer explicitly accepted the monthly service
+- commercial scope is agreed
 - one workflow is explicitly named
 - data source / delivery cadence is agreed
 - customer reviewer is named
-- Operations Assistant is named
+- Operations owner is named
 - privacy / processor / retention decisions still cover the recurring workflow
 - any material data-source or permission change passes a new review
 
@@ -23,17 +34,17 @@ A customer may enter `ACTIVE_MANAGED_OPS` only when:
 
 1. **Receive** — collect the agreed new cases/data export.
 2. **Preflight** — confirm scope, source, privacy and files still match the approved contract.
-3. **Run** — execute the existing shadow/copilot workflow. Do not introduce write tools.
+3. **Run** — execute the existing shadow/copilot workflow. Do not silently introduce new write authority.
 4. **Exceptions** — sort cases by risk, ambiguity and confidence.
-5. **Human review** — reviewer uses ACCEPT / EDIT / REJECT.
+5. **Human review** — reviewer decides Richtig / Ändern / Falsch for required review cases.
 6. **Proof** — generate monthly quality, safety, time and value report.
-7. **Improve** — cluster EDIT/REJECT reasons and add them to evals before changing prompts/rules.
+7. **Improve** — cluster corrections/rejections and add them to evals before changing prompts/rules.
 8. **Decide** — `KEEP`, `FIX`, `ESCALATE`, or propose an additional workflow.
 
 ## Operator checklist
 
 ### Before each cycle
-- [ ] customer and workflow match retainer scope
+- [ ] customer and workflow match monthly scope
 - [ ] expected data source received
 - [ ] no new integration or permission appeared silently
 - [ ] privacy/retention conditions are still valid
@@ -44,32 +55,32 @@ A customer may enter `ACTIVE_MANAGED_OPS` only when:
 - [ ] unsafe executions = 0
 - [ ] policy violations reviewed
 - [ ] exception queue sent to named reviewer
-- [ ] review completed
-- [ ] EDIT/REJECT reasons captured
+- [ ] required review completed
+- [ ] corrections/rejections captured
 - [ ] monthly report generated
 - [ ] customer-facing summary prepared
 
 ## STOP / escalation rules
 
-The Operations Assistant must stop or escalate when any of these occur:
+Operations must stop or escalate when any of these occur:
 
 - privacy/preflight is red
 - personal-data scope changes materially
 - new production write access is requested
 - payment or bank-detail change is involved
 - legal/tenancy decision is requested
-- autonomous external communication is requested
-- contractor/spend commitment is requested
+- autonomous external communication is requested outside earned authority
+- contractor/spend commitment is requested outside customer-defined authority
 - policy boundary would need to be weakened
 - unsafe execution > 0
 - repeated material quality regression
-- customer asks for a workflow not covered by the current scope
+- customer asks for a workflow not covered by current scope
 
 Never solve a red gate by changing the gate.
 
 ## Ownership
 
-### Operations Assistant owns
+### Operations owns
 - recurring intake
 - checklist / preflight
 - starting approved runs
@@ -83,10 +94,9 @@ Never solve a red gate by changing the gate.
 - domain judgment
 - consequential approval
 
-### Founder / Sales owns
-- pricing and commercial scope
-- renewals
-- new workflow sales
+### Sales / Owner owns
+- non-standard pricing or commercial scope
+- additional workflow sales
 - major customer relationship issues
 - policy/scope expansion decisions
 
@@ -95,18 +105,16 @@ Never solve a red gate by changing the gate.
 - schema/integration bugs
 - recurring technical failures
 
-## Commercial handoff
+## Product progression
 
-The retainer offer should be described as **Managed AI Operations**, not as autonomous software.
+The managed monthly service is the bridge toward Mara as a durable digital employee. Production authority still expands in this order:
 
-Initial pricing anchor:
-- **from €750/month** for one already-proven workflow
-- expansion / additional workflow can be priced higher after evidence
+**Microsoft 365 read-only → Live Shadow → Copilot approvals → earned low-risk automation → bounded workflow ownership**
 
-Final price should reflect the real pilot baseline, case volume, review burden and measured value. Do not promise a fixed case capacity before it is measured.
+A monthly subscription does not itself grant autonomy.
 
 ## Operating target
 
 The system is successful when a reliable non-engineer can run a stable customer cycle without terminal, JSON editing, prompt engineering or OpenAI expertise.
 
-Target, not yet proven: after stabilization, most operator effort should be exception handling and coordination rather than case-by-case processing.
+After stabilization, most human effort should be exception handling and coordination rather than case-by-case processing.
