@@ -1,5 +1,5 @@
 {
-  "schema": "ocn.trust-proof-registry/2",
+  "schema": "ocn.trust-proof-registry/3",
   "asOf": "2026-08-29",
   "status": "pre-public-validation",
   "principle": "Verifiable assurance for specific claims in a specific context at a specific time; never a universal trust score.",
@@ -13,30 +13,50 @@
   },
   "globalProofs": [
     {
-      "id": "trust-kernel-formal-v2",
-      "type": "bounded_exhaustive_model_check",
+      "id": "production-trust-kernel-bounded-v2",
+      "type": "bounded_exhaustive_model_check_over_production_functions",
       "status": "green_ci",
       "source": "formal/ocn-kernel-model.mjs",
+      "lastKnownRun": {"exploredStates": 966, "assertions": 4564, "result": "PASS"},
       "scope": [
         "explicit-grant authority",
         "payment never grants authority",
         "stale evidence blocks",
         "insufficient evidence blocks",
         "write/consequential human-review invariant",
-        "payment intent merchant binding",
-        "payment intent beneficiary binding",
-        "payment intent amount/currency binding",
-        "payment intent expiry and replay blocking",
+        "payment intent merchant/beneficiary/amount/currency/expiry/replay bindings",
         "payment intent mandate-or-human-approval invariant",
         "review/block do not execute in mediator model",
         "idempotency replay mediator invariant"
-      ],
+      ]
+    },
+    {
+      "id": "tla-trust-state-machine-v1",
+      "type": "independent_TLA_plus_TLC_model_check",
+      "status": "green_ci",
+      "spec": "formal/OCNTrustKernel.tla",
+      "config": "formal/OCNTrustKernel.cfg",
+      "tool": "TLA+ TLC 2.19 / pinned v1.7.4 tool bundle",
+      "scope": [
+        "hard merchant/beneficiary/amount/currency/freshness/replay bindings are required before verified/approved/executed states",
+        "approved/executing/executed requires mandate or observed human approval",
+        "payment state alone never grants authority",
+        "review/blocked states cannot execute",
+        "replay or any hard mismatch cannot execute",
+        "execution count never exceeds one in the specified state machine"
+      ]
+    },
+    {
+      "id": "formal-proof-limitations",
+      "type": "scope_boundary",
+      "status": "published",
       "limitations": [
-        "bounded finite-state verification, not proof of every possible program/environment state",
+        "model checking proves invariants of the specified/modelled state spaces, not every possible program/environment state",
         "does not prove external-world truth or upstream registry integrity",
         "does not prove arbitrary LLM correctness",
-        "does not yet prove every downstream execution adapter is equivalent to the abstract mediator",
-        "does not guarantee zero fraud"
+        "does not yet prove every downstream execution adapter is refinement-equivalent to the TLA+ model",
+        "does not guarantee zero fraud, merchant fulfilment or financial recovery",
+        "A5 requires independent external attestation and is never self-awarded"
       ]
     },
     {
@@ -54,7 +74,7 @@
       "readiness": "built_green_ci_public_hosting_pending",
       "claimFamilies": ["authority", "evidence", "freshness", "human-oversight"],
       "assurance": {"deterministicKernel": "A3", "operational": "A0"},
-      "formalCoverage": "authority/freshness/evidence/human-review invariants in bounded production-kernel model",
+      "formalCoverage": "production bounded checker plus independent TLA+ state-machine invariants for the high-impact authorization/execution lifecycle",
       "proves": ["declared checks executed", "blocking/review reasons", "payment does not grant authority"],
       "doesNotProve": ["absolute truth", "universal safety", "legal/clinical correctness outside validated scope"]
     },
@@ -63,7 +83,7 @@
       "readiness": "built_green_ci_public_hosting_pending",
       "claimFamilies": ["authority"],
       "assurance": {"explicitGrantLogic": "A3", "externalCredentialTruth": "A0"},
-      "formalCoverage": "all combinations in bounded actor/capability/action/scope/active-grant model",
+      "formalCoverage": "bounded actor/capability/action/scope/active-grant checker plus TLA+ authorization-before-execution invariant",
       "proves": ["matching active explicit grant exists or does not exist"],
       "doesNotProve": ["that an upstream identity/credential source is uncompromised"]
     },
@@ -104,12 +124,12 @@
       "readiness": "built_formally_model_checked_green_ci_public_hosting_pending",
       "claimFamilies": ["intent", "counterparty", "beneficiary", "amount", "currency", "authority", "replay"],
       "assurance": {"deterministicIntentKernel": "A3", "merchantOrRegistryTruth": "A0", "operational": "A0"},
-      "formalCoverage": "bounded exhaustive combinations of merchant verification/identity, beneficiary, amount, currency, intent expiry, mandate/human approval and replay",
+      "formalCoverage": "production bounded checker plus independent TLA+ lifecycle model for merchant/beneficiary/amount/currency/freshness/replay and authorization-before-execution",
       "proves": [
         "proposed payment remains exactly bound to supplied merchant/beneficiary/amount/currency intent",
         "expired intent and detected replay block",
-        "allow requires verified mandate or observed human approval",
-        "the assurance check itself never executes payment and payment never grants authority"
+        "allow/execution path requires verified mandate or observed human approval",
+        "the assurance check itself never executes payment and payment alone never grants authority"
       ],
       "doesNotProve": ["merchant fulfilment or honesty", "upstream registry integrity", "zero fraud", "recovery/chargeback outcome"]
     }
@@ -123,6 +143,7 @@
     "measured buyer-confirmed useful trust-gap finding",
     "buyer adjudication of false positives and false negatives",
     "hosted latency/reliability baseline",
+    "refinement/equivalence evidence from execution adapters to formal model before broad enforcement",
     "real operational outcomes for A4",
     "independent audit/attestation for A5"
   ]
