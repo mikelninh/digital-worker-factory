@@ -1,0 +1,116 @@
+{
+  "schema": "ocn.trust-proof-registry/1",
+  "asOf": "2026-08-29",
+  "status": "pre-public-validation",
+  "principle": "Verifiable assurance for specific claims in a specific context at a specific time; never a universal trust score.",
+  "assuranceLevels": {
+    "A0": "unknown",
+    "A1": "declared",
+    "A2": "verified",
+    "A3": "evaluated",
+    "A4": "operationally proven",
+    "A5": "independently attested"
+  },
+  "globalProofs": [
+    {
+      "id": "authority-kernel-formal-v1",
+      "type": "bounded_exhaustive_model_check",
+      "status": "ci-gated",
+      "scope": [
+        "explicit-grant authority",
+        "payment never grants authority",
+        "stale evidence blocks",
+        "insufficient evidence blocks",
+        "write/consequential human-review invariant",
+        "review/block do not execute",
+        "idempotency replay mediator invariant"
+      ],
+      "source": "formal/ocn-kernel-model.mjs",
+      "limitations": [
+        "bounded finite-state verification",
+        "does not prove external-world truth",
+        "does not prove arbitrary LLM correctness",
+        "does not yet prove every downstream adapter is equivalent to the abstract execution mediator"
+      ]
+    },
+    {
+      "id": "agent-commerce-x402-settlement-1",
+      "type": "onchain-testnet-settlement",
+      "status": "proven",
+      "network": "eip155:84532",
+      "transaction": "0xb28f1b80c766f02ad1fb3d53ae718b51a734ad41814ef8acd75bfcaa5272f385",
+      "claim": "A machine buyer successfully paid for bounded computation while paymentGrantedAuthority remained false."
+    }
+  ],
+  "capabilities": [
+    {
+      "id": "trust.preflight.v1",
+      "readiness": "built_green_ci_public_hosting_pending",
+      "claimFamilies": ["authority", "evidence", "freshness", "human-oversight"],
+      "assurance": {"deterministicKernel": "A3", "operational": "A0"},
+      "formalCoverage": "authority/freshness/evidence/human-review invariants in bounded production-kernel model",
+      "proves": ["declared checks executed", "blocking/review reasons", "payment does not grant authority"],
+      "doesNotProve": ["absolute truth", "universal safety", "legal/clinical correctness outside validated scope"]
+    },
+    {
+      "id": "authority.check.v1",
+      "readiness": "built_green_ci_public_hosting_pending",
+      "claimFamilies": ["authority"],
+      "assurance": {"explicitGrantLogic": "A3", "externalCredentialTruth": "A0"},
+      "formalCoverage": "all combinations in bounded actor/capability/action/scope/active-grant model",
+      "proves": ["matching active explicit grant exists or does not exist"],
+      "doesNotProve": ["that an upstream identity/credential source is uncompromised"]
+    },
+    {
+      "id": "freshness.verify.v1",
+      "readiness": "built_green_ci_public_hosting_pending",
+      "claimFamilies": ["freshness"],
+      "assurance": {"timestampPolicy": "A3", "sourceTruth": "A0"},
+      "proves": ["observation timestamp satisfies explicit max-age policy"],
+      "doesNotProve": ["that fresh information is substantively correct"]
+    },
+    {
+      "id": "evidence.verify.v1",
+      "readiness": "built_green_ci_public_hosting_pending",
+      "claimFamilies": ["evidence", "provenance"],
+      "assurance": {"bindingStructure": "A3", "substantiveTruth": "A0"},
+      "proves": ["claims are covered by supplied evidence references", "provenance locator/hash structure is present"],
+      "doesNotProve": ["that a cited source or claim is substantively true"]
+    },
+    {
+      "id": "entity.resolve.org.v1",
+      "readiness": "built_green_ci_public_hosting_pending",
+      "claimFamilies": ["entity-resolution"],
+      "assurance": {"boundedIdentifierMatch": "A2", "realWorldIdentity": "A0"},
+      "proves": ["bounded supplied identifiers match under the published scoring rule"],
+      "doesNotProve": ["external registry identity unless a verified registry provider is connected", "automatic merge authority"]
+    },
+    {
+      "id": "judge.output.v1",
+      "readiness": "adapter_ready_public_hosting_pending",
+      "claimFamilies": ["evaluation"],
+      "assurance": {"adapterContract": "A2", "operational": "A0"},
+      "proves": ["bounded evaluation can be invoked through the provider adapter when configured"],
+      "doesNotProve": ["universal correctness of an evaluated output"]
+    },
+    {
+      "id": "payment.intent.preflight.v1",
+      "readiness": "design_and_formalization_in_progress",
+      "claimFamilies": ["intent", "counterparty", "beneficiary", "amount", "authority", "replay"],
+      "assurance": {"operational": "A0"},
+      "targetProof": "requested payment exactly satisfies the verified user/company mandate and has not been replayed",
+      "doesNotProve": ["merchant fulfilment", "zero fraud", "recovery/chargeback outcome"]
+    }
+  ],
+  "nextPromotionGates": [
+    "stable public HTTPS endpoint",
+    "public proof card for each live event",
+    "1 then 10 then 20 repeated external settlements",
+    "first external Shadow Mode workflow",
+    "measured useful trust-gap finding",
+    "buyer adjudication of false positive/false negative",
+    "hosted latency/reliability baseline",
+    "real operational outcomes for A4",
+    "independent audit/attestation for A5"
+  ]
+}
