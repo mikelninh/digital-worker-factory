@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict'
 
+import { paymentIntentPreflight } from '../agent-commerce/payment-intent.mjs'
 import { checkAuthority, trustPreflight } from '../agent-commerce/trusted-events.mjs'
 
 const NOW = Date.parse('2026-08-29T00:00:00Z')
@@ -114,6 +115,73 @@ for (const risk of ['read', 'write', 'consequential']) {
   }
 }
 
+// Exhaustively model-check the production payment-intent guard. These dimensions
+// represent the core fraud-redirection surface: merchant identity, beneficiary,
+// amount, currency, expiry, authorization/mandate, and replay.
+for (const merchantVerified of BOOL) {
+  for (const merchantMatches of BOOL) {
+    for (const beneficiaryMatches of BOOL) {
+      for (const amountMatches of BOOL) {
+        for (const currencyMatches of BOOL) {
+          for (const intentFresh of BOOL) {
+            for (const mandateCovered of BOOL) {
+              for (const humanApproval of BOOL) {
+                for (const replayDetected of BOOL) {
+                  explored += 1
+                  const input = {
+                    intent: {
+                      intentId: 'intent-1', merchantId: 'merchant-7', beneficiary: 'wallet-approved', amount: '10.00', currency: 'USD',
+                      validUntil: intentFresh ? '2026-08-29T01:00:00Z' : '2026-08-28T23:00:00Z',
+                    },
+                    request: {
+                      merchantId: 'merchant-7',
+                      beneficiary: beneficiaryMatches ? 'wallet-approved' : 'wallet-attacker',
+                      amount: amountMatches ? '10.00' : '11.00',
+                      currency: currencyMatches ? 'USD' : 'EUR',
+                    },
+                    merchant: { id: merchantMatches ? 'merchant-7' : 'merchant-attacker', verified: merchantVerified },
+                    humanApproval,
+                    replayDetected,
+                  }
+                  if (mandateCovered) {
+                    input.mandate = {
+                      active: true,
+                      maxAmount: '25.00',
+                      currencies: [currencyMatches ? 'USD' : 'EUR'],
+                      merchantIds: ['merchant-7'],
+                      beneficiaries: [beneficiaryMatches ? 'wallet-approved' : 'wallet-attacker'],
+                      validUntil: '2026-08-29T01:00:00Z',
+                    }
+                  }
+
+                  const result = paymentIntentPreflight(input, { now: NOW })
+                  prove(result.authority.paymentGrantedAuthority === false, 'payment-intent check cannot grant authority by being paid')
+                  prove(result.authority.paymentExecutionPerformed === false, 'payment-intent check must never execute payment')
+
+                  if (!merchantVerified) prove(result.decision === 'block', 'unverified merchant must block')
+                  if (!merchantMatches) prove(result.decision === 'block', 'merchant identity mismatch must block')
+                  if (!beneficiaryMatches) prove(result.decision === 'block', 'beneficiary switch must block')
+                  if (!amountMatches) prove(result.decision === 'block', 'amount drift must block')
+                  if (!currencyMatches) prove(result.decision === 'block', 'currency drift must block')
+                  if (!intentFresh) prove(result.decision === 'block', 'expired intent must block')
+                  if (replayDetected) prove(result.decision === 'block', 'detected replay must block')
+
+                  const hardBindingsPass = merchantVerified && merchantMatches && beneficiaryMatches && amountMatches && currencyMatches && intentFresh && !replayDetected
+                  if (hardBindingsPass && !mandateCovered && !humanApproval) prove(result.decision === 'review', 'clean payment without mandate or human approval must review')
+                  if (result.decision === 'allow') {
+                    prove(hardBindingsPass, 'allow requires every hard intent binding')
+                    prove(mandateCovered || humanApproval, 'allow requires verified mandate or human approval')
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
 // Model the execution mediator that sits after preflight. Only `allow` may execute,
 // and an idempotency key that has already executed may never execute twice.
 for (const decision of ['allow', 'review', 'block']) {
@@ -126,8 +194,8 @@ for (const decision of ['allow', 'review', 'block']) {
 }
 
 console.log(JSON.stringify({
-  schema: 'ocn.formal-check/1',
-  model: 'bounded exhaustive model check over production deterministic trust kernel',
+  schema: 'ocn.formal-check/2',
+  model: 'bounded exhaustive model check over production deterministic trust and payment-intent kernels',
   exploredStates: explored,
   assertions,
   result: 'PASS',
@@ -139,13 +207,20 @@ console.log(JSON.stringify({
     'insufficient evidence blocks',
     'missing explicit authority blocks',
     'write/consequential work cannot be allowed without observed human approval in v1',
+    'payment intent cannot allow an unverified/mismatched merchant',
+    'payment intent cannot allow a changed beneficiary',
+    'payment intent cannot allow amount or currency drift',
+    'payment intent cannot allow an expired intent or detected replay',
+    'payment intent allow requires a verified mandate or observed human approval',
+    'payment-intent verification never executes payment',
     'review/block decisions cannot execute',
     'an already-executed idempotency key cannot execute twice in the mediator model',
   ],
   limitations: [
     'bounded finite-state verification, not a mathematical proof of every possible implementation state',
-    'does not prove external sources are substantively true',
+    'does not prove external sources, merchants or identity registries are substantively trustworthy',
     'does not prove an LLM is correct or safe in arbitrary contexts',
     'does not yet prove equivalence of every downstream execution adapter to this abstract mediator',
+    'does not guarantee zero fraud or financial recovery',
   ],
 }, null, 2))
