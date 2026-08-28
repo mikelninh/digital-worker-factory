@@ -5,12 +5,14 @@ on:
     paths:
       - 'agent-commerce/**'
       - 'core/**'
+      - '.dockerignore'
       - '.github/workflows/agent-commerce.yml'
   push:
     branches: [main]
     paths:
       - 'agent-commerce/**'
       - 'core/**'
+      - '.dockerignore'
       - '.github/workflows/agent-commerce.yml'
 
 jobs:
