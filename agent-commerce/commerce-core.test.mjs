@@ -60,8 +60,25 @@ test('service receipt binds request/output while denying authority escalation', 
 
   assert.equal(receipt.payment.status, 'settled')
   assert.equal(receipt.payment.settlementRef, 'test-settlement')
+  assert.equal(receipt.payment.settlementProof, 'inline')
   assert.equal(receipt.authority.paymentGrantedAuthority, false)
   assert.equal(receipt.authority.consequentialActionExecuted, false)
   assert.match(receipt.requestHash, /^[a-f0-9]{64}$/)
   assert.match(receipt.outputHash, /^[a-f0-9]{64}$/)
+})
+
+test('real x402 handler receipt cannot claim settlement before PAYMENT-RESPONSE exists', () => {
+  const descriptor = publicCapabilityDescriptor(baseOffer)
+  const receipt = makeServiceReceipt({
+    descriptor,
+    request: { artifact: 'hello' },
+    output: { score: 0.8 },
+    traceId: 'trace-2',
+    payment: { settlementRef: null },
+  })
+
+  assert.equal(receipt.payment.status, 'verified')
+  assert.equal(receipt.payment.settlementRef, null)
+  assert.equal(receipt.payment.settlementProof, 'PAYMENT-RESPONSE')
+  assert.equal(receipt.authority.paymentGrantedAuthority, false)
 })
