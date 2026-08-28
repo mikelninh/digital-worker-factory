@@ -1,0 +1,39 @@
+name: capability-outcome-receipts
+on:
+  pull_request:
+    paths:
+      - 'core/agent-gateway.mjs'
+      - 'core/agent-gateway.test.mjs'
+      - 'core/outcome-receipt.mjs'
+      - 'core/outcome-receipt.test.mjs'
+      - 'CONTEXT.md'
+      - 'docs/ETHICAL_REVENUE.md'
+      - '.github/workflows/outcome-receipts.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'core/agent-gateway.mjs'
+      - 'core/outcome-receipt.mjs'
+      - 'core/outcome-receipt.test.mjs'
+      - 'CONTEXT.md'
+      - 'docs/ETHICAL_REVENUE.md'
+      - '.github/workflows/outcome-receipts.yml'
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Syntax
+        run: |
+          node --check core/outcome-receipt.mjs
+          node --check core/agent-gateway.mjs
+      - name: Shared gateway + outcome receipt contracts
+        run: node --test core/agent-gateway.test.mjs core/outcome-receipt.test.mjs core/factory-gateway.test.mjs core/providers/gitlaw.test.mjs
+      - name: Ethical billing invariant
+        run: |
+          grep -q "Failed/blocked/shadowed is not billable" CONTEXT.md
+          grep -q "blocked.*not billable" docs/ETHICAL_REVENUE.md
