@@ -99,6 +99,15 @@ jobs:
           grep -q "ACTIVE_MANAGED_OPS" packs/hauspilot/operator/RETAINER_PLAYBOOK.md
       - name: Run managed operations state-machine tests
         run: node --test packs/hauspilot/retainer/state.test.mjs
+      - name: Run digital employee authority and durable-state tests
+        run: node --test packs/hauspilot/digital-employee/digital-employee.test.mjs
+      - name: Verify digital employee self-service UI
+        run: |
+          test -s site/hauspilot-digital-employee.html
+          test -s packs/hauspilot/digital-employee/README.md
+          grep -q "Mara is working" site/hauspilot-digital-employee.html
+          grep -q "Self-service setup" site/hauspilot-digital-employee.html
+          grep -q "Autonomy is earned from evidence" site/hauspilot-digital-employee.html
       - name: Smoke retainer workspace generator
         run: |
           node packs/hauspilot/retainer/new-retainer.mjs --id ci-demo --customer "CI Demo GmbH" --reviewer "Reviewer" --operator "Ops" --workflow repair_intake --fee 750
