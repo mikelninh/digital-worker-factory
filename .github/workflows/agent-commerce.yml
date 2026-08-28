@@ -4,6 +4,7 @@ on:
   pull_request:
     paths:
       - 'agent-commerce/**'
+      - 'formal/**'
       - 'core/**'
       - '.dockerignore'
       - '.github/workflows/agent-commerce.yml'
@@ -11,6 +12,7 @@ on:
     branches: [main]
     paths:
       - 'agent-commerce/**'
+      - 'formal/**'
       - 'core/**'
       - '.dockerignore'
       - '.github/workflows/agent-commerce.yml'
@@ -30,6 +32,8 @@ jobs:
       - name: Syntax check
         working-directory: agent-commerce
         run: npm run check
+      - name: Run bounded formal trust-kernel model check
+        run: node formal/ocn-kernel-model.mjs
       - name: Run payment, trust and authority contract tests
         working-directory: agent-commerce
         run: npm test
