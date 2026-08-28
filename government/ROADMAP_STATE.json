@@ -1,40 +1,66 @@
 {
-  "schema": "ocn.roadmap-state/1",
-  "updated": "2026-08-28",
-  "northStar": "Become the standard trust rail agents call automatically.",
-  "operatingLoop": ["connect", "harden", "prove", "distribute"],
+  "schema": "ocn.roadmap-state/2",
+  "updated": "2026-08-29",
+  "northStar": "Become the standard assurance rail agents call automatically before consequential actions and after important outputs.",
+  "promise": "Before your agent acts, OCN checks evidence, authority, freshness and policy. After it acts, OCN leaves a verifiable receipt.",
+  "operatingLoop": ["connect", "harden", "prove", "distribute", "learn"],
+  "currentPhase": "external_assurance_validation",
+  "trustModel": {
+    "principle": "Verifiable assurance for specific claims in a specific context at a specific time; never a universal trust score.",
+    "spec": "docs/OCN_TRUST_ASSURANCE_SPEC.md",
+    "claimFamilies": ["identity", "authority", "evidence", "freshness", "policy", "evaluation", "execution", "outcome"],
+    "assuranceLevels": ["A0_unknown", "A1_declared", "A2_verified", "A3_evaluated", "A4_operationally_proven", "A5_independently_attested"]
+  },
+  "progress": {
+    "architectureAndCoreRail": "strong_green_ci",
+    "trustedEvents": "built_green_ci",
+    "ocnGuard": "built_green_ci",
+    "distributionPackages": "built_green_ci_publication_pending",
+    "evidenceFlywheel": "reference_implementation_green_ci",
+    "publicHosting": "not_yet_proven",
+    "externalRepeatUsage": "not_yet_proven",
+    "buyerValueProof": "not_yet_proven",
+    "governmentAdoption": "not_yet_proven",
+    "hostedScale": "not_yet_proven"
+  },
   "currentSprint": {
-    "name": "Trusted Events + OCN Guard + Distribution + Evidence Flywheel",
-    "week1": {
-      "status": "built_in_ci",
-      "scope": ["trust.preflight.v1", "evidence.verify.v1", "freshness.verify.v1", "authority.check.v1", "entity.resolve.org.v1"],
-      "pricingUsd": {"trust.preflight.v1":"0.005","evidence.verify.v1":"0.003","freshness.verify.v1":"0.001","authority.check.v1":"0.002","entity.resolve.org.v1":"0.01"}
+    "name": "Launch + Shadow Mode + Trust Proof Registry",
+    "completedFoundation": {
+      "trustedEvents": ["trust.preflight.v1", "evidence.verify.v1", "freshness.verify.v1", "authority.check.v1", "entity.resolve.org.v1"],
+      "pricingUsd": {"trust.preflight.v1":"0.005","evidence.verify.v1":"0.003","freshness.verify.v1":"0.001","authority.check.v1":"0.002","entity.resolve.org.v1":"0.01"},
+      "guard": ["tool wrapper", "guarded fetch", "preflight allow/review/block", "postflight evidence/Judge hooks"],
+      "distribution": ["x402 Bazaar metadata", "Agentic.Market recipe", "AWS AgentCore recipe", "Cloudflare recipe", "paid MCP bridge", "paid JS Guard SDK"],
+      "evidence": ["privacy-safe trust-event telemetry", "outcome labels", "aggregate metrics", "feedback endpoint", "usage budgets"],
+      "deployment": ["portable OCN production container"]
     },
-    "week2": {
-      "status": "built_in_ci",
-      "scope": ["OCN Guard", "tool executor wrapper", "guarded fetch", "preflight block/review/allow", "postflight evidence and Judge hooks"]
-    },
-    "week3": {
-      "status": "distribution_ready_hosting_pending",
-      "scope": ["x402 Bazaar discovery", "Agentic.Market launch recipe", "AWS AgentCore recipe", "Cloudflare edge recipe", "paid MCP buyer bridge", "MCP Registry templates"]
-    },
-    "week4": {
-      "status": "built_in_ci",
-      "scope": ["privacy-safe trust-event telemetry", "outcome labels", "aggregate metrics", "feedback endpoint", "usage budgets"]
-    },
-    "externalUnlock": "Deploy exact green head to public HTTPS, complete external x402 calls, verify discovery/indexing, then promote M2/M3 only with evidence."
+    "nextCriticalMoves": [
+      "Deploy exact green head to a stable public HTTPS endpoint.",
+      "Publish a Trust Proof Registry and example Trust Envelope for every live trusted event.",
+      "Run 1, then 10, then 20 repeated external x402 trusted-event settlements against the public endpoint.",
+      "Verify Bazaar/Agentic.Market discovery and publish MCP/JS developer installation paths.",
+      "Launch OCN Shadow Mode on one external agent workflow with no blocking authority.",
+      "Measure stale evidence, weak evidence, authority mismatches, review time, false-block/false-allow and p95 latency.",
+      "Convert one useful Shadow Mode finding into a paid EUR 5k-15k design-partner pilot or EUR 25k-50k institutional pilot.",
+      "Use the first buyer evidence to decide which capability to deepen next; do not expand the 160-capability backlog speculatively.",
+      "Begin targeted discovery with public IT providers, Agentic AI Hub participants and regulated enterprise agent teams.",
+      "Run hosted 100 RPS then 1k RPS tests only after the public deterministic trust event is stable."
+    ],
+    "goToMarket": "docs/OCN_GTM_DISCOVERY.md",
+    "externalUnlock": "Public HTTPS + repeat external paid trust events + one Shadow Mode design partner."
   },
   "milestones": [
     {"id":"M0","name":"First machine payment proof","status":"achieved"},
-    {"id":"M1","name":"OpenCapabilities network defined","status":"achieved"},
+    {"id":"M1","name":"OpenCapabilities network and assurance architecture defined","status":"achieved"},
     {"id":"M2","name":"Public trust rail live","status":"in_progress"},
-    {"id":"M3","name":"First horizontal trust capability live","status":"in_progress"},
-    {"id":"M4","name":"First external agent user","status":"planned"},
-    {"id":"M5","name":"First government/public-IT buyer conversation","status":"planned"},
-    {"id":"M6","name":"First paid institutional pilot","status":"planned"},
-    {"id":"M7","name":"First repeat deployment","status":"planned"},
-    {"id":"M8","name":"First measured scale proof","status":"planned"},
-    {"id":"M9","name":"Sovereign/customer-controlled deployment validated","status":"planned"},
-    {"id":"M10","name":"Network business proof","status":"planned"}
+    {"id":"M3","name":"First horizontal trusted event live with public proof card","status":"in_progress"},
+    {"id":"M4","name":"First external repeat-paying agent","status":"planned"},
+    {"id":"M5","name":"First external Shadow Mode workflow and useful trust-gap finding","status":"planned"},
+    {"id":"M6","name":"First paid institutional/design-partner pilot","status":"planned"},
+    {"id":"M7","name":"First customer moves Shadow -> Enforcement","status":"planned"},
+    {"id":"M8","name":"First repeat deployment across multiple workflows/agents","status":"planned"},
+    {"id":"M9","name":"First measured hosted scale proof","status":"planned"},
+    {"id":"M10","name":"Sovereign/customer-controlled deployment validated","status":"planned"},
+    {"id":"M11","name":"Independent assurance/security/compliance review","status":"planned"},
+    {"id":"M12","name":"Network business proof: repeat usage + expansion + positive unit economics","status":"planned"}
   ]
 }
