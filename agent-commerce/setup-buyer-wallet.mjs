@@ -23,7 +23,7 @@ export async function createBuyerWallet({ file = DEFAULT_FILE } = {}) {
     '# Testnet-only Agent Commerce buyer wallet. NEVER COMMIT OR SHARE THIS FILE.',
     `BUYER_EVM_KEY=${privateKey}`,
     `BUYER_ADDRESS=${account.address}`,
-    'AGENT_COMMERCE_URL=',
+    'AGENT_COMMERCE_URL=http://127.0.0.1:4021',
     'MAX_PAYMENT_USDC_ATOMIC=20000',
     '',
   ].join('\n')
@@ -36,6 +36,7 @@ async function main() {
   const result = await createBuyerWallet()
   console.log(`Created testnet-only buyer wallet: ${result.address}`)
   console.log(`Secret stored locally in: ${result.file}`)
+  console.log('Fund only the public address with Base Sepolia test USDC.')
   console.log('Do not paste the private key or .env.buyer contents into chat, GitHub, tickets, or browser code.')
 }
 
