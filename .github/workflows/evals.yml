@@ -69,11 +69,18 @@ jobs:
       - name: Verify customer-facing explainer pages
         run: |
           test -s site/hauspilot.html
+          test -s site/hauspilot-setup.html
           test -s site/hauspilot-onepager.html
           test -s site/hauspilot-privacy.html
           test -s site/agent-capabilities.html
           grep -q "Ein Prozess" site/hauspilot.html
           grep -q "100/100" site/hauspilot.html
+          grep -q "Nichts installieren" site/hauspilot.html
+          grep -q "Sie öffnen nur einen Startlink" site/hauspilot.html
+          grep -q "Kein Download" site/hauspilot-setup.html
+          grep -q "Im ersten Test: nichts nach außen" site/hauspilot-setup.html
+          ! grep -q "client.json" site/hauspilot-setup.html
+          grep -q '"source": "/start"' site/vercel.json
           grep -q "Datenschutz ist ein Gate" site/hauspilot-privacy.html
           grep -q "Build capabilities agents can be trusted to use" site/agent-capabilities.html
           grep -q "Blocked before network" site/agent-capabilities.html
