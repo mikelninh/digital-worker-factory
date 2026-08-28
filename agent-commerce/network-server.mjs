@@ -5,6 +5,7 @@ import { pathToFileURL } from 'node:url'
 import { createHttpJsonAdapter, invokeCapabilityAdapter } from './capability-adapter.mjs'
 import { BASE_SEPOLIA, makeServiceReceipt } from './commerce-core.mjs'
 import { createApp as createCommerceApp } from './server.mjs'
+import { buildTrustedEventCatalog } from './trusted-event-catalog.mjs'
 import { prevalidateTrustedEventInput } from './trusted-event-input.mjs'
 import { createTrustedEventPaymentGate, TRUSTED_EVENT_ROUTES } from './trusted-event-payment.mjs'
 import { executeTrustedEvent, TRUSTED_EVENT_OFFERS } from './trusted-events.mjs'
@@ -53,6 +54,7 @@ export function createNetworkApp({
   usageBudgetStore = new MemoryUsageBudgetStore({ windowMs: 60_000, defaultLimit: 600 }),
   usageLimitPerMinute = Number(process.env.OCN_USAGE_LIMIT_PER_MINUTE ?? 600),
   feedbackToken = process.env.OCN_FEEDBACK_TOKEN,
+  publicBaseUrl = process.env.OCN_PUBLIC_BASE_URL ?? null,
   ...commerceOptions
 } = {}) {
   const app = createCommerceApp(commerceOptions)
@@ -74,6 +76,11 @@ export function createNetworkApp({
       fetchImpl: judgeFetchImpl,
     })
   }
+
+  app.get('/.well-known/trusted-events.json', (_req, res) => {
+    res.set('cache-control', 'public, max-age=60, stale-while-revalidate=300')
+    return res.json(buildTrustedEventCatalog({ baseUrl: publicBaseUrl, network }))
+  })
 
   app.get('/v1/network/health', (_req, res) => res.json({
     status: judgeAdapter ? 'ok' : 'degraded',
