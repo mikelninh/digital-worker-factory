@@ -8,9 +8,10 @@
   },
   "scripts": {
     "start": "node server.mjs",
+    "setup:buyer": "node setup-buyer-wallet.mjs",
     "smoke:buyer": "node buyer-smoke.mjs",
     "test": "node --test commerce-core.test.mjs server.test.mjs buyer-smoke.test.mjs",
-    "check": "node --check commerce-core.mjs && node --check triage-capability.mjs && node --check server.mjs && node --check buyer-smoke.mjs"
+    "check": "node --check commerce-core.mjs && node --check triage-capability.mjs && node --check server.mjs && node --check setup-buyer-wallet.mjs && node --check buyer-smoke.mjs"
   },
   "dependencies": {
     "@x402/core": "2.23.0",
