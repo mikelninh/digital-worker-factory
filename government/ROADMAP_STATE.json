@@ -1,5 +1,5 @@
 {
-  "schema": "ocn.roadmap-state/7",
+  "schema": "ocn.roadmap-state/8",
   "updated": "2026-08-29",
   "northStar": "Become the standard assurance rail agents call automatically before consequential actions and after important outputs.",
   "promise": "Before your agent acts, OCN checks evidence, authority, freshness, policy and intent. After it acts, OCN leaves a verifiable receipt.",
@@ -24,7 +24,7 @@
     "distributionPackages": "built_green_ci_publication_pending",
     "evidenceFlywheel": "reference_implementation_green_ci",
     "portableDeployment": "docker_green_ci_render_frankfurt_live",
-    "repeatPaymentHarness": "freshness_10_of_10_public_success_payment_intent_diagnostics_improved",
+    "repeatPaymentHarness": "freshness_10_of_10_public_success_payment_intent_safe_402_diagnostics_available",
     "publicHosting": "achieved_https_render_build_97aeb6c5f0706724639ecb953589a40d543f4169",
     "firstPublicPaidTrustedEvent": {
       "capabilityId": "freshness.verify.v1",
@@ -58,7 +58,14 @@
     "paymentIntentRepeat10Attempt": {
       "status": "payment_layer_402_before_capability_result",
       "successful": 0,
-      "diagnostics": "improved smoke harness committed to expose safe 402 payment headers and failing call index",
+      "diagnostics": "safe 402 payment headers and failing call index now exposed by the smoke harness",
+      "buyerBalanceCheck": {
+        "address": "0x2b36b350701f82bd25fa34Dc32fC52a2737eF523",
+        "network": "eip155:84532",
+        "usdc": "19.969",
+        "eth": "0",
+        "interpretation": "insufficient Base Sepolia test USDC is ruled out as the 402 cause; zero ETH does not explain the failure because the same wallet already completed x402 settlements"
+      },
       "doesNotInvalidate": "the already-proven single public payment.intent.preflight settlement"
     },
     "externalRepeatUsage": "not_yet_proven",
@@ -68,10 +75,10 @@
     "independentAttestation": "not_yet_proven"
   },
   "currentSprint": {
-    "name": "Diagnose Payment Batch -> 20 Repeat -> Independent Payer -> Shadow -> Paid Pilot",
+    "name": "Diagnose Payment 402 -> 20 Repeat -> Independent Payer -> Shadow -> Paid Pilot",
     "nextCriticalMoves": [
-      "Sync the improved smoke diagnostics and rerun one payment.intent.preflight call; inspect the safe PAYMENT-REQUIRED/402 metadata.",
-      "If the payer has insufficient Base Sepolia USDC, top up only testnet USDC and rerun 10 then 20 payment-intent calls.",
+      "Rerun one payment.intent.preflight call with the safe 402 diagnostics and inspect PAYMENT-REQUIRED/payment metadata; insufficient USDC has been ruled out.",
+      "Fix or route around the identified payment-verification issue, then rerun 10 and 20 payment-intent calls.",
       "Run 20 public paid freshness calls and publish p50/p95/p99/error/settlement distribution.",
       "Verify x402 Bazaar/Agentic.Market discovery and publish MCP/JS installation paths.",
       "Recruit independent x402/MCP/AgentCore builders; earn M4 only with a genuinely independent repeat-paying agent.",
