@@ -39,28 +39,44 @@ Payments are a **proof case**, not the category. The current x402 settlement ano
 7. **Proof over trust.** Every consequential attempt yields a receipt without leaking secrets.
 8. **Composable, not replacement infrastructure.** Consume existing IAM, MCP, payment and provider systems.
 
-## Open standard vs commercial product
+## Standards-first strategy
 
-A strong strategic split is:
+Do **not** create a competing open action/delegation standard by default. Adopt and contribute to emerging neutral contracts where they fit, then concentrate differentiation in the organization-controlled authorization boundary.
 
-### Open / portable
-- action/delegation envelope schema;
-- receipt schema;
-- conformance tests;
-- reference policy semantics;
-- sector profiles.
+Reference architecture:
 
-### Commercial
-- hosted high-availability enforcement gateway;
-- organisation-wide policy management;
-- identity/payment/MCP/provider integrations;
-- approval workflows;
-- receipt registry and audit exports;
-- policy simulation / replay;
-- control centre and kill switch;
-- enterprise/public-sector deployment and support.
+```text
+Open/portable governed contract
+(intent, delegation, purpose, constraints)
+        ↓ conformance ≠ permission
+OUR AUTHORITY ENGINE
+(local policy, institutional rules, budget, risk, approval, revocation)
+        ↓ allow / deny / approval
+framework-neutral enforcement seam
+        ↓
+MCP / API / x402 / database / real-world action
+        ↓
+proof + operational evidence
+```
 
-This makes adoption easier while keeping the high-value operating layer monetisable.
+This makes the company complementary to standards rather than dependent on winning a standards war.
+
+### Open ecosystem we should interoperate with
+- portable governed-contract formats for delegation/intent exchange;
+- framework-neutral enforcement contracts such as Agent Hooks;
+- OAuth/OIDC/IAM for identity;
+- MCP/A2A for tool and agent transport;
+- x402/MPP/conventional rails for payment execution.
+
+### Commercial differentiation
+- institution-specific policy compilation and enforcement;
+- enterprise/public-sector delegation lifecycle and revocation;
+- evidence-bound approvals and progressive autonomy;
+- durable idempotency, retry safety and consequence control;
+- provider-neutral receipt registry, replay and incident attribution;
+- policy simulation, red-team conformance and promotion gates;
+- approval queues, kill switch and control centre;
+- regulated/public-sector profiles and deployment support.
 
 ## Roadmap
 
@@ -85,7 +101,7 @@ This makes adoption easier while keeping the high-value operating layer monetisa
 ### V0.3 — Obvious product
 - Agent Authority Control Centre;
 - policy authoring and simulation;
-- live “why allowed / why blocked” trace;
+- live "why allowed / why blocked" trace;
 - pause/revoke delegation;
 - budget and approval queue;
 - downloadable proof packet.
@@ -100,10 +116,10 @@ This makes adoption easier while keeping the high-value operating layer monetisa
 - deployment profile for EU public administration.
 
 ### V1 — Interoperable trust layer
-- signed delegation credentials;
-- portable action receipts;
-- cross-vendor conformance certification;
-- Trust Passport built from evidence, not self-attestation.
+- consume signed delegation credentials from compatible standards;
+- portable proof export mapped to compatible receipt formats;
+- cross-vendor runtime conformance evidence;
+- Trust Passport built from independently verifiable evidence, not self-attestation.
 
 ## North-star demo
 
@@ -111,7 +127,7 @@ This makes adoption easier while keeping the high-value operating layer monetisa
 
 It may discover and purchase useful machine services, call tools and complete work. Then attack it with overspend, prompt injection, wrong-purpose requests, stale approvals, revoked delegation, retries and payment-provider failures.
 
-Success is not “nothing fails”. Success is:
+Success is not "nothing fails". Success is:
 
 - useful work completes;
 - unauthorised actions make zero provider calls;
