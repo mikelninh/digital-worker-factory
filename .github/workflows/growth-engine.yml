@@ -1,0 +1,43 @@
+name: growth-engine
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Check Growth Agent syntax
+        run: |
+          node --check core/company-future/growth-agent.mjs
+          node --check core/company-future/growth-content.mjs
+          node --check site/authority-scorecard.mjs
+          node --check site/api/leads.js
+      - name: Prove governed Growth Agent
+        run: node --test core/company-future/growth-agent.test.mjs
+      - name: Prove browser/server score parity
+        run: node --test core/company-future/growth-scorecard-parity.test.mjs
+      - name: Prove proof-driven content queue
+        run: node --test core/company-future/growth-content.test.mjs
+      - name: Verify lead magnet and onboarding boundary
+        run: |
+          test -s site/agent-authority-scorecard.html
+          test -s docs/GROWTH_ENGINE.md
+          test -s docs/GROWTH_ENGINE_DATASTORE.sql
+          grep -q "How much power" site/agent-authority-scorecard.html
+          grep -q "Nothing is sent anywhere just to calculate it" site/agent-authority-scorecard.html
+          grep -q "explicit follow-up consent" docs/GROWTH_ENGINE.md
+          grep -q "service-role key must never enter public client code" docs/GROWTH_ENGINE.md
+          grep -q '"source": "/scorecard"' site/vercel.json
+          grep -q "lead_sink_unconfigured" site/api/leads.js
+      - name: Verify attraction loop points to useful proof
+        run: |
+          grep -q "agent-authority-scorecard" core/company-future/growth-content.mjs
+          grep -q "10,000 consequential decisions" core/company-future/growth-content.mjs
+          grep -q "clinical authority" core/company-future/growth-content.mjs
+          grep -q "'/scorecard'" core/company-future/growth-content.mjs
