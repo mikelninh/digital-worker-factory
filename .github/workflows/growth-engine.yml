@@ -17,12 +17,15 @@ jobs:
           node --check core/company-future/growth-agent.mjs
           node --check core/company-future/growth-content.mjs
           node --check core/company-future/growth-live.mjs
+          node --check core/company-future/growth-executors.mjs
           node --check site/authority-scorecard.mjs
           node --check site/api/leads.js
       - name: Prove governed Growth Agent
         run: node --test core/company-future/growth-agent.test.mjs
       - name: Prove live inbound lifecycle and human attention boundary
         run: node --test core/company-future/growth-live.test.mjs
+      - name: Prove governed email and calendar provider boundaries
+        run: node --test core/company-future/growth-executors.test.mjs
       - name: Prove browser/server score parity
         run: node --test core/company-future/growth-scorecard-parity.test.mjs
       - name: Prove proof-driven content queue
