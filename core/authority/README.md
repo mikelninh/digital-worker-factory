@@ -30,8 +30,15 @@ import { AuthorityGateway } from './core/authority/index.mjs'
 const gateway = new AuthorityGateway({ policy, executors })
 
 const result = await gateway.invoke({
-  actor: { id: 'research-agent-7', role: 'research_agent', autonomyLevel: 3 },
-  principal: { id: 'acme', type: 'company' },
+  actor: {
+    id: 'research-agent-7',
+    role: 'research_agent',
+    autonomyLevel: 3,
+  },
+  principal: {
+    id: 'acme',
+    type: 'company',
+  },
   delegation: {
     id: 'delegation-42',
     delegateId: 'research-agent-7',
@@ -47,9 +54,20 @@ const result = await gateway.invoke({
     counterpartyApproved: true,
     idempotencyKey: 'research-2026-08-29-dataset-1',
   },
-  evidence: { claims: ['vendor_terms_checked'] },
-  budget: { currency: 'EUR', spent: 3, limit: 10 },
-  metrics: { cases: 100, acceptanceRate: 0.99, correctionRate: 0.01, unsafeExecutions: 0 },
+  evidence: {
+    claims: ['vendor_terms_checked'],
+  },
+  budget: {
+    currency: 'EUR',
+    spent: 3,
+    limit: 10,
+  },
+  metrics: {
+    cases: 100,
+    acceptanceRate: 0.99,
+    correctionRate: 0.01,
+    unsafeExecutions: 0,
+  },
 })
 ```
 
@@ -91,11 +109,13 @@ The same kernel is tested against:
 - **government:** a casework agent that may read under legal basis but cannot issue a consequential denial without bound human approval;
 - **regulated/legal:** a legal agent whose approved write is still blocked when instruction-injection evidence is present.
 
-The point is not that these policies are production-complete. The point is that **the authority primitive is sector-independent**.
+The point is not that these three policies are production-complete. The point is that **the authority primitive is sector-independent**.
 
-## Relationship to the existing Factory gateway
+## Relationship to existing Factory gateway
 
 The existing `core/agent-gateway.mjs` remains useful for capability registration, provider routing and current product integrations. The Authority Kernel is the next lower-level trust primitive: it adds principal/delegation semantics, progressive autonomy, spend/purpose limits, idempotency and proof receipts.
+
+The intended evolution is:
 
 ```text
 model / workflow
@@ -122,4 +142,25 @@ To stay out of commodity fights, this layer should integrate with rather than re
 - model and agent runtimes;
 - generic logs/traces/APM.
 
-The product opportunity is the cross-vendor **decision + delegation + proof semantics** between them.
+The product opportunity is the organization-controlled **authorization + enforcement + proof layer** between them.
+
+## Standards-first interop
+
+We should not invent another portable governance standard where strong open work already exists. The intended composition is:
+
+```text
+portable governed contract / intent conformance
+        ↓
+ORGANIZATION AUTHORITY ENGINE
+        ↓ local authorization
+framework-neutral enforcement seam
+        ↓
+MCP / API / payment rail / database / real-world action
+        ↓
+proof receipt
+```
+
+The reference interop modules currently model two emerging seams without claiming formal certification:
+
+- portable Governed Contract results are treated as upstream eligibility evidence; **conformance never becomes execution permission**;
+- local ALLOW / APPROVAL / BLOCK decisions can be projected into Agent Hooks-style `allow` / fail-closed `deny`, with approvals liftable only when bound to an exact context identity.
