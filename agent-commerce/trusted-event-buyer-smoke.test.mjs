@@ -1,7 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 
-import { isDirectRun, TRUST_EVENT_SMOKES, validateTrustedBuyerConfig } from './trusted-event-buyer-smoke.mjs'
+import { isDirectRun, summarizeFailedResponse, TRUST_EVENT_SMOKES, validateTrustedBuyerConfig } from './trusted-event-buyer-smoke.mjs'
 
 const TEST_KEY = `0x${'11'.repeat(32)}`
 
@@ -41,6 +41,22 @@ test('payment-intent smoke body is exact, time-bounded and approval-observed', (
   assert.equal(body.merchant.verified, true)
   assert.equal(body.humanApproval, true)
   assert.equal(Date.parse(body.intent.validUntil), now + 3_600_000)
+})
+
+test('failed-response diagnostics expose safe x402 metadata without secrets', () => {
+  const headers = new Headers({
+    'content-type': 'application/json',
+    'payment-required': 'diagnostic-payment-required',
+    'authorization': 'Bearer must-not-leak',
+    'x-request-id': 'req-123',
+  })
+  const response = { status: 402, statusText: 'Payment Required', headers }
+  const summary = summarizeFailedResponse(response, { error: 'payment_required' }, { callIndex: 3, capabilityId: 'payment.intent.preflight.v1' })
+  assert.equal(summary.status, 402)
+  assert.equal(summary.callIndex, 3)
+  assert.equal(summary.headers['payment-required'], 'diagnostic-payment-required')
+  assert.equal(summary.headers['x-request-id'], 'req-123')
+  assert.equal(summary.headers.authorization, undefined)
 })
 
 test('trusted buyer smoke can reuse existing AGENT_COMMERCE_URL config', () => {
