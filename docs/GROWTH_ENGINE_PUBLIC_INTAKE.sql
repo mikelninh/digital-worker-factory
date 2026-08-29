@@ -1,6 +1,9 @@
 -- Company 01 public lead-intake boundary.
 -- Production migration applied to dedicated project htffcvdopavknnylbowl.
 
+-- Used for internal E2E verification and future database-triggered webhooks.
+create extension if not exists pg_net;
+
 create schema if not exists private;
 
 create table if not exists private.company01_growth_rate_limits (
