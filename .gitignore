@@ -4,5 +4,6 @@ node_modules/
 !.env.example
 deployments/
 retainers/
+.authority-data/
 hauspilot-batch-results.json
 *.local.json

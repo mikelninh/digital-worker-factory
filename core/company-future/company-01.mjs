@@ -1,0 +1,112 @@
+export const company01 = Object.freeze({
+  id: 'company-01',
+  workingName: 'Company 01',
+  purpose: 'Make autonomous agents safe enough to do real work for real organisations.',
+  vision: 'Useful autonomous work at increasing scale without unbounded authority.',
+  firstCustomer: 'company-01',
+  product: {
+    name: 'Authority Control Plane',
+    category: 'authority infrastructure for autonomous systems',
+    promise: 'Decide and prove what an autonomous system may do before it acts.',
+  },
+  firstOffer: {
+    name: 'Trusted Agent Pilot',
+    outcome: 'Put one valuable real workflow behind an explicit authority envelope and prove useful work plus invariant preservation.',
+  },
+  humanReservedAuthority: [
+    'company.strategy.change',
+    'company.legal_commitment',
+    'company.material_financial_commitment',
+    'authority.policy.change',
+    'authority.emergency_revoke',
+    'people.high_consequence_decision',
+    'company.sensitive_public_statement',
+  ],
+  doctrine: [
+    'payment_never_grants_permission',
+    'agent_cannot_self_grant_authority',
+    'unknown_state_fails_closed',
+    'retry_never_expands_authority',
+    'approval_must_bind_exact_context',
+    'manager_agent_cannot_self_approve',
+    'autonomy_is_earned_and_revocable',
+    'consequential_execution_is_traceable',
+    'sensitive_payloads_do_not_enter_proof_logs',
+    'usefulness_and_safety_are_measured_separately',
+  ],
+  initialWorkers: [
+    {
+      id: 'chief-of-staff-01',
+      role: 'chief_of_staff',
+      purpose: 'operator_attention_compression',
+      may: ['authority.read', 'operations.summarize', 'operations.recommend'],
+      mayNot: ['authority.approve', 'authority.expand', 'consequence.execute'],
+    },
+    {
+      id: 'research-buyer-01',
+      role: 'research_agent',
+      purpose: 'market_intelligence',
+      may: ['research.source.read', 'research.purchase_data'],
+      initialBudget: { currency: 'EUR', perAction: 5, mission: 10 },
+    },
+    {
+      id: 'engineering-worker-01',
+      role: 'engineering_agent',
+      purpose: 'product_delivery',
+      may: ['repo.read', 'test.run', 'change.prepare', 'documentation.prepare'],
+      approvalRequired: ['repo.merge', 'production.deploy', 'secret.change', 'destructive.infrastructure_change'],
+    },
+    {
+      id: 'revenue-worker-01',
+      role: 'revenue_agent',
+      purpose: 'customer_development',
+      may: ['prospect.research', 'account.brief.prepare', 'pilot.prepare', 'outreach.draft'],
+      approvalRequired: ['outreach.send', 'commercial.commitment'],
+    },
+  ],
+  weeklyScoreboard: {
+    value: [
+      'useful_work_units',
+      'qualified_opportunities',
+      'revenue_collected_eur',
+      'operator_hours_saved',
+      'agent_operating_cost_eur',
+    ],
+    autonomy: [
+      'proposed_actions',
+      'autonomous_actions',
+      'human_approvals',
+      'blocked_actions',
+      'reconciliation_cases',
+      'human_minutes_per_1000_decisions',
+      'autonomous_actions_per_human_intervention',
+      'promotions',
+      'demotions',
+    ],
+    invariants: {
+      unauthorized_provider_executions: 0,
+      duplicate_consequential_executions: 0,
+      post_revocation_executions: 0,
+      budget_invariant_violations: 0,
+      approval_bypasses: 0,
+      missing_proof_receipts: 0,
+      sensitive_receipt_leaks: 0,
+    },
+  },
+  experiment30Days: [
+    'run_real_research_buyer_missions',
+    'generate_chief_of_staff_brief_from_real_receipts',
+    'generate_first_qualified_pilot_conversation',
+    'add_one_worker_only_when_tied_to_a_real_business_burden',
+    'publish_weekly_proof_ledger_without_hiding_failures',
+  ],
+})
+
+export function company01NorthStar({ usefulWork = 0, economicValueEur = 0, invariantViolations = 0 } = {}) {
+  return {
+    useful: Number(usefulWork) > 0,
+    economic: Number(economicValueEur) > 0,
+    governed: Number(invariantViolations) === 0,
+    passed: Number(usefulWork) > 0 && Number(economicValueEur) > 0 && Number(invariantViolations) === 0,
+  }
+}

@@ -1,0 +1,117 @@
+name: authority-kernel
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  conformance:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Check authority kernel syntax
+        run: |
+          node --check core/authority/policy.mjs
+          node --check core/authority/receipt.mjs
+          node --check core/authority/execution.mjs
+          node --check core/authority/gateway.mjs
+          node --check core/authority/service.mjs
+          node --check core/authority/interop/portable-contract.mjs
+          node --check core/authority/interop/agent-hooks.mjs
+          node --check core/authority/adapters/oidc.mjs
+          node --check core/authority/adapters/mcp.mjs
+          node --check core/authority/adapters/x402.mjs
+          node --check core/authority/stores/json-file.mjs
+          node --check core/authority/profiles/public-sector.mjs
+          node --check core/authority/demo/policy.mjs
+          node --check core/authority/demo/providers.mjs
+          node --check core/authority/demo/mission.mjs
+          node --check core/authority/demo/run.mjs
+          node --check core/authority/demo/server.mjs
+          node --check core/company-future/policy.mjs
+          node --check core/company-future/workforce.mjs
+          node --check core/company-future/scale-gauntlet.mjs
+          node --check core/company-future/autonomy.mjs
+          node --check core/company-future/government-caseworker.mjs
+          node --check core/company-future/operating-day.mjs
+          node --check core/company-future/research-buyer.mjs
+          node --check core/company-future/company-proof.mjs
+          node --check core/company-future/chief-of-staff.mjs
+          node --check core/company-future/company-01.mjs
+          node --check core/company-future/design-partners.mjs
+          node --check core/company-future/revenue-worker.mjs
+          node --check site/authority-ui-engine.mjs
+      - name: Run cross-sector authority conformance
+        run: node --test core/authority/conformance.test.mjs core/authority/interop/interop.test.mjs
+      - name: Prove concurrent consequence suppression
+        run: node --test core/authority/concurrency.test.mjs
+      - name: Prove authenticated HTTP service boundary
+        run: node --test core/authority/service.test.mjs
+      - name: Prove IAM MCP and x402 adapter boundaries
+        run: node --test core/authority/adapters/adapters.test.mjs
+      - name: Prove restart-safe consequence control
+        run: node --test core/authority/stores/json-file.test.mjs
+      - name: Prove public-sector governance gates
+        run: node --test core/authority/profiles/public-sector.test.mjs
+      - name: Run ten-euro mission end to end
+        run: |
+          node --test core/authority/demo/mission.test.mjs
+          node core/authority/demo/run.mjs
+      - name: Run 100-agent 10k-decision scale gauntlet
+        run: node --test core/company-future/scale-gauntlet.test.mjs
+      - name: Prove evidence-earned progressive autonomy
+        run: node --test core/company-future/autonomy.test.mjs
+      - name: Prove synthetic benefits caseworker boundaries
+        run: node --test core/company-future/government-caseworker.test.mjs
+      - name: Prove one-person mature operating-day target
+        run: node --test core/company-future/operating-day.test.mjs
+      - name: Prove governed Research Buyer boundaries
+        run: node --test core/company-future/research-buyer.test.mjs
+      - name: Run live Research Buyer network smoke
+        run: node core/company-future/research-buyer.mjs
+      - name: Run unified company-of-the-future proof
+        run: |
+          node --test core/company-future/company-proof.test.mjs
+          node core/company-future/company-proof.mjs > /tmp/company-of-future-proof.json
+          node -e "const r=require('/tmp/company-of-future-proof.json'); if(!r.scale.passed || !r.operatingDay.onePersonSupervisionTarget.passed) process.exit(1); console.log(JSON.stringify({scale:r.scale,operatingDay:r.operatingDay,progressiveAutonomy:r.progressiveAutonomy,government:r.government},null,2))"
+      - name: Prove one-person Chief of Staff boundary
+        run: node --test core/company-future/chief-of-staff.test.mjs
+      - name: Prove Company 01 operating constitution
+        run: node --test core/company-future/company-01.test.mjs
+      - name: Prove cross-company Design Partner Lab
+        run: node --test core/company-future/design-partners.test.mjs
+      - name: Prove Revenue Worker handoff and outreach gate
+        run: node --test core/company-future/revenue-worker.test.mjs
+      - name: Prove Control Centre parity with the kernel
+        run: node --test core/authority/ui-parity.test.mjs
+      - name: Verify Authority and Company proof surfaces
+        run: |
+          test -s site/authority-control-center.html
+          test -s site/authority-ui-engine.mjs
+          test -s site/company-of-the-future.html
+          test -s docs/COMPANY_01_CHARTER.md
+          test -s docs/DESIGN_PARTNER_LAB.md
+          test -s docs/COMPANY_01_PROSPECTS.md
+          test -s docs/FIRST_COHORT_BRIEFS.md
+          grep -q "Give agents real power" site/authority-control-center.html
+          grep -q "Run the safety gauntlet" site/authority-control-center.html
+          grep -q "0.*unauthorised provider calls" site/authority-control-center.html
+          grep -q "One human." site/company-of-the-future.html
+          grep -q "Authority Scale Gauntlet" site/company-of-the-future.html
+          grep -q "Make autonomous agents safe enough to do real work" docs/COMPANY_01_CHARTER.md
+          grep -q "Research Buyer Prospect Report" docs/COMPANY_01_PROSPECTS.md
+          grep -q "First Cohort Account Briefs" docs/FIRST_COHORT_BRIEFS.md
+          grep -q '"source": "/authority"' site/vercel.json
+          grep -q '"source": "/company"' site/vercel.json
+      - name: Verify positioning contract
+        run: |
+          test -s core/authority/README.md
+          test -s docs/AUTHORITY_POSITIONING.md
+          grep -q "payment success never grants authority" core/authority/README.md
+          grep -q "Standards-first interop" core/authority/README.md
+          grep -q "Authority infrastructure for autonomous systems" docs/AUTHORITY_POSITIONING.md
+          grep -q "Standards-first strategy" docs/AUTHORITY_POSITIONING.md
+          grep -q "Commercial differentiation" docs/AUTHORITY_POSITIONING.md

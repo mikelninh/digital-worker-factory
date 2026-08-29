@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="description" content="Interactive authority control centre for autonomous agents: delegation, budgets, approvals, receipts and fail-closed execution." />
+  <title>Authority Control Centre — Trustworthy Autonomous Agents</title>
+  <style>
+    :root{--bg:#07090d;--panel:#0d1118;--panel2:#111722;--panel3:#151d29;--ink:#f5f7f8;--muted:#8f9aaa;--line:#202938;--green:#b8ff63;--blue:#75a7ff;--amber:#ffd166;--red:#ff7d86;--violet:#bd9cff;--max:1240px}
+    *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:radial-gradient(circle at 85% 0%,#16213b 0,transparent 32%),radial-gradient(circle at 0 28%,#102414 0,transparent 28%),var(--bg);color:var(--ink);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;line-height:1.5}.wrap{max-width:var(--max);margin:auto;padding:0 24px}.nav{height:72px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(255,255,255,.07);position:sticky;top:0;background:rgba(7,9,13,.84);backdrop-filter:blur(18px);z-index:10}.brand{font-weight:800;letter-spacing:-.035em}.brand span{color:var(--green)}.navlinks{display:flex;gap:10px;align-items:center}.btn{border:1px solid var(--line);background:#101620;color:var(--ink);padding:10px 14px;border-radius:12px;font:inherit;font-weight:700;cursor:pointer;text-decoration:none}.btn:hover{border-color:#3b4960}.btn.primary{background:var(--green);color:#0b0d0f;border-color:var(--green)}.btn.danger{color:#ffadb3}.hero{padding:70px 0 34px}.eyebrow{display:inline-flex;gap:8px;align-items:center;padding:7px 10px;border:1px solid #315225;background:#101d11;border-radius:999px;color:var(--green);font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase}.dot{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 18px var(--green)}h1{font-size:clamp(46px,7vw,82px);line-height:.98;letter-spacing:-.06em;max-width:1020px;margin:22px 0}.lede{max-width:830px;color:var(--muted);font-size:clamp(18px,2vw,22px)}.heroactions{display:flex;gap:10px;flex-wrap:wrap;margin-top:26px}.proofstrip{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:18px;overflow:hidden;margin:28px 0 55px}.proof{background:rgba(12,16,23,.96);padding:20px}.proof strong{font-size:20px;display:block}.proof span{font-size:12px;color:var(--muted)}.layout{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(320px,.75fr);gap:18px;align-items:start}.card{border:1px solid var(--line);border-radius:20px;background:rgba(13,17,24,.9);box-shadow:0 24px 70px rgba(0,0,0,.22)}.cardhead{padding:20px 22px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:14px}.cardbody{padding:22px}.kicker{font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:var(--blue);font-weight:800}.status{display:inline-flex;gap:7px;align-items:center;font-size:12px;font-weight:800}.status:before{content:"";width:8px;height:8px;border-radius:50%;background:var(--green)}.status.paused{color:var(--amber)}.status.paused:before{background:var(--amber)}.missiontitle{font-size:26px;letter-spacing:-.035em;margin:5px 0 4px}.muted{color:var(--muted)}.moneyrow{display:grid;grid-template-columns:1fr auto;gap:12px;margin:22px 0 8px}.money{font-size:40px;font-weight:850;letter-spacing:-.05em}.money small{font-size:16px;color:var(--muted);font-weight:600}.meter{height:10px;border-radius:999px;background:#1b2330;overflow:hidden}.meter span{display:block;height:100%;width:57%;background:linear-gradient(90deg,var(--green),#88dbff);border-radius:inherit}.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:18px}.stat{padding:14px;border:1px solid var(--line);border-radius:14px;background:#0a0e14}.stat strong{font-size:22px;display:block}.stat span{font-size:11px;color:var(--muted)}.timeline{display:grid;gap:9px;margin-top:22px}.event{display:grid;grid-template-columns:90px 1fr auto;gap:12px;align-items:center;padding:13px 14px;border:1px solid var(--line);border-radius:14px;background:#0b1017}.event .label{font-size:13px;font-weight:700}.pill{display:inline-flex;align-items:center;justify-content:center;padding:5px 8px;border-radius:999px;font-size:10px;font-weight:900;letter-spacing:.05em}.allow{background:#18321b;color:var(--green)}.block{background:#35191e;color:#ff9aa2}.approval{background:#382f16;color:#ffe08a}.failed{background:#2b2039;color:#d3b9ff}.duplicate{background:#172b37;color:#9cddff}.sidegrid{display:grid;gap:18px}.rule{display:flex;justify-content:space-between;gap:16px;padding:12px 0;border-top:1px solid var(--line);font-size:13px}.rule:first-child{border-top:0}.rule b{max-width:60%;text-align:right}.good{color:var(--green)}.warn{color:var(--amber)}.bad{color:var(--red)}.section{padding:66px 0 0}.section h2{font-size:clamp(34px,4vw,52px);letter-spacing:-.045em;line-height:1.05;margin:0 0 12px}.sectionlead{color:var(--muted);max-width:800px;font-size:18px;margin-bottom:25px}.scenarioLayout{display:grid;grid-template-columns:360px 1fr;gap:18px}.scenarioList{display:grid;gap:8px}.scenario{width:100%;text-align:left;border:1px solid var(--line);background:#0d121a;color:var(--ink);padding:14px;border-radius:14px;cursor:pointer}.scenario:hover,.scenario.active{border-color:#4d668b;background:#111a27}.scenario small{color:var(--muted);display:block;margin-top:4px}.resultbox{min-height:430px}.decisionHero{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;padding-bottom:20px;border-bottom:1px solid var(--line)}.decisionWord{font-size:56px;letter-spacing:-.06em;font-weight:900}.decisionWord.ALLOW{color:var(--green)}.decisionWord.BLOCK{color:var(--red)}.decisionWord.APPROVAL{color:var(--amber)}.explain{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:18px}.explainbox{border:1px solid var(--line);border-radius:14px;padding:15px;background:#0a0f16}.explainbox h4{margin:0 0 10px;font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}.reason{font:12px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;padding:7px 9px;border-radius:9px;background:#151c27;margin:6px 0;word-break:break-word}.flow{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:24px}.flow div{padding:15px 12px;border:1px solid var(--line);border-radius:14px;text-align:center;font-size:12px}.flow b{display:block;color:var(--blue);margin-bottom:3px}.sectors{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}.sector{padding:20px;border:1px solid var(--line);border-radius:18px;background:#0c1118}.sector h3{font-size:21px;margin:7px 0}.sector p{font-size:13px;color:var(--muted)}.sector ul{padding-left:18px;color:#cbd3df;font-size:13px}.proofcall{margin-top:24px;border:1px solid #2d4c24;border-radius:18px;padding:22px;background:linear-gradient(135deg,rgba(184,255,99,.09),rgba(117,167,255,.04))}.proofcall strong{font-size:22px}.code{font:12px/1.65 ui-monospace,SFMono-Regular,Menlo,monospace;white-space:pre-wrap;border:1px solid var(--line);border-radius:14px;padding:15px;background:#080c11;color:#cad3df;margin-top:12px}.footer{padding:70px 0;color:var(--muted);font-size:12px}.hidden{display:none}
+    @media(max-width:980px){.layout,.scenarioLayout{grid-template-columns:1fr}.sidegrid{grid-template-columns:1fr 1fr}.proofstrip{grid-template-columns:repeat(2,1fr)}.sectors{grid-template-columns:1fr}.flow{grid-template-columns:1fr 1fr}.stats{grid-template-columns:1fr 1fr}}
+    @media(max-width:620px){.wrap{padding:0 16px}.navlinks a:not(.btn){display:none}.proofstrip,.sidegrid{grid-template-columns:1fr}.event{grid-template-columns:1fr auto}.event .label{grid-column:1/-1}.explain{grid-template-columns:1fr}.flow{grid-template-columns:1fr}.decisionHero{align-items:flex-start;flex-direction:column}.decisionWord{font-size:44px}}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <nav class="nav">
+      <div class="brand">Authority <span>Control Centre</span></div>
+      <div class="navlinks"><a class="btn" href="/agents">Architecture</a><a class="btn" href="https://github.com/mikelninh/digital-worker-factory/pull/28" target="_blank" rel="noreferrer">Executable proof ↗</a></div>
+    </nav>
+
+    <header class="hero">
+      <div class="eyebrow"><span class="dot"></span> organisation-controlled authority</div>
+      <h1>Give agents real power.<br>Keep the boundaries yours.</h1>
+      <p class="lede">A vendor-neutral control plane for consequential AI actions. Identity tells us who the agent is. Tools tell us what it can call. <strong>Authority decides what it may actually do — right now, for this purpose, under this delegation.</strong></p>
+      <div class="heroactions"><button class="btn primary" id="runGauntlet">Run the safety gauntlet</button><a class="btn" href="#simulator">Try one action</a></div>
+    </header>
+
+    <section class="proofstrip">
+      <div class="proof"><strong>€5.70 / €10</strong><span>useful work completed inside budget</span></div>
+      <div class="proof"><strong>0</strong><span>unauthorised provider calls</span></div>
+      <div class="proof"><strong>0</strong><span>duplicate consequential executions</span></div>
+      <div class="proof"><strong>100%</strong><span>mission attempts receive proof receipts</span></div>
+    </section>
+
+    <section class="layout" id="mission">
+      <article class="card">
+        <div class="cardhead"><div><div class="kicker">North-star mission</div><div class="missiontitle">€10 public-building research agent</div></div><span class="status" id="agentStatus">RUNNING</span></div>
+        <div class="cardbody">
+          <p class="muted">Mission: turn a bounded €10 operating envelope into an evidence-backed research brief. The provider data is deterministic demo fixture data; the authority decisions, execution gates, idempotency and receipts are produced by the executable kernel.</p>
+          <div class="moneyrow"><div><div class="money">€5.70 <small>spent</small></div><div class="muted">€4.30 remains</div></div><button class="btn danger" id="pauseButton">Pause demo agent</button></div>
+          <div class="meter" aria-label="57 percent of budget used"><span></span></div>
+          <div class="stats"><div class="stat"><strong>3</strong><span>sources acquired</span></div><div class="stat"><strong>1</strong><span>approval gate</span></div><div class="stat"><strong>3</strong><span>blocked attacks</span></div><div class="stat"><strong>1</strong><span>external failure isolated</span></div></div>
+          <div class="timeline" id="timeline">
+            <div class="event"><span class="pill allow">EXECUTED</span><span class="label">Read free public baseline</span><span class="muted">€0</span></div>
+            <div class="event"><span class="pill allow">EXECUTED</span><span class="label">Buy approved benchmark pack</span><span class="muted">€1.20</span></div>
+            <div class="event"><span class="pill allow">EXECUTED</span><span class="label">Buy approved retrofit curves</span><span class="muted">€4.50</span></div>
+            <div class="event"><span class="pill block">BLOCKED</span><span class="label">Unknown vendor</span><span class="muted">zero provider calls</span></div>
+            <div class="event"><span class="pill block">BLOCKED</span><span class="label">Would exceed delegated €10 budget</span><span class="muted">zero provider calls</span></div>
+            <div class="event"><span class="pill block">BLOCKED</span><span class="label">Prompt-injected purchase instruction</span><span class="muted">zero provider calls</span></div>
+            <div class="event"><span class="pill failed">FAILED OUTSIDE</span><span class="label">Payment facilitator nonce/gas collision</span><span class="muted">authority unchanged</span></div>
+            <div class="event"><span class="pill duplicate">SUPPRESSED</span><span class="label">Replay first purchase</span><span class="muted">zero duplicate charge</span></div>
+            <div class="event"><span class="pill allow">EXECUTED</span><span class="label">Prepare internal evidence brief</span><span class="muted">3 sources</span></div>
+            <div class="event"><span class="pill approval">APPROVAL</span><span class="label">External publication requested</span><span class="muted">human required</span></div>
+            <div class="event"><span class="pill allow">EXECUTED</span><span class="label">Publish after exact-bound approval</span><span class="muted">sandbox only</span></div>
+          </div>
+        </div>
+      </article>
+
+      <aside class="sidegrid">
+        <article class="card"><div class="cardhead"><div><div class="kicker">Delegation</div><strong>Operating envelope</strong></div></div><div class="cardbody">
+          <div class="rule"><span>Principal</span><b>Public Buildings Lab</b></div>
+          <div class="rule"><span>Purpose</span><b>Energy research</b></div>
+          <div class="rule"><span>Autonomy</span><b class="good">L3 · bounded</b></div>
+          <div class="rule"><span>Total budget</span><b>€10.00</b></div>
+          <div class="rule"><span>Max purchase</span><b>€5.00</b></div>
+          <div class="rule"><span>Vendor rule</span><b>Approved only</b></div>
+          <div class="rule"><span>External publish</span><b class="warn">Approval</b></div>
+        </div></article>
+        <article class="card"><div class="cardhead"><div><div class="kicker">Invariant health</div><strong>Runtime guarantees</strong></div></div><div class="cardbody">
+          <div class="rule"><span>Payment = permission</span><b class="bad">Never</b></div>
+          <div class="rule"><span>Blocked → provider call</span><b class="good">0</b></div>
+          <div class="rule"><span>Replay → duplicate</span><b class="good">0</b></div>
+          <div class="rule"><span>Receipt secret leaks</span><b class="good">0</b></div>
+          <div class="rule"><span>Unknown authority</span><b class="good">Fail closed</b></div>
+        </div></article>
+      </aside>
+    </section>
+
+    <section class="section" id="simulator">
+      <h2>Try to break the authority boundary.</h2>
+      <p class="sectionlead">Choose a consequential action. The browser simulator is parity-tested against the Node authority kernel in CI, so these decisions cannot silently drift into a prettier marketing story.</p>
+      <div class="scenarioLayout">
+        <div class="scenarioList" id="scenarioList"></div>
+        <article class="card resultbox"><div class="cardbody" id="scenarioResult"></div></article>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>One boundary. Different institutions.</h2>
+      <p class="sectionlead">The policy changes by institution; the authority primitive does not.</p>
+      <div class="sectors">
+        <article class="sector"><div class="kicker">Company</div><h3>Autonomous procurement</h3><p>Agents can buy machine services and operate tools without becoming unbounded corporate actors.</p><ul><li>budget and vendor limits</li><li>purpose-bound delegation</li><li>approval for consequential spend</li><li>retry-safe execution</li></ul></article>
+        <article class="sector"><div class="kicker">Government</div><h3>Delegated public power</h3><p>Casework agents can help at machine speed while legal basis and accountable authority remain explicit.</p><ul><li>legal basis + purpose</li><li>named delegating official</li><li>human gate for adverse decisions</li><li>contestability and receipts next</li></ul></article>
+        <article class="sector"><div class="kicker">Regulated</div><h3>Legal, health, finance</h3><p>Even a human-approved action can be stopped by a hard safety escalation or missing evidence.</p><ul><li>evidence freshness</li><li>hard safety escalations</li><li>exact-bound approvals</li><li>provider-independent audit</li></ul></article>
+      </div>
+      <div class="proofcall"><strong>The product is not another agent framework.</strong><p class="muted">Open contracts can describe portable delegation. IAM can authenticate identities. Agent Hooks can expose an enforcement seam. MCP and x402 can perform actions. <strong style="color:var(--ink)">This layer is the organisation-controlled decision boundary between them.</strong></p><div class="flow"><div><b>Identity</b>who?</div><div><b>Contract</b>what was delegated?</div><div><b>Authority</b>may this happen now?</div><div><b>Execution</b>tool / payment / API</div><div><b>Receipt</b>what happened?</div></div></div>
+    </section>
+
+    <section class="section">
+      <h2>What is real today?</h2>
+      <div class="code">EXECUTABLE NOW
+✓ fail-closed authority kernel
+✓ principal + delegation + purpose
+✓ budgets + approved counterparties
+✓ exact-bound approvals
+✓ progressive autonomy gates
+✓ idempotent consequence boundary
+✓ provider/facilitator failure attribution
+✓ payment-secret redaction
+✓ company + government + legal conformance cases
+✓ €10 mission runner and attack gauntlet
+✓ browser simulator parity-tested against kernel
+
+NEXT LIVE ADAPTERS
+→ MCP tool-call adapter
+→ x402/MPP live payment adapter
+→ OIDC/IAM identity-context adapter
+→ durable shared receipt/idempotency store
+→ production control-centre API + revocation
+
+No production credentials or real citizen/client data are used in this demo.</div>
+    </section>
+
+    <footer class="footer"><div class="brand">Authority <span>Control Centre</span></div><div>Proof over trust · authority outside the model · fail closed by default.</div></footer>
+  </div>
+
+  <script type="module">
+    import { runUiScenario, uiScenarios } from './authority-ui-engine.mjs'
+
+    const list = document.querySelector('#scenarioList')
+    const result = document.querySelector('#scenarioResult')
+    let active = 'valid_purchase'
+
+    const niceReason = (reason) => ({
+      within_delegated_authority: 'Inside the current delegated operating envelope.',
+      human_approval_present: 'An accountable human approval is bound to this exact action and delegation.',
+      delegated_budget_exceeded: 'This action would exceed the total delegated budget.',
+      action_budget_exceeded: 'This single action exceeds its action-level spend ceiling.',
+      counterparty_not_approved: 'The destination/provider is outside the approved counterparty set.',
+      delegation_purpose_missing: 'The requested purpose is not included in the delegation.',
+      action_purpose_not_allowed: 'The action policy does not allow this purpose.',
+      delegation_revoked: 'The delegation has been revoked and no longer carries standing.',
+      'hard_escalation:instruction_injection': 'Instruction-injection evidence triggers a hard safety escalation.',
+      explicit_approval_required: 'The institution requires an accountable human decision before execution.',
+      hard_blocked_action: 'This capability is prohibited by institutional policy regardless of payment or model intent.',
+    }[reason] || reason)
+
+    function renderList(){
+      list.innerHTML = uiScenarios.map(s => `<button class="scenario ${s.id===active?'active':''}" data-id="${s.id}"><strong>${s.title}</strong><small>${s.description}</small></button>`).join('')
+      list.querySelectorAll('button').forEach(btn => btn.addEventListener('click', () => { active = btn.dataset.id; renderList(); renderResult(); }))
+    }
+
+    function renderResult(){
+      const s = runUiScenario(active)
+      const r = s.result
+      const decisionClass = r.decision
+      const execution = r.execution === 'failed' ? `<span class="pill failed">EXECUTION FAILED OUTSIDE AUTHORITY</span>` : r.decision === 'ALLOW' ? `<span class="pill allow">${r.execution.toUpperCase()}</span>` : r.decision === 'APPROVAL' ? `<span class="pill approval">ZERO PROVIDER CALLS</span>` : `<span class="pill block">ZERO PROVIDER CALLS</span>`
+      const amount = s.input.action.amount ? `€${Number(s.input.action.amount.value).toFixed(2)}` : '—'
+      result.innerHTML = `<div class="decisionHero"><div><div class="kicker">${s.sector} · authority decision</div><div class="decisionWord ${decisionClass}">${r.decision}</div></div>${execution}</div>
+        <h3>${s.title}</h3><p class="muted">${s.description}</p>
+        <div class="explain"><div class="explainbox"><h4>Context</h4><div class="rule"><span>Actor</span><b>${s.input.actor.id}</b></div><div class="rule"><span>Role</span><b>${s.input.actor.role}</b></div><div class="rule"><span>Action</span><b>${s.input.action.type}</b></div><div class="rule"><span>Purpose</span><b>${s.input.action.purpose}</b></div><div class="rule"><span>Amount</span><b>${amount}</b></div></div>
+        <div class="explainbox"><h4>Why</h4>${r.reasons.map(reason => `<div class="reason">${reason}<br><span class="muted">${niceReason(reason)}</span></div>`).join('')}${r.failureLayer ? `<div class="reason">failureLayer: ${r.failureLayer}<br><span class="muted">${r.detail}</span></div>` : ''}</div></div>`
+    }
+
+    renderList(); renderResult()
+
+    let paused = false
+    document.querySelector('#pauseButton').addEventListener('click', e => {
+      paused = !paused
+      const status = document.querySelector('#agentStatus')
+      status.textContent = paused ? 'PAUSED' : 'RUNNING'
+      status.classList.toggle('paused', paused)
+      e.target.textContent = paused ? 'Resume demo agent' : 'Pause demo agent'
+    })
+
+    document.querySelector('#runGauntlet').addEventListener('click', async e => {
+      const original = e.target.textContent
+      e.target.disabled = true
+      for (const scenario of uiScenarios) {
+        active = scenario.id; renderList(); renderResult(); await new Promise(r => setTimeout(r, 210))
+      }
+      active = 'valid_purchase'; renderList(); renderResult(); e.target.disabled = false; e.target.textContent = original
+      document.querySelector('#simulator').scrollIntoView({behavior:'smooth'})
+    })
+  </script>
+</body>
+</html>
