@@ -38,6 +38,26 @@ function clone(value) {
   return JSON.parse(JSON.stringify(value))
 }
 
+function governmentInput(actionType, revoked = false) {
+  return {
+    actor: { id: 'case-agent-1', role: 'casework_agent', autonomyLevel: 5 },
+    principal: { id: 'district-office', type: 'government' },
+    delegation: {
+      id: 'delegation-case-agent-1',
+      delegateId: 'case-agent-1',
+      principalId: 'district-office',
+      scopes: [actionType],
+      purposes: ['benefit_casework'],
+      validUntil: '2026-09-01T00:00:00.000Z',
+      revoked,
+    },
+    action: { type: actionType, purpose: 'benefit_casework' },
+    evidence: { claims: actionType === 'government.case.read' ? ['legal_basis'] : ['legal_basis', 'decision_evidence_complete'] },
+    budget: null,
+    metrics: {},
+  }
+}
+
 export function scenarioInput(id) {
   const input = clone(BASE)
 
@@ -48,30 +68,18 @@ export function scenarioInput(id) {
   if (id === 'unknown_vendor') input.action.counterpartyApproved = false
   if (id === 'wrong_purpose') input.action.purpose = 'personal_shopping'
   if (id === 'prompt_injection') input.evidence.flags = ['instruction_injection']
-  if (id === 'revoked_delegation') input.delegation.revoked = true
+  if (id === 'revoked_delegation') return governmentInput('government.case.read', true)
 
   if (id === 'government_denial' || id === 'government_denial_approved') {
-    input.actor = { id: 'case-agent-1', role: 'casework_agent', autonomyLevel: 5 }
-    input.principal = { id: 'district-office', type: 'government' }
-    input.delegation = {
-      id: 'delegation-case-agent-1',
-      delegateId: 'case-agent-1',
-      principalId: 'district-office',
-      scopes: ['government.benefit.deny'],
-      purposes: ['benefit_casework'],
-      validUntil: '2026-09-01T00:00:00.000Z',
-    }
-    input.action = { type: 'government.benefit.deny', purpose: 'benefit_casework' }
-    input.evidence = { claims: ['legal_basis', 'decision_evidence_complete'] }
-    input.budget = null
-    input.metrics = {}
+    const gov = governmentInput('government.benefit.deny', false)
     if (id === 'government_denial_approved') {
-      input.approval = {
+      gov.approval = {
         approvedBy: 'official-147',
         actionType: 'government.benefit.deny',
         delegationId: 'delegation-case-agent-1',
       }
     }
+    return gov
   }
 
   if (id === 'payment_is_not_permission') {
@@ -102,6 +110,11 @@ const RULES = Object.freeze({
     approvedCounterpartyOnly: true,
     max: 5,
     requiredEvidence: ['vendor_terms_checked', 'source_relevant'],
+  },
+  'government.case.read': {
+    roles: ['casework_agent'],
+    purposes: ['benefit_casework'],
+    requiredEvidence: ['legal_basis'],
   },
   'government.benefit.deny': {
     roles: ['casework_agent'],
