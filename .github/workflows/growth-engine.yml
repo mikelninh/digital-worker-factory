@@ -30,29 +30,8 @@ jobs:
         run: node --test core/company-future/growth-scorecard-parity.test.mjs
       - name: Prove proof-driven content queue
         run: node --test core/company-future/growth-content.test.mjs
-      - name: Verify lead magnet and onboarding boundary
-        run: |
-          test -s site/agent-authority-scorecard.html
-          test -s docs/GROWTH_ENGINE.md
-          test -s docs/GROWTH_ENGINE_DATASTORE.sql
-          test -s docs/GROWTH_ENGINE_PUBLIC_INTAKE.sql
-          test -s docs/GROWTH_ENGINE_AUTOPILOT.sql
-          test -s supabase/functions/company01-lead-intake/index.ts
-          grep -q "How much power" site/agent-authority-scorecard.html
-          grep -q "Nothing is sent anywhere just to calculate it" site/agent-authority-scorecard.html
-          grep -q "explicit follow-up consent" docs/GROWTH_ENGINE.md
-          grep -q "SUPABASE_SECRET_KEYS" docs/GROWTH_ENGINE.md
-          grep -q "security invoker" docs/GROWTH_ENGINE_DATASTORE.sql
-          grep -q "revoke all on function public.company01_create_inbound_lead" docs/GROWTH_ENGINE_DATASTORE.sql
-          grep -q "company01_ingest_inbound_lead" docs/GROWTH_ENGINE_PUBLIC_INTAKE.sql
-          grep -q "10 minutes" docs/GROWTH_ENGINE_PUBLIC_INTAKE.sql
-          grep -q "company01-growth-autopilot" docs/GROWTH_ENGINE_AUTOPILOT.sql
-          grep -q "for update skip locked" docs/GROWTH_ENGINE_AUTOPILOT.sql
-          grep -q "growth.inbound.acknowledge" docs/GROWTH_ENGINE_AUTOPILOT.sql
-          grep -q '"source": "/scorecard"' site/vercel.json
-          grep -q "company01-lead-intake" site/api/leads.js
-          grep -q "SUPABASE_SECRET_KEYS" supabase/functions/company01-lead-intake/index.ts
-          grep -q "company01_ingest_inbound_lead" supabase/functions/company01-lead-intake/index.ts
+      - name: Verify production growth + public website contract
+        run: node --test core/company-future/growth-production-contract.test.mjs
       - name: Verify attraction loop points to useful proof
         run: |
           grep -q "agent-authority-scorecard" core/company-future/growth-content.mjs
