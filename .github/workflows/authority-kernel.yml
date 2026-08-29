@@ -1,0 +1,29 @@
+name: authority-kernel
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  conformance:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Check authority kernel syntax
+        run: |
+          node --check core/authority/policy.mjs
+          node --check core/authority/receipt.mjs
+          node --check core/authority/execution.mjs
+          node --check core/authority/gateway.mjs
+      - name: Run cross-sector authority conformance
+        run: node --test core/authority/conformance.test.mjs
+      - name: Verify positioning contract
+        run: |
+          test -s core/authority/README.md
+          test -s docs/AUTHORITY_POSITIONING.md
+          grep -q "payment success never grants authority" core/authority/README.md
+          grep -q "Authority infrastructure for autonomous systems" docs/AUTHORITY_POSITIONING.md
+          grep -q "Open standard vs commercial product" docs/AUTHORITY_POSITIONING.md
