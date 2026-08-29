@@ -20,8 +20,20 @@ test('trusted buyer smoke keeps per-call spend and repeat count bounded', () => 
   })
   assert.equal(config.maxPaymentAtomic, 20_000n)
   assert.equal(config.repeats, 20)
+  assert.equal(config.continueOnFailure, false)
   assert.throws(() => validateTrustedBuyerConfig({ BUYER_EVM_KEY: TEST_KEY, OCN_BASE_URL: 'https://ocn.example', OCN_SMOKE_REPEATS: '21' }), /OCN_SMOKE_REPEATS_invalid/)
   assert.throws(() => validateTrustedBuyerConfig({ BUYER_EVM_KEY: TEST_KEY, OCN_BASE_URL: 'https://ocn.example', MAX_PAYMENT_USDC_ATOMIC: '1000001' }), /buyer_spend_cap_invalid/)
+})
+
+test('trusted buyer smoke can continue across unique failed calls without retrying them', () => {
+  const config = validateTrustedBuyerConfig({
+    BUYER_EVM_KEY: TEST_KEY,
+    OCN_BASE_URL: 'https://ocn.example',
+    OCN_SMOKE_REPEATS: '10',
+    OCN_SMOKE_CONTINUE_ON_FAILURE: 'true',
+  })
+  assert.equal(config.repeats, 10)
+  assert.equal(config.continueOnFailure, true)
 })
 
 test('trusted buyer smoke supports freshness and payment-intent targets only', () => {
