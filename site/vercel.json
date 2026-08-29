@@ -2,6 +2,7 @@
   "rewrites": [
     { "source": "/agents", "destination": "/agent-capabilities.html" },
     { "source": "/authority", "destination": "/authority-control-center.html" },
+    { "source": "/company", "destination": "/company-of-the-future.html" },
     { "source": "/employee", "destination": "/hauspilot-digital-employee.html" },
     { "source": "/try", "destination": "/hauspilot-try.html" },
     { "source": "/start", "destination": "/hauspilot-setup.html" },
