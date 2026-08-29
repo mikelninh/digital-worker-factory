@@ -8,11 +8,14 @@ services:
     plan: free
     dockerContext: .
     dockerfilePath: ./agent-commerce/Dockerfile.network
+    dockerCommand: node network-server.mjs
     autoDeployTrigger: off
     healthCheckPath: /v1/network/health
     envVars:
       - key: NODE_ENV
         value: production
+      - key: HOST
+        value: 0.0.0.0
       - key: PAY_TO
         value: "0x82dfA57a7CAfE1056fDc97595A472Cf68AABEB75"
       - key: PAYMENTS_MODE
