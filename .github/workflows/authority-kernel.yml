@@ -20,6 +20,9 @@ jobs:
           node --check core/authority/gateway.mjs
           node --check core/authority/interop/portable-contract.mjs
           node --check core/authority/interop/agent-hooks.mjs
+          node --check core/authority/adapters/oidc.mjs
+          node --check core/authority/adapters/mcp.mjs
+          node --check core/authority/adapters/x402.mjs
           node --check core/authority/stores/json-file.mjs
           node --check core/authority/demo/policy.mjs
           node --check core/authority/demo/providers.mjs
@@ -28,6 +31,8 @@ jobs:
           node --check site/authority-ui-engine.mjs
       - name: Run cross-sector authority conformance
         run: node --test core/authority/conformance.test.mjs core/authority/interop/interop.test.mjs
+      - name: Prove IAM MCP and x402 adapter boundaries
+        run: node --test core/authority/adapters/adapters.test.mjs
       - name: Prove restart-safe consequence control
         run: node --test core/authority/stores/json-file.test.mjs
       - name: Run ten-euro mission end to end
