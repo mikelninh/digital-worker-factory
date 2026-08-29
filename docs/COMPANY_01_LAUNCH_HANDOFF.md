@@ -31,7 +31,36 @@ Live and verified:
 - nurture leads receive no sales/provider action
 - action queue uses context digests + unique idempotency keys
 - recurring cron runs verified successful
-- database cleaned to zero synthetic test leads after testing
+
+### Safe tokenized onboarding — live and E2E proven
+
+The onboarding transport no longer depends on manually collecting workflow details in email.
+
+Live:
+
+- private hashed onboarding-token store
+- raw invitation token is never persisted; only SHA-256 hash is stored
+- invitation lifetime: 14 days
+- token can be revoked/reissued
+- public Edge Function: `company01-onboarding-intake`
+- prepared website route: `/onboard?t=<token>`
+- explicit safe-data attestation required
+- accepts only the bounded P0 packet:
+  - one recurring workflow
+  - accountable human owner
+  - systems the eventual workflow may touch
+  - desired output
+  - 1–5 synthetic/redacted/non-sensitive examples
+- no production credentials required
+- successful submission moves lead to `onboarding`
+- onboarding state becomes `ready`
+- queues exactly one idempotent `pilot.synthetic.prepare` ALLOW action
+
+Real E2E proof returned:
+
+`201 { accepted: true, status: "ready_for_synthetic_pilot" }`
+
+The database was then verified for the expected state/action/event and the entire synthetic trail, including its invitation token, was deleted.
 
 ### Public build-in-public ledger backend
 
@@ -41,7 +70,8 @@ Also live and verified:
 - public Edge Function: `company01-public-ledger`
 - real external HTTP GET returned 200
 - no organisation names, emails, scorecard answers or customer artifacts exposed
-- current live metrics correctly return zero because all synthetic test rows were removed
+- current real funnel counts are zero because all synthetic test rows were removed
+- unmeasured invariants are reported as `not_wired`, not fake zeros
 
 ### Public acquisition product
 
@@ -54,24 +84,19 @@ Prepared in the `site/` bundle:
 - `/pilot/brettinghams` — commercial pilot
 - `/pilot/government` — public-sector pilot
 - `/pilot/healthcare` — healthcare pilot
+- `/onboard?t=...` — tokenized safe pilot onboarding
 - `/authority` — Authority Control Centre
 - `/company` — Company of the Future proof
 - `/ledger` — self-updating privacy-safe public operating ledger
 - `/factory` — preserved Digital Worker Factory V1
 
-The root homepage now explains:
+The `/onboard` route has stricter privacy controls because its URL contains a short-lived invitation token:
 
-1. the problem,
-2. the Authority Control Plane,
-3. ALLOW / APPROVAL / BLOCK,
-4. current proof,
-5. four sector examples,
-6. the free Scorecard,
-7. the Trusted Agent Pilot,
-8. the live ledger,
-9. what Company 01 has and has not proven yet.
+- `Referrer-Policy: no-referrer`
+- `X-Robots-Tag: noindex, nofollow, noarchive`
+- `Cache-Control: no-store`
 
-Baseline security headers are configured in `site/vercel.json`.
+Baseline site security headers are also configured globally in `site/vercel.json`.
 
 ### Governed customer lifecycle
 
@@ -80,6 +105,7 @@ Already encoded and tested:
 - requested inbound acknowledgement: `ALLOW` only after explicit consent
 - unsolicited outbound: `APPROVAL`
 - synthetic/non-sensitive onboarding: `ALLOW`
+- tokenized safe onboarding intake: `ALLOW` for an eligible qualified lead
 - sensitive/production onboarding: `APPROVAL`
 - prospect-selected available meeting: `ALLOW`
 - unavailable/unselected meeting: `APPROVAL`
@@ -104,13 +130,11 @@ If Vercel does not infer the subdirectory from the link, use this one-time setup
 1. Import GitHub repository `mikelninh/digital-worker-factory` into Vercel.
 2. Set **Root Directory** to `site`.
 3. Framework preset: **Other / static**.
-4. No Supabase database secret is needed in Vercel for lead intake.
+4. No Supabase database secret is needed in Vercel for lead intake/onboarding/ledger.
 5. Deploy.
-6. Verify `/`, `/scorecard`, `/pilot`, `/authority`, `/company`, `/ledger`.
+6. Verify `/`, `/scorecard`, `/pilot`, `/authority`, `/company`, `/ledger`, `/onboard`.
 
-The `/api/leads` function is a secretless proxy to the already-live Supabase intake function.
-
-After a Vercel project exists, future deployments can be automated from Git.
+The public form backends are already hosted by Supabase. After a Vercel project exists, future website deployments can be automated from Git.
 
 Optional later:
 
@@ -125,7 +149,7 @@ Desired sender identity:
 
 - a Company 01 business mailbox rather than a personal address, if available.
 
-The first automatic email should only be the **explicitly requested inbound acknowledgement / pilot packet**. Unsolicited outbound remains human-approved.
+The first automatic email should only be the **explicitly requested inbound acknowledgement / pilot packet**, containing the qualified lead's short-lived `/onboard?t=...` invitation. Unsolicited outbound remains human-approved.
 
 ### 3. Connect Google Calendar
 
@@ -173,17 +197,18 @@ Company 01 has passed the next milestone only when all of these are true:
 real public website                         live
 real scorecard completion                   > 0
 qualified inbound lead                      > 0
-synthetic onboarding started                > 0
+safe onboarding packet submitted            > 0
+synthetic pilot preparation                 > 0
 useful operator/customer output             > 0
 economic value / paid pilot                 > 0
-unauthorised executions                      0
-duplicate consequences                       0
-post-revocation executions                   0
-approval bypasses                            0
-missing authority receipts                   0
+unauthorised executions                      measured = 0
+duplicate consequences                       measured = 0
+post-revocation executions                   measured = 0
+approval bypasses                            measured = 0
+missing authority receipts                   measured = 0
 ```
 
-Do not substitute synthetic stress metrics for these longitudinal real-company metrics.
+If a production evidence path is not wired yet, publish **not measured / not wired**, never an invented zero.
 
 ## Recommended return sequence
 
@@ -191,11 +216,13 @@ When you come back:
 
 1. Check CI on PR #31.
 2. Open the prefilled Vercel deploy/import link above.
-3. Test `/scorecard` once from the public URL using a disposable test lead, then delete that lead.
-4. Check `/ledger` updates without exposing the test lead identity.
-5. Connect Company 01 email.
-6. Connect Calendar.
-7. Send the live Scorecard to Bao + Christopher.
-8. Start real traffic and let the public ledger move from zero.
+3. Test `/scorecard` once from the public URL using a disposable test lead.
+4. Issue that lead a disposable onboarding invitation and test `/onboard?t=...`.
+5. Check `/ledger` shows only aggregate counts and never exposes the test identity.
+6. Delete the disposable lead (its onboarding/token state cascades away).
+7. Connect Company 01 email.
+8. Connect Calendar.
+9. Send the live Scorecard to the first warm design partners.
+10. Start real traffic and let the public ledger move from zero.
 
-Everything before step 2 should be code/infrastructure rather than manual sales administration.
+Everything before step 2 is already code/infrastructure rather than manual sales administration.
