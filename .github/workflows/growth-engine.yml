@@ -15,12 +15,15 @@ jobs:
       - name: Check Growth Agent syntax
         run: |
           node --check core/company-future/growth-agent.mjs
+          node --check core/company-future/growth-content.mjs
           node --check site/authority-scorecard.mjs
           node --check site/api/leads.js
       - name: Prove governed Growth Agent
         run: node --test core/company-future/growth-agent.test.mjs
       - name: Prove browser/server score parity
         run: node --test core/company-future/growth-scorecard-parity.test.mjs
+      - name: Prove proof-driven content queue
+        run: node --test core/company-future/growth-content.test.mjs
       - name: Verify lead magnet and onboarding boundary
         run: |
           test -s site/agent-authority-scorecard.html
@@ -32,3 +35,9 @@ jobs:
           grep -q "service-role key must never enter public client code" docs/GROWTH_ENGINE.md
           grep -q '"source": "/scorecard"' site/vercel.json
           grep -q "lead_sink_unconfigured" site/api/leads.js
+      - name: Verify attraction loop points to useful proof
+        run: |
+          grep -q "Agent Authority Scorecard" core/company-future/growth-content.mjs
+          grep -q "10,000 consequential decisions" core/company-future/growth-content.mjs
+          grep -q "clinical authority" core/company-future/growth-content.mjs
+          grep -q "\/scorecard" core/company-future/growth-content.mjs
