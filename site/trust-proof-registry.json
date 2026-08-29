@@ -1,7 +1,7 @@
 {
-  "schema": "ocn.trust-proof-registry/5",
+  "schema": "ocn.trust-proof-registry/6",
   "asOf": "2026-08-29",
-  "status": "public-rail-live-first-paid-trusted-event-proven",
+  "status": "public-rail-live-two-paid-capabilities-proven-repeat-freshness-proven",
   "principle": "Verifiable assurance for specific claims in a specific context at a specific time; never a universal trust score.",
   "publicRail": {
     "url": "https://ocn-trust-rail.onrender.com",
@@ -24,7 +24,7 @@
   },
   "globalProofs": [
     {
-      "id": "public-paid-trusted-event-1",
+      "id": "public-paid-freshness-1",
       "type": "public_x402_testnet_settlement_with_service_receipt",
       "status": "proven",
       "capabilityId": "freshness.verify.v1",
@@ -40,12 +40,61 @@
       "settlement": {"success": true, "settlementProof": "PAYMENT-RESPONSE"},
       "authority": {"paymentGrantedAuthority": false, "consequentialActionExecuted": false},
       "result": {"status": "fresh", "fresh": true, "policy": "explicit-max-age"},
-      "claim": "A public external HTTP client paid for freshness.verify.v1 through x402 on Base Sepolia, received HTTP 200 plus a receipt, and payment did not grant authority or execute a consequential action.",
-      "limitations": [
-        "payer is the operator-controlled test buyer, so this proves public operation and repeatability potential, not independent demand",
-        "Base Sepolia is testnet and this is not production revenue",
-        "single-call latency is not a performance baseline; free-tier cold start and payment-facilitator latency must be separated with repeated calls"
-      ]
+      "limitations": ["operator-controlled test buyer; proves operation, not market demand", "Base Sepolia testnet; not production revenue", "first-call latency is not a warm baseline"]
+    },
+    {
+      "id": "public-paid-payment-intent-1",
+      "type": "public_x402_testnet_settlement_with_service_receipt",
+      "status": "proven",
+      "capabilityId": "payment.intent.preflight.v1",
+      "endpoint": "https://ocn-trust-rail.onrender.com/v1/payment/intent/preflight",
+      "publicBuildSha": "97aeb6c5f0706724639ecb953589a40d543f4169",
+      "buyer": "0x2b36b350701f82bd25fa34Dc32fC52a2737eF523",
+      "network": "eip155:84532",
+      "amountUsd": "0.005",
+      "transaction": "0x742274a991c6f47b14467db0563f7e291c9b541419b31079fde2849a7fe84991",
+      "trustEventId": "b6c84203-48ed-465b-abcc-4945725980a4",
+      "httpStatus": 200,
+      "latencyMs": 1665,
+      "settlement": {"success": true, "settlementProof": "PAYMENT-RESPONSE"},
+      "decision": "allow",
+      "authority": {"paymentGrantedAuthority": false, "paymentExecutionPerformed": false, "authorizationSource": "human_approval"},
+      "verifiedBindings": ["merchant", "beneficiary", "amount", "currency", "intent freshness", "replay", "approval"],
+      "limitations": ["operator-controlled test buyer; proves operation, not market demand", "merchant/source-system truth is outside this proof", "does not prove zero fraud or payment recovery"]
+    },
+    {
+      "id": "public-paid-freshness-repeat-10",
+      "type": "public_x402_repeat_settlement_run",
+      "status": "proven",
+      "capabilityId": "freshness.verify.v1",
+      "successfulCalls": 10,
+      "attemptedCalls": 10,
+      "settlementSuccessRate": 1.0,
+      "latencyMs": {"min": 909, "p50": 992.5, "mean": 1135.6, "p95": 1599.2, "p99": 1658.24, "max": 1673},
+      "transactions": [
+        "0xe82834db2f9cfdb7876b9b15f003d66c0bdea6017a73124508defb97cf6eedf3",
+        "0x9b19135ebf956b5b2ca9af40d9421520313f9c358de30391bbacf3dd6ddb2073",
+        "0xa9e64ead358de4b8bc5e5a5a73774da84852c79708d9f13f4b57a0e86ffbba5c",
+        "0x6a0e81d34979c4afec791b20e42a91be867eb5b1dda407849c797ccb4ce97dcf",
+        "0xbb3ed1e595ff6423059a949f34f8d50a09ad4ff8ea47954113314bbbf1765004",
+        "0xa7c42aa626e3c11b1df05f66201ffebb7dd10f60eb24257a7f31ea495d2883b2",
+        "0xec421c5c3b05dbbf5d3f4ed5b5473c7ce8d62d3998b0d4139ed2957062bbc780",
+        "0x34ecc0e1ccba185064d24805cfd5baa0cd71b8fedc5a97a9081c7bb8ec444e4c",
+        "0x62cd8737d168d66b2b2369a4f492d6c28c784fd8711e45b956a99a10cc02bcab",
+        "0x232062c9642910e156d031ee46dff302be0f5ffb6ee0dc9314bbde20cdd76550"
+      ],
+      "authorityInvariant": {"paymentGrantedAuthority": false, "consequentialActionExecuted": false},
+      "interpretation": "Public operator-controlled warm-path repeatability proof; not independent demand or production-scale reliability."
+    },
+    {
+      "id": "payment-intent-repeat-10-attempt-1",
+      "type": "public_x402_repeat_attempt",
+      "status": "payment_layer_402_before_capability_result",
+      "attemptedCalls": 10,
+      "successfulCalls": 0,
+      "observed": "first attempted paid request returned HTTP 402 with empty JSON body in the old smoke harness",
+      "interpretation": "Does not invalidate the already-proven single payment.intent.preflight execution; diagnosis is on the payment/client/facilitator path. A newer smoke harness captures safe 402 headers and call index.",
+      "likelyCausesToCheck": ["insufficient Base Sepolia USDC", "payment signature/settlement rejection", "facilitator/payment requirement issue"]
     },
     {
       "id": "public-rail-health-1",
@@ -62,17 +111,7 @@
       "status": "green_ci",
       "source": "formal/ocn-kernel-model.mjs",
       "lastKnownRun": {"exploredStates": 966, "assertions": 4564, "result": "PASS"},
-      "scope": [
-        "explicit-grant authority",
-        "payment never grants authority",
-        "stale evidence blocks",
-        "insufficient evidence blocks",
-        "write/consequential human-review invariant",
-        "payment intent merchant/beneficiary/amount/currency/expiry/replay bindings",
-        "payment intent mandate-or-human-approval invariant",
-        "review/block do not execute in mediator model",
-        "idempotency replay mediator invariant"
-      ]
+      "scope": ["explicit-grant authority", "payment never grants authority", "stale evidence blocks", "insufficient evidence blocks", "write/consequential human-review invariant", "payment intent merchant/beneficiary/amount/currency/expiry/replay bindings", "payment intent mandate-or-human-approval invariant", "review/block do not execute in mediator model", "idempotency replay mediator invariant"]
     },
     {
       "id": "tla-trust-state-machine-v1",
@@ -81,35 +120,13 @@
       "spec": "formal/OCNTrustKernel.tla",
       "config": "formal/OCNTrustKernel.cfg",
       "tool": "TLA+ TLC 2.19 / pinned v1.7.4 tool bundle",
-      "scope": [
-        "hard merchant/beneficiary/amount/currency/freshness/replay bindings are required before verified/approved/executed states",
-        "approved/executing/executed requires mandate or observed human approval",
-        "payment state alone never grants authority",
-        "review/blocked states cannot execute",
-        "replay or any hard mismatch cannot execute",
-        "execution count never exceeds one in the specified state machine"
-      ]
+      "scope": ["hard merchant/beneficiary/amount/currency/freshness/replay bindings before verified/approved/executed", "authorization before execution", "payment state alone never grants authority", "review/blocked cannot execute", "replay or hard mismatch cannot execute", "execution count <= 1"]
     },
     {
       "id": "formal-proof-limitations",
       "type": "scope_boundary",
       "status": "published",
-      "limitations": [
-        "model checking proves invariants of the specified/modelled state spaces, not every possible program/environment state",
-        "does not prove external-world truth or upstream registry integrity",
-        "does not prove arbitrary LLM correctness",
-        "does not yet prove every downstream execution adapter is refinement-equivalent to the TLA+ model",
-        "does not guarantee zero fraud, merchant fulfilment or financial recovery",
-        "A5 requires independent external attestation and is never self-awarded"
-      ]
-    },
-    {
-      "id": "agent-commerce-x402-settlement-1",
-      "type": "onchain-testnet-settlement",
-      "status": "proven",
-      "network": "eip155:84532",
-      "transaction": "0xb28f1b80c766f02ad1fb3d53ae718b51a734ad41814ef8acd75bfcaa5272f385",
-      "claim": "A machine buyer successfully paid for bounded computation while paymentGrantedAuthority remained false."
+      "limitations": ["model checking proves invariants of specified/modelled state spaces, not every possible program/environment state", "does not prove external-world truth or upstream registry integrity", "does not prove arbitrary LLM correctness", "does not yet prove every downstream execution adapter is refinement-equivalent to the TLA+ model", "does not guarantee zero fraud, merchant fulfilment or financial recovery", "A5 requires independent external attestation and is never self-awarded"]
     }
   ],
   "capabilities": [
@@ -118,7 +135,6 @@
       "readiness": "public_rail_live",
       "claimFamilies": ["authority", "evidence", "freshness", "human-oversight"],
       "assurance": {"deterministicKernel": "A3", "operational": "A1"},
-      "formalCoverage": "production bounded checker plus independent TLA+ state-machine invariants for the high-impact authorization/execution lifecycle",
       "proves": ["declared checks executed", "blocking/review reasons", "payment does not grant authority"],
       "doesNotProve": ["absolute truth", "universal safety", "legal/clinical correctness outside validated scope"]
     },
@@ -127,16 +143,15 @@
       "readiness": "public_rail_live",
       "claimFamilies": ["authority"],
       "assurance": {"explicitGrantLogic": "A3", "externalCredentialTruth": "A0", "operational": "A1"},
-      "formalCoverage": "bounded actor/capability/action/scope/active-grant checker plus TLA+ authorization-before-execution invariant",
       "proves": ["matching active explicit grant exists or does not exist"],
       "doesNotProve": ["that an upstream identity/credential source is uncompromised"]
     },
     {
       "id": "freshness.verify.v1",
-      "readiness": "public_paid_settlement_proven_repeat_validation_next",
+      "readiness": "public_paid_repeat_10_proven",
       "claimFamilies": ["freshness"],
       "assurance": {"timestampPolicy": "A3", "sourceTruth": "A0", "publicOperation": "A2"},
-      "proves": ["observation timestamp satisfies explicit max-age policy", "public x402 paid invocation completed with receipt and preserved authority boundaries"],
+      "proves": ["observation timestamp satisfies explicit max-age policy", "10/10 public x402 paid warm-path calls settled with receipts and preserved authority boundaries"],
       "doesNotProve": ["that fresh information is substantively correct", "independent market demand", "production-scale reliability"]
     },
     {
@@ -165,29 +180,12 @@
     },
     {
       "id": "payment.intent.preflight.v1",
-      "readiness": "public_rail_live_formally_model_checked_paid_public_validation_pending",
+      "readiness": "public_paid_single_proven_formally_model_checked_repeat_payment_diagnostic_pending",
       "claimFamilies": ["intent", "counterparty", "beneficiary", "amount", "currency", "authority", "replay"],
-      "assurance": {"deterministicIntentKernel": "A3", "merchantOrRegistryTruth": "A0", "operational": "A1"},
-      "formalCoverage": "production bounded checker plus independent TLA+ lifecycle model for merchant/beneficiary/amount/currency/freshness/replay and authorization-before-execution",
-      "proves": [
-        "proposed payment remains exactly bound to supplied merchant/beneficiary/amount/currency intent",
-        "expired intent and detected replay block",
-        "allow/execution path requires verified mandate or observed human approval",
-        "the assurance check itself never executes payment and payment alone never grants authority"
-      ],
-      "doesNotProve": ["merchant fulfilment or honesty", "upstream registry integrity", "zero fraud", "recovery/chargeback outcome"]
+      "assurance": {"deterministicIntentKernel": "A3", "merchantOrRegistryTruth": "A0", "publicOperation": "A2"},
+      "proves": ["public paid invocation completed successfully once", "merchant/beneficiary/amount/currency/freshness/replay bindings were satisfied", "human approval was observed", "payment did not grant authority", "the preflight did not execute payment"],
+      "doesNotProve": ["merchant fulfilment or honesty", "upstream registry integrity", "zero fraud", "recovery/chargeback outcome", "repeat paid reliability until payment-layer 402 is diagnosed"]
     }
   ],
-  "nextPromotionGates": [
-    "one successful public paid payment.intent.preflight settlement",
-    "10 then 20 repeated public settlements with latency/error distribution",
-    "first independent repeat-paying agent",
-    "first external Shadow Mode workflow",
-    "measured buyer-confirmed useful trust-gap finding",
-    "buyer adjudication of false positives and false negatives",
-    "hosted latency/reliability baseline",
-    "refinement/equivalence evidence from execution adapters to formal model before broad enforcement",
-    "real operational outcomes for A4",
-    "independent audit/attestation for A5"
-  ]
+  "nextPromotionGates": ["diagnose the payment-intent batch HTTP 402 with the improved smoke harness", "complete 10 then 20 repeated payment-intent settlements", "complete 20-call freshness repeat proof", "first independent repeat-paying agent", "first external Shadow Mode workflow", "measured buyer-confirmed useful trust-gap finding", "buyer adjudication of false positives and false negatives", "hosted latency/reliability baseline", "refinement/equivalence evidence from execution adapters to formal model before broad enforcement", "real operational outcomes for A4", "independent audit/attestation for A5"]
 }
