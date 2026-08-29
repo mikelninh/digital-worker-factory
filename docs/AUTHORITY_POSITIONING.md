@@ -37,7 +37,7 @@ Payments are a **proof case**, not the category. The observed x402 settlement an
 4. **Progressive autonomy.** Humans define operating envelopes; agents earn wider autonomy with evidence.
 5. **Bound approvals.** Approval is scoped to an exact action/delegation, not a global yes.
 6. **Idempotent consequences.** Retry cannot become duplicate real-world action.
-7. **Proof over trust.** Every consequential attempt yields a receipt without leaking secrets.
+7. **Proof over trust.** Every consequential attempt yields a receipt without leaking secrets or raw action/evidence payloads.
 8. **Composable, not replacement infrastructure.** Consume existing IAM, MCP, payment and provider systems.
 
 ## Standards-first strategy
@@ -80,20 +80,23 @@ The company value should concentrate in:
 - action and delegated budget limits;
 - exact-bound approval;
 - fail-closed unknown/revoked/expired authority;
-- idempotent execution;
-- privacy-safe authority receipts;
-- company, government and legal conformance cases.
+- privacy-minimised proof receipts;
+- company, government, legal and finance conformance cases.
 
-### V0.2 — Integration + durable consequence control ✅ reference implementation
+### V0.2 — Integration + consequence control ✅ reference implementation
 - OIDC/IAM claims → actor/principal context;
 - MCP executor downstream of authority;
 - x402 paid-resource executor downstream of spend authority;
 - facilitator failure attribution;
+- atomic claim-before-provider idempotency in the reference runtime;
+- simultaneous duplicate suppression;
+- uncertain failure → reconciliation instead of blind retry;
 - durable JSON reference idempotency store;
 - durable JSONL receipt store;
+- durable JSON delegation-revocation store;
 - replay suppression proven across gateway restart.
 
-These are reference adapters/stores. Production requires hardened shared infrastructure rather than local JSON files.
+These are reference adapters/stores. Production requires hardened transactional shared infrastructure across replicas.
 
 ### V0.3 — Obvious product ✅ first demo slice
 - interactive Authority Control Centre at `/authority` in the site bundle;
@@ -117,16 +120,26 @@ The current provider catalogue is deterministic fixture data for safe repeatabil
 
 This is an executable reference profile, **not a legal-compliance certification**.
 
+### V0.5 — Authenticated service boundary 🟢 reference implementation
+- bearer-protected `/v1/preflight`;
+- bearer-protected `/v1/invoke`;
+- receipt retrieval;
+- durable delegation revocation endpoint;
+- malformed/oversized body fail-closed handling;
+- runnable local service entry point.
+
+This is a local/reference service, not yet a hardened public deployment.
+
 ## Next production milestones
 
-1. **Network service** — expose the authority decision boundary as a versioned authenticated API/service, not only an in-process library.
-2. **Shared durable state** — transactional datastore for idempotency, delegation revocation, budgets and receipts across replicas.
-3. **Live adapters** — connect one real MCP workflow and the already-tested real x402 payment path behind the kernel.
-4. **Revocation + approvals API** — durable delegation lifecycle, approval queue, kill switch and emergency policy changes.
-5. **Concurrency proof** — controlled concurrent paid actions, retries, crash/restart and race-condition tests.
-6. **Policy simulation** — replay historical actions against proposed policy changes before rollout.
-7. **Public-sector evidence profile** — retention, provenance freshness, contestability/appeal receipt fields and deployment controls.
-8. **Portable evidence export** — signed receipts / compatible proof formats without creating another standards silo.
+1. **Shared transactional state** — datastore for idempotency claims, budgets, delegation revocation and receipts across processes/replicas.
+2. **Live adapters behind the kernel** — connect one real MCP workflow and the already-tested real x402 payment path to the authority service.
+3. **Approval lifecycle API** — durable approval requests, expiry, multi-party rules and emergency revocation/kill switch.
+4. **Crash/network ambiguity proof** — process termination at every execution phase, provider timeout after submission, reconciliation workflow and recovery tests.
+5. **Policy simulation** — replay historical actions against proposed policy changes before rollout.
+6. **Public-sector evidence expansion** — provenance freshness, retention, appeal receipt fields and deployment controls.
+7. **Portable evidence export** — signed receipts / compatible proof formats without creating another standards silo.
+8. **Public deployment** — hosted Control Centre + service with authentication, monitoring and operational runbook. The connected Vercel account currently has no project, so no public deployment is claimed yet.
 
 ## North-star demo
 
