@@ -24,6 +24,7 @@ jobs:
           node --check core/authority/adapters/mcp.mjs
           node --check core/authority/adapters/x402.mjs
           node --check core/authority/stores/json-file.mjs
+          node --check core/authority/profiles/public-sector.mjs
           node --check core/authority/demo/policy.mjs
           node --check core/authority/demo/providers.mjs
           node --check core/authority/demo/mission.mjs
@@ -35,6 +36,8 @@ jobs:
         run: node --test core/authority/adapters/adapters.test.mjs
       - name: Prove restart-safe consequence control
         run: node --test core/authority/stores/json-file.test.mjs
+      - name: Prove public-sector governance gates
+        run: node --test core/authority/profiles/public-sector.test.mjs
       - name: Run ten-euro mission end to end
         run: |
           node --test core/authority/demo/mission.test.mjs
