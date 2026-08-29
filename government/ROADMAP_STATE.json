@@ -1,10 +1,10 @@
 {
-  "schema": "ocn.roadmap-state/4",
+  "schema": "ocn.roadmap-state/5",
   "updated": "2026-08-29",
   "northStar": "Become the standard assurance rail agents call automatically before consequential actions and after important outputs.",
   "promise": "Before your agent acts, OCN checks evidence, authority, freshness, policy and intent. After it acts, OCN leaves a verifiable receipt.",
   "operatingLoop": ["connect", "harden", "prove", "distribute", "learn"],
-  "currentPhase": "public_launch_and_external_assurance_validation",
+  "currentPhase": "public_paid_validation",
   "trustModel": {
     "principle": "Verifiable assurance for specific claims in a specific context at a specific time; never a universal trust score.",
     "spec": "docs/OCN_TRUST_ASSURANCE_SPEC.md",
@@ -17,15 +17,25 @@
     "architectureAndCoreRail": "strong_green_ci",
     "formalTrustKernel": "production_bounded_plus_independent_TLA_TLC_green_ci",
     "trustedEvents": "six_events_built_green_ci",
-    "paymentIntentFraudGuard": "built_formally_model_checked_green_ci_public_hosting_pending",
+    "paymentIntentFraudGuard": "built_formally_model_checked_green_ci_public_endpoint_live_paid_public_validation_pending",
     "ocnGuard": "built_green_ci",
-    "trustProofRegistry": "built_static_pre_public",
-    "shadowModeDemo": "built_synthetic_pre_public",
+    "trustProofRegistry": "built_static_public_build_binding_added_paid_public_validation_pending",
+    "shadowModeDemo": "built_synthetic_pre_external",
     "distributionPackages": "built_green_ci_publication_pending",
     "evidenceFlywheel": "reference_implementation_green_ci",
-    "portableDeployment": "docker_green_ci_render_frankfurt_blueprint_ready",
+    "portableDeployment": "docker_green_ci_render_frankfurt_live",
     "repeatPaymentHarness": "freshness_and_payment_intent_1_to_20_calls_green_ci",
-    "publicHosting": "one_click_blueprint_ready_not_yet_deployed",
+    "publicHosting": "achieved_https_render_build_97aeb6c5f0706724639ecb953589a40d543f4169",
+    "publicHealth": {
+      "url": "https://ocn-trust-rail.onrender.com/v1/network/health",
+      "service": "ocn-trust-rail",
+      "buildSha": "97aeb6c5f0706724639ecb953589a40d543f4169",
+      "trustedEvents": 6,
+      "paymentsMode": "x402",
+      "network": "eip155:84532",
+      "status": "degraded_optional_judge_provider_not_configured",
+      "coreRailReachable": true
+    },
     "externalRepeatUsage": "not_yet_proven",
     "buyerValueProof": "not_yet_proven",
     "governmentAdoption": "not_yet_proven",
@@ -33,7 +43,7 @@
     "independentAttestation": "not_yet_proven"
   },
   "currentSprint": {
-    "name": "Deploy -> Prove -> Recruit -> Shadow -> Paid Pilot",
+    "name": "Paid Public Proof -> Repeat Payer -> Shadow -> Paid Pilot",
     "completedFoundation": {
       "trustedEvents": ["trust.preflight.v1", "evidence.verify.v1", "freshness.verify.v1", "authority.check.v1", "entity.resolve.org.v1", "payment.intent.preflight.v1"],
       "pricingUsd": {"trust.preflight.v1":"0.005","evidence.verify.v1":"0.003","freshness.verify.v1":"0.001","authority.check.v1":"0.002","entity.resolve.org.v1":"0.01","payment.intent.preflight.v1":"0.005"},
@@ -43,12 +53,12 @@
       "evidence": ["privacy-safe trust-event telemetry", "outcome labels", "aggregate metrics", "feedback endpoint", "usage budgets"],
       "demos": ["Trust Proof Registry", "Shadow Mode fraud/government/action demo"],
       "commercial": ["buyer/use-case map", "first 20 targets", "four design-partner offers", "M0-M12 acceleration plan"],
-      "deployment": ["portable OCN production container", "Frankfurt Render Blueprint", "public launch runbook", "repeat external payment smoke"]
+      "deployment": ["portable OCN production container", "Frankfurt Render public HTTPS deployment", "public launch runbook", "repeat external payment smoke"]
     },
     "nextCriticalMoves": [
-      "Deploy the exact green OCN build to stable public HTTPS using the prepared Frankfurt Blueprint.",
-      "Bind public URL and deployed build SHA into the Trust Proof Registry and discovery metadata.",
-      "Run one paid freshness event and one paid payment.intent.preflight event from the existing capped buyer wallet.",
+      "Verify public trusted-event discovery on /.well-known/trusted-events.json from an operator/external client.",
+      "Run one paid freshness event and one paid payment.intent.preflight event from the existing capped buyer wallet against the public rail.",
+      "Bind successful public settlement transaction hashes, latency and trust-event IDs into the Trust Proof Registry.",
       "Run 10 then 20 repeat paid events and publish settlement/latency evidence; operator calls prove system repeatability, not market demand.",
       "Verify x402 Bazaar/Agentic.Market discovery and publish MCP/JS installation paths.",
       "Recruit three independent x402/MCP/AgentCore builders; earn M4 when one independently repeats 20+ paid events across two sessions and confirms utility.",
@@ -68,19 +78,19 @@
     "firstTargets": "docs/FIRST_20_TARGETS.md",
     "offers": "docs/OCN_DESIGN_PARTNER_OFFERS.md",
     "accelerationPlan": "docs/M0_M12_ACCELERATION_PLAN.md",
-    "externalUnlock": "Public HTTPS + repeat external paid trusted events + one buyer-confirmed Shadow Mode finding."
+    "externalUnlock": "Public paid settlement + repeat external paid trusted events + one buyer-confirmed Shadow Mode finding."
   },
   "milestones": [
     {"id":"M0","name":"First machine payment proof","status":"achieved"},
     {"id":"M1","name":"OpenCapabilities network + assurance architecture + production/TLA+ formal models","status":"achieved"},
-    {"id":"M2","name":"Public trust rail live","status":"ready_to_deploy"},
-    {"id":"M3","name":"First horizontal trusted event live with public proof card","status":"blocked_on_M2_deployment"},
+    {"id":"M2","name":"Public trust rail live","status":"achieved","evidence":{"url":"https://ocn-trust-rail.onrender.com/v1/network/health","buildSha":"97aeb6c5f0706724639ecb953589a40d543f4169","paymentsMode":"x402","network":"eip155:84532","trustedEvents":6}},
+    {"id":"M3","name":"First horizontal trusted event live with public proof card and public paid settlement","status":"in_progress_paid_settlement_pending"},
     {"id":"M4","name":"First external repeat-paying agent","status":"target_queue_ready"},
     {"id":"M5","name":"First external Shadow Mode workflow and buyer-confirmed useful trust-gap finding","status":"demo_and_offers_ready"},
     {"id":"M6","name":"First paid institutional/design-partner pilot","status":"offers_ready_value_proof_pending"},
     {"id":"M7","name":"First customer moves Shadow -> deterministic Enforcement","status":"planned"},
     {"id":"M8","name":"First repeat deployment across multiple workflows/agents","status":"planned"},
-    {"id":"M9","name":"First measured hosted scale proof","status":"load_test_after_M2_M3"},
+    {"id":"M9","name":"First measured hosted scale proof","status":"load_test_after_M3"},
     {"id":"M10","name":"Sovereign/customer-controlled deployment validated","status":"architecture_ready_external_validation_pending"},
     {"id":"M11","name":"Independent assurance/security/formal review","status":"internal_formal_evidence_ready_external_reviewer_pending"},
     {"id":"M12","name":"Network business proof: repeat usage + expansion + positive unit economics","status":"planned"}
