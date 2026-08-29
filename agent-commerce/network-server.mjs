@@ -85,6 +85,8 @@ export function createNetworkApp({
   app.get('/v1/network/health', (_req, res) => res.json({
     status: judgeAdapter ? 'ok' : 'degraded',
     reason: judgeAdapter ? null : 'judge_provider_not_configured',
+    service: 'ocn-trust-rail',
+    buildSha: process.env.RENDER_GIT_COMMIT ?? process.env.OCN_BUILD_SHA ?? null,
     providers: { judge: Boolean(judgeAdapter) },
     trustedEvents: Object.keys(TRUSTED_EVENT_OFFERS).length,
     paymentsMode,
@@ -140,7 +142,6 @@ export function createNetworkApp({
     }
   })
 
-  // Cheap validation and abuse budget happen before payment, so malformed/over-limit traffic is not charged.
   app.use((req, res, next) => {
     if (req.method !== 'POST') return next()
     const capabilityId = TRUSTED_EVENT_PATHS[req.path]
@@ -198,8 +199,9 @@ export function createNetworkApp({
 
 export function startNetworkServer(options = {}) {
   const port = Number(options.port ?? process.env.PORT ?? 4021)
+  const host = options.host ?? process.env.HOST ?? '0.0.0.0'
   const app = createNetworkApp(options)
-  return app.listen(port, () => console.log(`Open Capability Network listening on http://localhost:${port}`))
+  return app.listen(port, host, () => console.log(`Open Capability Network listening on http://${host}:${port}`))
 }
 
 if (isDirectRun()) startNetworkServer()
