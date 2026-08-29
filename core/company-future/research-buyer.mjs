@@ -6,6 +6,18 @@ function normalizeHosts(hosts = []) {
   return new Set(hosts.map((host) => String(host).toLowerCase()))
 }
 
+function sourceBoundaryEvidence(sourceUrl, hostSet) {
+  try {
+    const url = new URL(sourceUrl || '')
+    const approved = url.protocol === 'https:' && hostSet.has(url.hostname.toLowerCase())
+    return approved
+      ? { claims: ['source_host_approved'], flags: [] }
+      : { claims: [], flags: ['privacy_scope_violation'] }
+  } catch {
+    return { claims: [], flags: ['privacy_scope_violation'] }
+  }
+}
+
 export function createSafeHttpsReadExecutor({
   allowedHosts,
   fetchImpl = globalThis.fetch,
@@ -55,6 +67,7 @@ export function createResearchBuyerAgent({
   requestPaidResource = null,
   clock = () => new Date(),
 } = {}) {
+  const hostSet = normalizeHosts(allowedHosts)
   const actor = { id: 'research-buyer-01', role: 'research_agent', autonomyLevel: 3 }
   const principal = { id: principalId, type: 'company' }
   const delegation = {
@@ -93,7 +106,7 @@ export function createResearchBuyerAgent({
           sourceId: sourceId ?? null,
           idempotencyKey,
         },
-        evidence: { claims: [] },
+        evidence: sourceBoundaryEvidence(sourceUrl, hostSet),
         metrics: earnedAutonomyMetrics,
         budget: { currency: 'EUR', spent, limit: 10 },
       })
