@@ -66,6 +66,22 @@ export function validateTrustedBuyerConfig(env = process.env) {
   }
 }
 
+export function summarizeFailedResponse(response, body, { callIndex, capabilityId } = {}) {
+  const safeHeaders = {}
+  for (const name of ['content-type', 'payment-required', 'payment-response', 'x-request-id', 'x-ratelimit-limit', 'x-ratelimit-remaining', 'x-ratelimit-reset']) {
+    const value = response.headers.get(name)
+    if (value) safeHeaders[name] = value
+  }
+  return {
+    callIndex: Number.isInteger(callIndex) ? callIndex : null,
+    capabilityId: capabilityId ?? null,
+    status: response.status,
+    statusText: response.statusText || null,
+    headers: safeHeaders,
+    body,
+  }
+}
+
 export async function runTrustedEventBuyerSmoke({ env = process.env, fetchImpl = fetch, now = () => Date.now() } = {}) {
   const config = validateTrustedBuyerConfig(env)
   const target = TRUST_EVENT_SMOKES[config.event]
@@ -96,7 +112,7 @@ export async function runTrustedEventBuyerSmoke({ env = process.env, fetchImpl =
     const body = await response.json().catch(() => ({}))
     if (!response.ok) {
       const error = new Error(`trusted_event_paid_request_failed:${response.status}`)
-      error.details = body
+      error.details = summarizeFailedResponse(response, body, { callIndex: i, capabilityId: target.capabilityId })
       throw error
     }
     if (body?.receipt?.authority?.paymentGrantedAuthority !== false) throw new Error('receipt_authority_boundary_failed')
