@@ -1,85 +1,37 @@
 export const uiScenarios = Object.freeze([
-  {
-    id: 'valid_purchase',
-    sector: 'company',
-    title: 'Approved €2 data purchase',
-    description: 'Correct purpose, approved vendor, earned autonomy and enough delegated budget.',
-  },
-  {
-    id: 'overspend',
-    sector: 'company',
-    title: 'Spend beyond the €10 envelope',
-    description: 'The purchase is individually small enough, but would push the delegation over its total budget.',
-  },
-  {
-    id: 'unknown_vendor',
-    sector: 'company',
-    title: 'Cheap but unapproved vendor',
-    description: 'Low price is not authority. Counterparty policy still applies.',
-  },
-  {
-    id: 'wrong_purpose',
-    sector: 'company',
-    title: 'Use research authority for another purpose',
-    description: 'The agent has a valid identity but the requested purpose is outside the delegation.',
-  },
-  {
-    id: 'prompt_injection',
-    sector: 'regulated',
-    title: 'Prompt-injected purchase instruction',
-    description: 'A hard escalation overrides otherwise valid authority.',
-  },
-  {
-    id: 'revoked_delegation',
-    sector: 'government',
-    title: 'Revoked casework authority',
-    description: 'Yesterday’s delegation cannot become today’s standing permission.',
-  },
-  {
-    id: 'government_denial',
-    sector: 'government',
-    title: 'Benefit denial without official approval',
-    description: 'Evidence can be complete and the action can still require an accountable human decision.',
-  },
-  {
-    id: 'government_denial_approved',
-    sector: 'government',
-    title: 'Benefit denial with exact-bound approval',
-    description: 'Approval works only when bound to the correct action and delegation.',
-  },
-  {
-    id: 'payment_is_not_permission',
-    sector: 'finance',
-    title: 'Payment settled, bank change still forbidden',
-    description: 'A successful payment never grants a new capability.',
-  },
-  {
-    id: 'facilitator_failure',
-    sector: 'payments',
-    title: 'Facilitator settlement collision',
-    description: 'Authority allows the purchase; the external payment facilitator fails without expanding authority.',
-  },
+  { id: 'valid_purchase', sector: 'company', title: 'Approved €2 data purchase', description: 'Correct purpose, approved vendor, earned autonomy and enough delegated budget.' },
+  { id: 'overspend', sector: 'company', title: 'Spend beyond the €10 envelope', description: 'The purchase is individually small enough, but would push the delegation over its total budget.' },
+  { id: 'unknown_vendor', sector: 'company', title: 'Cheap but unapproved vendor', description: 'Low price is not authority. Counterparty policy still applies.' },
+  { id: 'wrong_purpose', sector: 'company', title: 'Use research authority for another purpose', description: 'The agent has a valid identity but the requested purpose is outside the delegation.' },
+  { id: 'prompt_injection', sector: 'regulated', title: 'Prompt-injected purchase instruction', description: 'A hard escalation overrides otherwise valid authority.' },
+  { id: 'revoked_delegation', sector: 'government', title: 'Revoked casework authority', description: 'Yesterday’s delegation cannot become today’s standing permission.' },
+  { id: 'government_denial', sector: 'government', title: 'Benefit denial without official approval', description: 'Evidence can be complete and the action can still require an accountable human decision.' },
+  { id: 'government_denial_approved', sector: 'government', title: 'Benefit denial with exact-bound approval', description: 'Approval works only when bound to the correct action and delegation.' },
+  { id: 'payment_is_not_permission', sector: 'finance', title: 'Payment settled, bank change still forbidden', description: 'A successful payment never grants a new capability.' },
+  { id: 'facilitator_failure', sector: 'payments', title: 'Facilitator settlement collision', description: 'Authority allows the purchase; the external payment facilitator fails without expanding authority.' },
 ])
 
+const PURPOSE = 'public_building_energy_research'
 const BASE = Object.freeze({
   actor: { id: 'research-7', role: 'research_agent', autonomyLevel: 3 },
-  principal: { id: 'acme', type: 'company' },
+  principal: { id: 'public-buildings-lab', type: 'public_body' },
   delegation: {
     id: 'delegation-research-7',
     delegateId: 'research-7',
-    principalId: 'acme',
+    principalId: 'public-buildings-lab',
     scopes: ['research.purchase_data'],
-    purposes: ['market_research'],
+    purposes: [PURPOSE],
     validUntil: '2026-09-01T00:00:00.000Z',
   },
   action: {
     type: 'research.purchase_data',
-    purpose: 'market_research',
+    purpose: PURPOSE,
     amount: { currency: 'EUR', value: 2 },
     counterpartyApproved: true,
   },
   evidence: { claims: ['vendor_terms_checked', 'source_relevant'] },
   budget: { currency: 'EUR', spent: 3, limit: 10 },
+  metrics: { cases: 300, acceptanceRate: 0.995, correctionRate: 0.004, unsafeExecutions: 0 },
 })
 
 function clone(value) {
@@ -112,6 +64,7 @@ export function scenarioInput(id) {
     input.action = { type: 'government.benefit.deny', purpose: 'benefit_casework' }
     input.evidence = { claims: ['legal_basis', 'decision_evidence_complete'] }
     input.budget = null
+    input.metrics = {}
     if (id === 'government_denial_approved') {
       input.approval = {
         approvedBy: 'official-147',
@@ -123,6 +76,7 @@ export function scenarioInput(id) {
 
   if (id === 'payment_is_not_permission') {
     input.actor = { id: 'finance-1', role: 'finance_agent', autonomyLevel: 5 }
+    input.principal = { id: 'acme', type: 'company' }
     input.delegation = {
       id: 'delegation-finance-1',
       delegateId: 'finance-1',
@@ -134,6 +88,7 @@ export function scenarioInput(id) {
     input.action = { type: 'finance.bank_detail_change', purpose: 'finance_ops', paymentStatus: 'settled' }
     input.evidence = { paymentProof: { settled: true } }
     input.budget = null
+    input.metrics = {}
   }
 
   if (id === 'facilitator_failure') input.executionFailure = 'replacement transaction underpriced'
@@ -143,7 +98,7 @@ export function scenarioInput(id) {
 const RULES = Object.freeze({
   'research.purchase_data': {
     roles: ['research_agent'],
-    purposes: ['market_research'],
+    purposes: [PURPOSE],
     approvedCounterpartyOnly: true,
     max: 5,
     requiredEvidence: ['vendor_terms_checked', 'source_relevant'],
@@ -213,5 +168,6 @@ export function evaluateUiAuthority(input) {
 export function runUiScenario(id) {
   const scenario = uiScenarios.find((item) => item.id === id)
   if (!scenario) throw new Error(`unknown_scenario:${id}`)
-  return { ...scenario, input: scenarioInput(id), result: evaluateUiAuthority(scenarioInput(id)) }
+  const input = scenarioInput(id)
+  return { ...scenario, input, result: evaluateUiAuthority(input) }
 }
