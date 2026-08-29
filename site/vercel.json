@@ -3,6 +3,7 @@
     { "source": "/agents", "destination": "/agent-capabilities.html" },
     { "source": "/authority", "destination": "/authority-control-center.html" },
     { "source": "/company", "destination": "/company-of-the-future.html" },
+    { "source": "/ledger", "destination": "/company-ledger.html" },
     { "source": "/factory", "destination": "/factory.html" },
     { "source": "/scorecard", "destination": "/agent-authority-scorecard.html" },
     { "source": "/pilot", "destination": "/trusted-agent-pilot.html" },
