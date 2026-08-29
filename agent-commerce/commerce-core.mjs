@@ -66,7 +66,7 @@ export function publicCapabilityDescriptor(offer) {
   })
 }
 
-export function makeServiceReceipt({ descriptor, request, traceId, output, payment = null }) {
+export function makeServiceReceipt({ descriptor, request, requestId = null, traceId, output, payment = null }) {
   const requestHash = fingerprint(request)
   const outputHash = fingerprint(output)
   const settlementRef = payment?.settlementRef ?? null
@@ -74,6 +74,7 @@ export function makeServiceReceipt({ descriptor, request, traceId, output, payme
     schema: 'agent-commerce.receipt/1',
     capabilityId: descriptor.id,
     capabilityVersion: descriptor.version,
+    requestId,
     traceId,
     requestHash,
     outputHash,

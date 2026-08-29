@@ -1,0 +1,29 @@
+{
+  "schema": "ocn.public-paid-settlement/1",
+  "observedAt": "2026-08-29T08:08:57.564Z",
+  "publicBuildSha": "97aeb6c5f0706724639ecb953589a40d543f4169",
+  "capabilityId": "freshness.verify.v1",
+  "endpoint": "https://ocn-trust-rail.onrender.com/v1/freshness/verify",
+  "buyerAddress": "0x2b36b350701f82bd25fa34Dc32fC52a2737eF523",
+  "network": "eip155:84532",
+  "amountUsd": "0.001",
+  "transaction": "0x327a9381f4f821c535f6bd2cc209545c92d73e9ae2594668334a8d7b8662c147",
+  "trustEventId": "c8fa5c18-a824-400e-a2cf-2cb0471868ad",
+  "httpStatus": 200,
+  "latencyMs": 23599,
+  "settlementSuccess": true,
+  "receipt": {
+    "paymentStatus": "verified",
+    "settlementProof": "PAYMENT-RESPONSE",
+    "paymentGrantedAuthority": false,
+    "consequentialActionExecuted": false
+  },
+  "result": {
+    "status": "fresh",
+    "fresh": true,
+    "ageSeconds": 21,
+    "maxAgeSeconds": 60,
+    "policy": "explicit-max-age"
+  },
+  "interpretation": "Public paid system operation proven with operator-controlled test buyer. This is not independent demand, production revenue, or a latency baseline."
+}

@@ -1,0 +1,54 @@
+{
+  "schema": "ocn.public-paid-repeat-evidence/1",
+  "observedAt": "2026-08-29T08:34:28Z",
+  "capabilityId": "payment.intent.preflight.v1",
+  "endpoint": "https://ocn-trust-rail.onrender.com/v1/payment/intent/preflight",
+  "network": "eip155:84532",
+  "asset": "USDC",
+  "priceUsdPerCall": "0.005",
+  "buyer": "0x2b36b350701f82bd25fa34Dc32fC52a2737eF523",
+  "attemptedCalls": 10,
+  "successfulCalls": 9,
+  "failedCalls": 1,
+  "settlementSuccessRate": 0.9,
+  "successfulLatencyMs": {
+    "min": 642,
+    "p50": 986,
+    "mean": 980.33,
+    "p95": 1342.6,
+    "p99": 1350.92,
+    "max": 1353
+  },
+  "transactions": [
+    "0x32e4c29153bba0f7b88a74f06d14333385f578fc64737255dc4f1396024dc840",
+    "0x50bf89625b7ff86c037d1523967a988874af1eaa6c1a9ee27427f9c39eab9aaf",
+    "0xb178328e41d7d25b668e05b99143679646b379a8238c3a182ba7b455ae94247c",
+    "0x8af1985dfa9b7ce9d8bf2d36c6960fdc0cb2baf69b6053b880f673a50717cb0d",
+    "0x7caef4945b148e60e7e680ec7cdf69e4f9dbdaaf5d7850cf7e2b0bc1ab067957",
+    "0xdab0d60aa1be871da0641fae735f00f1d2885a86e4696b9d951ef5141e29950f",
+    "0x418691c013462d888b109849ceb955796e9b22bea12cd731ffc919dc2d4b5511",
+    "0x6c7732a49a38c4d4b48c2c9816ce2292b74f76ca95e3213d6f2ef9a1cc1c4582",
+    "0xf205ff1c92bd723fa06de393b038f876205b49567665a7a7a053f682ad51f548"
+  ],
+  "authorityInvariantOnSuccessfulCalls": {
+    "paymentGrantedAuthority": false,
+    "paymentExecutionPerformed": false,
+    "authorizationSource": "human_approval"
+  },
+  "failure": {
+    "callIndex": 8,
+    "httpStatus": 402,
+    "failureLayer": "facilitator_settlement",
+    "errorReason": "invalid_exact_evm_transaction_failed",
+    "detail": "replacement transaction underpriced",
+    "xRequestId": "ocn-smoke-1787992477412-8",
+    "interpretation": "The x402 facilitator attempted to submit the EVM settlement transaction but Base rejected it as an underpriced replacement transaction. This occurred before a successful settlement/capability response and is not evidence of a deterministic OCN intent-kernel failure."
+  },
+  "limitations": [
+    "Operator-controlled test buyer; this proves public repeatability characteristics, not independent demand.",
+    "Base Sepolia testnet; not production revenue.",
+    "A 90% settlement success rate in this small run is not production-ready payment reliability.",
+    "The failure classification is based on the facilitator PAYMENT-RESPONSE returned by the live request.",
+    "This run does not prove merchant honesty, upstream source integrity, zero fraud, or payment recovery."
+  ]
+}

@@ -1,0 +1,36 @@
+services:
+  - type: web
+    name: ocn-trust-rail
+    runtime: docker
+    repo: https://github.com/mikelninh/digital-worker-factory
+    branch: feat/gov-launch-actual
+    region: frankfurt
+    plan: free
+    renderSubdomainPolicy: enabled
+    dockerContext: .
+    dockerfilePath: ./agent-commerce/Dockerfile.network
+    dockerCommand: node network-server.mjs
+    autoDeployTrigger: off
+    healthCheckPath: /v1/network/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: HOST
+        value: 0.0.0.0
+      - key: PAY_TO
+        value: "0x82dfA57a7CAfE1056fDc97595A472Cf68AABEB75"
+      - key: PAYMENTS_MODE
+        value: x402
+      - key: X402_NETWORK
+        value: "eip155:84532"
+      - key: X402_FACILITATOR_URL
+        value: "https://x402.org/facilitator"
+      - key: OCN_USAGE_LIMIT_PER_MINUTE
+        value: "600"
+      - key: OCN_PUBLIC_BASE_URL
+        fromService:
+          type: web
+          name: ocn-trust-rail
+          envVarKey: RENDER_EXTERNAL_URL
+      - key: OCN_FEEDBACK_TOKEN
+        generateValue: true

@@ -1,0 +1,223 @@
+{
+  "schema": "ocn.trust-proof-registry/7",
+  "asOf": "2026-08-29",
+  "status": "public-rail-live-two-paid-capabilities-repeat-evidence-published",
+  "principle": "Verifiable assurance for specific claims in a specific context at a specific time; never a universal trust score.",
+  "publicRail": {
+    "url": "https://ocn-trust-rail.onrender.com",
+    "health": "https://ocn-trust-rail.onrender.com/v1/network/health",
+    "buildSha": "97aeb6c5f0706724639ecb953589a40d543f4169",
+    "paymentsMode": "x402",
+    "network": "eip155:84532",
+    "trustedEvents": 6,
+    "healthStatus": "degraded_optional_judge_provider_not_configured",
+    "coreRailReachable": true,
+    "paidPublicSettlement": "proven"
+  },
+  "assuranceLevels": {
+    "A0": "unknown",
+    "A1": "declared",
+    "A2": "verified",
+    "A3": "evaluated",
+    "A4": "operationally proven",
+    "A5": "independently attested"
+  },
+  "globalProofs": [
+    {
+      "id": "public-paid-freshness-1",
+      "type": "public_x402_testnet_settlement_with_service_receipt",
+      "status": "proven",
+      "capabilityId": "freshness.verify.v1",
+      "endpoint": "https://ocn-trust-rail.onrender.com/v1/freshness/verify",
+      "publicBuildSha": "97aeb6c5f0706724639ecb953589a40d543f4169",
+      "buyer": "0x2b36b350701f82bd25fa34Dc32fC52a2737eF523",
+      "network": "eip155:84532",
+      "amountUsd": "0.001",
+      "transaction": "0x327a9381f4f821c535f6bd2cc209545c92d73e9ae2594668334a8d7b8662c147",
+      "trustEventId": "c8fa5c18-a824-400e-a2cf-2cb0471868ad",
+      "httpStatus": 200,
+      "latencyMs": 23599,
+      "settlement": {"success": true, "settlementProof": "PAYMENT-RESPONSE"},
+      "authority": {"paymentGrantedAuthority": false, "consequentialActionExecuted": false},
+      "result": {"status": "fresh", "fresh": true, "policy": "explicit-max-age"},
+      "limitations": ["operator-controlled test buyer; proves operation, not market demand", "Base Sepolia testnet; not production revenue", "first-call latency is not a warm baseline"]
+    },
+    {
+      "id": "public-paid-payment-intent-1",
+      "type": "public_x402_testnet_settlement_with_service_receipt",
+      "status": "proven",
+      "capabilityId": "payment.intent.preflight.v1",
+      "endpoint": "https://ocn-trust-rail.onrender.com/v1/payment/intent/preflight",
+      "publicBuildSha": "97aeb6c5f0706724639ecb953589a40d543f4169",
+      "buyer": "0x2b36b350701f82bd25fa34Dc32fC52a2737eF523",
+      "network": "eip155:84532",
+      "amountUsd": "0.005",
+      "transaction": "0x742274a991c6f47b14467db0563f7e291c9b541419b31079fde2849a7fe84991",
+      "trustEventId": "b6c84203-48ed-465b-abcc-4945725980a4",
+      "httpStatus": 200,
+      "latencyMs": 1665,
+      "settlement": {"success": true, "settlementProof": "PAYMENT-RESPONSE"},
+      "decision": "allow",
+      "authority": {"paymentGrantedAuthority": false, "paymentExecutionPerformed": false, "authorizationSource": "human_approval"},
+      "verifiedBindings": ["merchant", "beneficiary", "amount", "currency", "intent freshness", "replay", "approval"],
+      "limitations": ["operator-controlled test buyer; proves operation, not market demand", "merchant/source-system truth is outside this proof", "does not prove zero fraud or payment recovery"]
+    },
+    {
+      "id": "public-paid-freshness-repeat-10",
+      "type": "public_x402_repeat_settlement_run",
+      "status": "proven",
+      "capabilityId": "freshness.verify.v1",
+      "successfulCalls": 10,
+      "attemptedCalls": 10,
+      "settlementSuccessRate": 1.0,
+      "latencyMs": {"min": 909, "p50": 992.5, "mean": 1135.6, "p95": 1599.2, "p99": 1658.24, "max": 1673},
+      "transactions": [
+        "0xe82834db2f9cfdb7876b9b15f003d66c0bdea6017a73124508defb97cf6eedf3",
+        "0x9b19135ebf956b5b2ca9af40d9421520313f9c358de30391bbacf3dd6ddb2073",
+        "0xa9e64ead358de4b8bc5e5a5a73774da84852c79708d9f13f4b57a0e86ffbba5c",
+        "0x6a0e81d34979c4afec791b20e42a91be867eb5b1dda407849c797ccb4ce97dcf",
+        "0xbb3ed1e595ff6423059a949f34f8d50a09ad4ff8ea47954113314bbbf1765004",
+        "0xa7c42aa626e3c11b1df05f66201ffebb7dd10f60eb24257a7f31ea495d2883b2",
+        "0xec421c5c3b05dbbf5d3f4ed5b5473c7ce8d62d3998b0d4139ed2957062bbc780",
+        "0x34ecc0e1ccba185064d24805cfd5baa0cd71b8fedc5a97a9081c7bb8ec444e4c",
+        "0x62cd8737d168d66b2b2369a4f492d6c28c784fd8711e45b956a99a10cc02bcab",
+        "0x232062c9642910e156d031ee46dff302be0f5ffb6ee0dc9314bbde20cdd76550"
+      ],
+      "authorityInvariant": {"paymentGrantedAuthority": false, "consequentialActionExecuted": false},
+      "interpretation": "Public operator-controlled warm-path repeatability proof; not independent demand or production-scale reliability."
+    },
+    {
+      "id": "public-paid-payment-intent-repeat-10",
+      "type": "public_x402_repeat_settlement_run",
+      "status": "proven_with_settlement_anomaly",
+      "capabilityId": "payment.intent.preflight.v1",
+      "successfulCalls": 9,
+      "attemptedCalls": 10,
+      "failedCalls": 1,
+      "settlementSuccessRate": 0.9,
+      "latencyMsSuccessful": {"min": 642, "p50": 986, "mean": 980.33, "p95": 1342.6, "p99": 1350.92, "max": 1353},
+      "transactions": [
+        "0x32e4c29153bba0f7b88a74f06d14333385f578fc64737255dc4f1396024dc840",
+        "0x50bf89625b7ff86c037d1523967a988874af1eaa6c1a9ee27427f9c39eab9aaf",
+        "0xb178328e41d7d25b668e05b99143679646b379a8238c3a182ba7b455ae94247c",
+        "0x8af1985dfa9b7ce9d8bf2d36c6960fdc0cb2baf69b6053b880f673a50717cb0d",
+        "0x7caef4945b148e60e7e680ec7cdf69e4f9dbdaaf5d7850cf7e2b0bc1ab067957",
+        "0xdab0d60aa1be871da0641fae735f00f1d2885a86e4696b9d951ef5141e29950f",
+        "0x418691c013462d888b109849ceb955796e9b22bea12cd731ffc919dc2d4b5511",
+        "0x6c7732a49a38c4d4b48c2c9816ce2292b74f76ca95e3213d6f2ef9a1cc1c4582",
+        "0xf205ff1c92bd723fa06de393b038f876205b49567665a7a7a053f682ad51f548"
+      ],
+      "authorityInvariantOnSuccessfulCalls": {"paymentGrantedAuthority": false, "paymentExecutionPerformed": false, "authorizationSource": "human_approval"},
+      "failure": {
+        "callIndex": 8,
+        "httpStatus": 402,
+        "failureLayer": "facilitator_settlement",
+        "errorReason": "invalid_exact_evm_transaction_failed",
+        "detail": "replacement transaction underpriced",
+        "interpretation": "The live PAYMENT-RESPONSE shows the facilitator's EVM settlement submission was rejected by Base as an underpriced replacement transaction. The failure happened in settlement infrastructure, not as an OCN intent-kernel decision."
+      },
+      "evidence": "evidence/public-paid-repeat-payment-intent-10-2026-08-29.json",
+      "limitations": ["operator-controlled test buyer; not independent demand", "Base Sepolia testnet; not production revenue", "90% in a 10-call sample is not production-ready payment reliability", "no automatic retry is claimed because settlement ambiguity must be handled idempotently"]
+    },
+    {
+      "id": "payment-intent-repeat-10-attempt-1",
+      "type": "historical_public_x402_repeat_attempt",
+      "status": "superseded_by_diagnosed_repeat_run",
+      "attemptedCalls": 10,
+      "successfulCalls": 0,
+      "observed": "The old smoke harness stopped on the first HTTP 402 and emitted an empty JSON body.",
+      "interpretation": "Superseded by the later continue-on-failure run that isolated a facilitator-settlement replacement-transaction-underpriced error."
+    },
+    {
+      "id": "public-rail-health-1",
+      "type": "operator_verified_public_https_health",
+      "status": "proven",
+      "url": "https://ocn-trust-rail.onrender.com/v1/network/health",
+      "buildSha": "97aeb6c5f0706724639ecb953589a40d543f4169",
+      "observed": {"service":"ocn-trust-rail","trustedEvents":6,"paymentsMode":"x402","network":"eip155:84532"},
+      "limitation": "Health is degraded only because the optional Judge provider is not configured."
+    },
+    {
+      "id": "production-trust-kernel-bounded-v2",
+      "type": "bounded_exhaustive_model_check_over_production_functions",
+      "status": "green_ci",
+      "source": "formal/ocn-kernel-model.mjs",
+      "lastKnownRun": {"exploredStates": 966, "assertions": 4564, "result": "PASS"},
+      "scope": ["explicit-grant authority", "payment never grants authority", "stale evidence blocks", "insufficient evidence blocks", "write/consequential human-review invariant", "payment intent merchant/beneficiary/amount/currency/expiry/replay bindings", "payment intent mandate-or-human-approval invariant", "review/block do not execute in mediator model", "idempotency replay mediator invariant"]
+    },
+    {
+      "id": "tla-trust-state-machine-v1",
+      "type": "independent_TLA_plus_TLC_model_check",
+      "status": "green_ci",
+      "spec": "formal/OCNTrustKernel.tla",
+      "config": "formal/OCNTrustKernel.cfg",
+      "tool": "TLA+ TLC 2.19 / pinned v1.7.4 tool bundle",
+      "scope": ["hard merchant/beneficiary/amount/currency/freshness/replay bindings before verified/approved/executed", "authorization before execution", "payment state alone never grants authority", "review/blocked cannot execute", "replay or hard mismatch cannot execute", "execution count <= 1"]
+    },
+    {
+      "id": "formal-proof-limitations",
+      "type": "scope_boundary",
+      "status": "published",
+      "limitations": ["model checking proves invariants of specified/modelled state spaces, not every possible program/environment state", "does not prove external-world truth or upstream registry integrity", "does not prove arbitrary LLM correctness", "does not yet prove every downstream execution adapter is refinement-equivalent to the TLA+ model", "does not guarantee zero fraud, merchant fulfilment or financial recovery", "A5 requires independent external attestation and is never self-awarded"]
+    }
+  ],
+  "capabilities": [
+    {
+      "id": "trust.preflight.v1",
+      "readiness": "public_rail_live",
+      "claimFamilies": ["authority", "evidence", "freshness", "human-oversight"],
+      "assurance": {"deterministicKernel": "A3", "operational": "A1"},
+      "proves": ["declared checks executed", "blocking/review reasons", "payment does not grant authority"],
+      "doesNotProve": ["absolute truth", "universal safety", "legal/clinical correctness outside validated scope"]
+    },
+    {
+      "id": "authority.check.v1",
+      "readiness": "public_rail_live",
+      "claimFamilies": ["authority"],
+      "assurance": {"explicitGrantLogic": "A3", "externalCredentialTruth": "A0", "operational": "A1"},
+      "proves": ["matching active explicit grant exists or does not exist"],
+      "doesNotProve": ["that an upstream identity/credential source is uncompromised"]
+    },
+    {
+      "id": "freshness.verify.v1",
+      "readiness": "public_paid_repeat_10_proven",
+      "claimFamilies": ["freshness"],
+      "assurance": {"timestampPolicy": "A3", "sourceTruth": "A0", "publicOperation": "A2"},
+      "proves": ["observation timestamp satisfies explicit max-age policy", "10/10 public x402 paid warm-path calls settled with receipts and preserved authority boundaries"],
+      "doesNotProve": ["that fresh information is substantively correct", "independent market demand", "production-scale reliability"]
+    },
+    {
+      "id": "evidence.verify.v1",
+      "readiness": "public_rail_live",
+      "claimFamilies": ["evidence", "provenance"],
+      "assurance": {"bindingStructure": "A3", "substantiveTruth": "A0", "operational": "A1"},
+      "proves": ["claims are covered by supplied evidence references", "provenance locator/hash structure is present"],
+      "doesNotProve": ["that a cited source or claim is substantively true"]
+    },
+    {
+      "id": "entity.resolve.org.v1",
+      "readiness": "public_rail_live",
+      "claimFamilies": ["entity-resolution"],
+      "assurance": {"boundedIdentifierMatch": "A2", "realWorldIdentity": "A0", "operational": "A1"},
+      "proves": ["bounded supplied identifiers match under the published scoring rule"],
+      "doesNotProve": ["external registry identity unless a verified registry provider is connected", "automatic merge authority"]
+    },
+    {
+      "id": "judge.output.v1",
+      "readiness": "adapter_ready_provider_not_configured_on_public_rail",
+      "claimFamilies": ["evaluation"],
+      "assurance": {"adapterContract": "A2", "operational": "A0"},
+      "proves": ["bounded evaluation can be invoked through the provider adapter when configured"],
+      "doesNotProve": ["universal correctness of an evaluated output"]
+    },
+    {
+      "id": "payment.intent.preflight.v1",
+      "readiness": "public_paid_repeat_9_of_10_proven_formally_model_checked",
+      "claimFamilies": ["intent", "counterparty", "beneficiary", "amount", "currency", "authority", "replay"],
+      "assurance": {"deterministicIntentKernel": "A3", "merchantOrRegistryTruth": "A0", "publicOperation": "A2", "paymentSettlementReliability": "A1"},
+      "proves": ["9/10 public paid calls in the measured repeat run settled successfully", "merchant/beneficiary/amount/currency/freshness/replay bindings were satisfied on successful calls", "human approval was observed", "payment did not grant authority", "the preflight did not execute payment"],
+      "doesNotProve": ["merchant fulfilment or honesty", "upstream registry integrity", "zero fraud", "recovery/chargeback outcome", "production-ready payment settlement reliability"]
+    }
+  ],
+  "nextPromotionGates": ["complete 20-call payment-intent and freshness reliability samples", "add settlement-safe idempotency/payment-identifier semantics before any automatic retry", "first independent repeat-paying agent", "first external Shadow Mode workflow", "measured buyer-confirmed useful trust-gap finding", "buyer adjudication of false positives and false negatives", "hosted latency/reliability baseline", "refinement/equivalence evidence from execution adapters to formal model before broad enforcement", "real operational outcomes for A4", "independent audit/attestation for A5"]
+}

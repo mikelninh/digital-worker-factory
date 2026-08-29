@@ -1,0 +1,112 @@
+{
+  "schema": "ocn.roadmap-state/9",
+  "updated": "2026-08-29",
+  "northStar": "Become the standard assurance rail agents call automatically before consequential actions and after important outputs.",
+  "promise": "Before your agent acts, OCN checks evidence, authority, freshness, policy and intent. After it acts, OCN leaves a verifiable receipt.",
+  "operatingLoop": ["connect", "harden", "prove", "distribute", "learn"],
+  "currentPhase": "repeat_public_paid_validation_and_external_recruitment",
+  "trustModel": {
+    "principle": "Verifiable assurance for specific claims in a specific context at a specific time; never a universal trust score.",
+    "spec": "docs/OCN_TRUST_ASSURANCE_SPEC.md",
+    "formal": ["formal/ocn-kernel-model.mjs", "formal/OCNTrustKernel.tla", "formal/OCNTrustKernel.cfg"],
+    "proofRegistry": "site/trust-proof-registry.json",
+    "claimFamilies": ["identity", "authority", "intent", "counterparty", "beneficiary", "evidence", "freshness", "policy", "evaluation", "execution", "outcome"],
+    "assuranceLevels": ["A0_unknown", "A1_declared", "A2_verified", "A3_evaluated", "A4_operationally_proven", "A5_independently_attested"]
+  },
+  "progress": {
+    "architectureAndCoreRail": "strong_green_ci",
+    "formalTrustKernel": "production_bounded_plus_independent_TLA_TLC_green_ci",
+    "trustedEvents": "six_events_built_green_ci_public_discovery_live",
+    "paymentIntentFraudGuard": "built_formally_model_checked_public_paid_repeat_9_of_10_settled",
+    "ocnGuard": "built_green_ci",
+    "trustProofRegistry": "public_build_two_paid_capabilities_repeat_freshness_and_payment_intent_evidence_bound",
+    "shadowModeDemo": "built_synthetic_pre_external",
+    "distributionPackages": "built_green_ci_publication_pending",
+    "evidenceFlywheel": "reference_implementation_green_ci",
+    "portableDeployment": "docker_green_ci_render_frankfurt_live",
+    "repeatPaymentHarness": "continue_on_failure_plus_safe_facilitator_failure_decoding",
+    "publicHosting": "achieved_https_render_build_97aeb6c5f0706724639ecb953589a40d543f4169",
+    "firstPublicPaidTrustedEvent": {
+      "capabilityId": "freshness.verify.v1",
+      "transaction": "0x327a9381f4f821c535f6bd2cc209545c92d73e9ae2594668334a8d7b8662c147",
+      "trustEventId": "c8fa5c18-a824-400e-a2cf-2cb0471868ad",
+      "httpStatus": 200,
+      "settlementSuccess": true,
+      "latencyMs": 23599,
+      "paymentGrantedAuthority": false,
+      "consequentialActionExecuted": false
+    },
+    "firstPublicPaymentIntent": {
+      "capabilityId": "payment.intent.preflight.v1",
+      "transaction": "0x742274a991c6f47b14467db0563f7e291c9b541419b31079fde2849a7fe84991",
+      "trustEventId": "b6c84203-48ed-465b-abcc-4945725980a4",
+      "httpStatus": 200,
+      "settlementSuccess": true,
+      "latencyMs": 1665,
+      "decision": "allow",
+      "paymentGrantedAuthority": false,
+      "paymentExecutionPerformed": false,
+      "authorizationSource": "human_approval"
+    },
+    "freshnessRepeat10": {
+      "attempted": 10,
+      "successful": 10,
+      "settlementSuccessRate": 1.0,
+      "latencyMs": {"min": 909, "p50": 992.5, "mean": 1135.6, "p95": 1599.2, "p99": 1658.24, "max": 1673},
+      "interpretation": "operator-controlled public repeatability proof, not independent demand"
+    },
+    "paymentIntentRepeat10": {
+      "attempted": 10,
+      "successful": 9,
+      "failed": 1,
+      "settlementSuccessRate": 0.9,
+      "latencyMsSuccessful": {"min": 642, "p50": 986, "mean": 980.33, "p95": 1342.6, "p99": 1350.92, "max": 1353},
+      "authorityInvariantOnSuccessfulCalls": {"paymentGrantedAuthority": false, "paymentExecutionPerformed": false},
+      "failure": {
+        "callIndex": 8,
+        "httpStatus": 402,
+        "failureLayer": "facilitator_settlement",
+        "errorReason": "invalid_exact_evm_transaction_failed",
+        "detail": "replacement transaction underpriced",
+        "interpretation": "Base rejected the facilitator relayer transaction as an underpriced replacement transaction; this is payment-settlement infrastructure evidence, not a deterministic OCN intent-kernel failure."
+      },
+      "evidence": "evidence/public-paid-repeat-payment-intent-10-2026-08-29.json",
+      "interpretation": "Strong small-sample public operation evidence, but 90% settlement success is not production-ready payment reliability and does not prove independent demand."
+    },
+    "externalRepeatUsage": "not_yet_proven",
+    "buyerValueProof": "not_yet_proven",
+    "governmentAdoption": "not_yet_proven",
+    "hostedScale": "not_yet_proven",
+    "independentAttestation": "not_yet_proven"
+  },
+  "currentSprint": {
+    "name": "20-Call Reliability -> Independent Payer -> Shadow -> Paid Pilot",
+    "nextCriticalMoves": [
+      "Run 20 payment-intent and 20 freshness calls with continue-on-failure and publish success/error/latency distributions without retrying failed signed payments.",
+      "Treat facilitator-settlement failures as a separate reliability layer; evaluate a facilitator fallback or dedicated facilitator only if the measured error rate remains material.",
+      "Add official x402 payment-identifier/idempotency semantics before any automatic retry policy so settlement ambiguity cannot create double-charge risk.",
+      "Verify x402 Bazaar/Agentic.Market discovery and publish MCP/JS installation paths.",
+      "Recruit independent x402/MCP/AgentCore builders; earn M4 only with a genuinely independent repeat-paying agent.",
+      "Run Payment Intent Shadow with a real payment/AP/commerce workflow and Decision Assurance Shadow with a real public-sector/enterprise workflow.",
+      "Measure useful catches, false positives/negatives, review-time change, p95 latency, audit completeness and cost per trusted event.",
+      "Convert one buyer-confirmed useful finding into a paid design-partner/institutional pilot.",
+      "Enable buyer-approved deterministic enforcement gates, expand to a second workflow, then attack hosted scale, sovereign deployment and independent assurance."
+    ],
+    "externalUnlock": "Independent repeat-paying agent + one buyer-confirmed Shadow Mode finding."
+  },
+  "milestones": [
+    {"id":"M0","name":"First machine payment proof","status":"achieved"},
+    {"id":"M1","name":"OpenCapabilities network + assurance architecture + production/TLA+ formal models","status":"achieved"},
+    {"id":"M2","name":"Public trust rail live","status":"achieved"},
+    {"id":"M3","name":"First horizontal trusted event live with public proof card and public paid settlement","status":"achieved"},
+    {"id":"M4","name":"First external repeat-paying agent","status":"target_queue_ready"},
+    {"id":"M5","name":"First external Shadow Mode workflow and buyer-confirmed useful trust-gap finding","status":"demo_and_offers_ready"},
+    {"id":"M6","name":"First paid institutional/design-partner pilot","status":"offers_ready_value_proof_pending"},
+    {"id":"M7","name":"First customer moves Shadow -> deterministic Enforcement","status":"planned"},
+    {"id":"M8","name":"First repeat deployment across multiple workflows/agents","status":"planned"},
+    {"id":"M9","name":"First measured hosted scale proof","status":"load_test_after_repeat_validation"},
+    {"id":"M10","name":"Sovereign/customer-controlled deployment validated","status":"architecture_ready_external_validation_pending"},
+    {"id":"M11","name":"Independent assurance/security/formal review","status":"internal_formal_evidence_ready_external_reviewer_pending"},
+    {"id":"M12","name":"Network business proof: repeat usage + expansion + positive unit economics","status":"planned"}
+  ]
+}

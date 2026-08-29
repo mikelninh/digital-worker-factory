@@ -1,0 +1,31 @@
+{
+  "schema": "ocn.public-paid-settlement/1",
+  "observedAt": "2026-08-29T08:30:36.718Z",
+  "capabilityId": "payment.intent.preflight.v1",
+  "endpoint": "https://ocn-trust-rail.onrender.com/v1/payment/intent/preflight",
+  "buyer": "0x2b36b350701f82bd25fa34Dc32fC52a2737eF523",
+  "network": "eip155:84532",
+  "amountUsd": "0.005",
+  "httpStatus": 200,
+  "latencyMs": 1047,
+  "trustEventId": "c56c0ec6-dbf4-4caa-aa8a-19c0f5fd3eec",
+  "transaction": "0x8205e350679b7e93a4c9df2ea11e667e2655a3ed61af77c66c22795b80db1261",
+  "settlementSuccess": true,
+  "decision": "allow",
+  "authority": {
+    "paymentGrantedAuthority": false,
+    "consequentialActionExecuted": false,
+    "paymentExecutionPerformed": false,
+    "authorizationSource": "human_approval"
+  },
+  "bindings": {
+    "merchantVerified": true,
+    "beneficiaryBound": true,
+    "amountExact": true,
+    "currencyBound": true,
+    "intentFresh": true,
+    "replayDetected": false,
+    "humanApprovalPresent": true
+  },
+  "interpretation": "Second successful public paid invocation of payment.intent.preflight.v1 after one earlier transient HTTP 402 repeat-run failure. This proves the earlier 402 is not a deterministic capability failure. Payer remains operator-controlled and Base Sepolia is testnet, so this is not independent demand or production revenue."
+}
