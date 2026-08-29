@@ -1,7 +1,7 @@
 {
-  "schema": "ocn.trust-proof-registry/6",
+  "schema": "ocn.trust-proof-registry/7",
   "asOf": "2026-08-29",
-  "status": "public-rail-live-two-paid-capabilities-proven-repeat-freshness-proven",
+  "status": "public-rail-live-two-paid-capabilities-repeat-evidence-published",
   "principle": "Verifiable assurance for specific claims in a specific context at a specific time; never a universal trust score.",
   "publicRail": {
     "url": "https://ocn-trust-rail.onrender.com",
@@ -87,14 +87,46 @@
       "interpretation": "Public operator-controlled warm-path repeatability proof; not independent demand or production-scale reliability."
     },
     {
+      "id": "public-paid-payment-intent-repeat-10",
+      "type": "public_x402_repeat_settlement_run",
+      "status": "proven_with_settlement_anomaly",
+      "capabilityId": "payment.intent.preflight.v1",
+      "successfulCalls": 9,
+      "attemptedCalls": 10,
+      "failedCalls": 1,
+      "settlementSuccessRate": 0.9,
+      "latencyMsSuccessful": {"min": 642, "p50": 986, "mean": 980.33, "p95": 1342.6, "p99": 1350.92, "max": 1353},
+      "transactions": [
+        "0x32e4c29153bba0f7b88a74f06d14333385f578fc64737255dc4f1396024dc840",
+        "0x50bf89625b7ff86c037d1523967a988874af1eaa6c1a9ee27427f9c39eab9aaf",
+        "0xb178328e41d7d25b668e05b99143679646b379a8238c3a182ba7b455ae94247c",
+        "0x8af1985dfa9b7ce9d8bf2d36c6960fdc0cb2baf69b6053b880f673a50717cb0d",
+        "0x7caef4945b148e60e7e680ec7cdf69e4f9dbdaaf5d7850cf7e2b0bc1ab067957",
+        "0xdab0d60aa1be871da0641fae735f00f1d2885a86e4696b9d951ef5141e29950f",
+        "0x418691c013462d888b109849ceb955796e9b22bea12cd731ffc919dc2d4b5511",
+        "0x6c7732a49a38c4d4b48c2c9816ce2292b74f76ca95e3213d6f2ef9a1cc1c4582",
+        "0xf205ff1c92bd723fa06de393b038f876205b49567665a7a7a053f682ad51f548"
+      ],
+      "authorityInvariantOnSuccessfulCalls": {"paymentGrantedAuthority": false, "paymentExecutionPerformed": false, "authorizationSource": "human_approval"},
+      "failure": {
+        "callIndex": 8,
+        "httpStatus": 402,
+        "failureLayer": "facilitator_settlement",
+        "errorReason": "invalid_exact_evm_transaction_failed",
+        "detail": "replacement transaction underpriced",
+        "interpretation": "The live PAYMENT-RESPONSE shows the facilitator's EVM settlement submission was rejected by Base as an underpriced replacement transaction. The failure happened in settlement infrastructure, not as an OCN intent-kernel decision."
+      },
+      "evidence": "evidence/public-paid-repeat-payment-intent-10-2026-08-29.json",
+      "limitations": ["operator-controlled test buyer; not independent demand", "Base Sepolia testnet; not production revenue", "90% in a 10-call sample is not production-ready payment reliability", "no automatic retry is claimed because settlement ambiguity must be handled idempotently"]
+    },
+    {
       "id": "payment-intent-repeat-10-attempt-1",
-      "type": "public_x402_repeat_attempt",
-      "status": "payment_layer_402_before_capability_result",
+      "type": "historical_public_x402_repeat_attempt",
+      "status": "superseded_by_diagnosed_repeat_run",
       "attemptedCalls": 10,
       "successfulCalls": 0,
-      "observed": "first attempted paid request returned HTTP 402 with empty JSON body in the old smoke harness",
-      "interpretation": "Does not invalidate the already-proven single payment.intent.preflight execution; diagnosis is on the payment/client/facilitator path. A newer smoke harness captures safe 402 headers and call index.",
-      "likelyCausesToCheck": ["insufficient Base Sepolia USDC", "payment signature/settlement rejection", "facilitator/payment requirement issue"]
+      "observed": "The old smoke harness stopped on the first HTTP 402 and emitted an empty JSON body.",
+      "interpretation": "Superseded by the later continue-on-failure run that isolated a facilitator-settlement replacement-transaction-underpriced error."
     },
     {
       "id": "public-rail-health-1",
@@ -180,12 +212,12 @@
     },
     {
       "id": "payment.intent.preflight.v1",
-      "readiness": "public_paid_single_proven_formally_model_checked_repeat_payment_diagnostic_pending",
+      "readiness": "public_paid_repeat_9_of_10_proven_formally_model_checked",
       "claimFamilies": ["intent", "counterparty", "beneficiary", "amount", "currency", "authority", "replay"],
-      "assurance": {"deterministicIntentKernel": "A3", "merchantOrRegistryTruth": "A0", "publicOperation": "A2"},
-      "proves": ["public paid invocation completed successfully once", "merchant/beneficiary/amount/currency/freshness/replay bindings were satisfied", "human approval was observed", "payment did not grant authority", "the preflight did not execute payment"],
-      "doesNotProve": ["merchant fulfilment or honesty", "upstream registry integrity", "zero fraud", "recovery/chargeback outcome", "repeat paid reliability until payment-layer 402 is diagnosed"]
+      "assurance": {"deterministicIntentKernel": "A3", "merchantOrRegistryTruth": "A0", "publicOperation": "A2", "paymentSettlementReliability": "A1"},
+      "proves": ["9/10 public paid calls in the measured repeat run settled successfully", "merchant/beneficiary/amount/currency/freshness/replay bindings were satisfied on successful calls", "human approval was observed", "payment did not grant authority", "the preflight did not execute payment"],
+      "doesNotProve": ["merchant fulfilment or honesty", "upstream registry integrity", "zero fraud", "recovery/chargeback outcome", "production-ready payment settlement reliability"]
     }
   ],
-  "nextPromotionGates": ["diagnose the payment-intent batch HTTP 402 with the improved smoke harness", "complete 10 then 20 repeated payment-intent settlements", "complete 20-call freshness repeat proof", "first independent repeat-paying agent", "first external Shadow Mode workflow", "measured buyer-confirmed useful trust-gap finding", "buyer adjudication of false positives and false negatives", "hosted latency/reliability baseline", "refinement/equivalence evidence from execution adapters to formal model before broad enforcement", "real operational outcomes for A4", "independent audit/attestation for A5"]
+  "nextPromotionGates": ["complete 20-call payment-intent and freshness reliability samples", "add settlement-safe idempotency/payment-identifier semantics before any automatic retry", "first independent repeat-paying agent", "first external Shadow Mode workflow", "measured buyer-confirmed useful trust-gap finding", "buyer adjudication of false positives and false negatives", "hosted latency/reliability baseline", "refinement/equivalence evidence from execution adapters to formal model before broad enforcement", "real operational outcomes for A4", "independent audit/attestation for A5"]
 }
