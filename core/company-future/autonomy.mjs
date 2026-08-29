@@ -1,7 +1,9 @@
 import { evaluatePromotionGate } from '../authority/index.mjs'
 
 export function recommendAutonomyLevel({ policy, metrics = {}, currentLevel = 2, maxLevel = 4 } = {}) {
-  let eligibleLevel = Math.min(Number(currentLevel) || 0, maxLevel)
+  const normalizedCurrent = Number(currentLevel) || 0
+  const safeBaseline = Math.min(normalizedCurrent, 2)
+  let eligibleLevel = safeBaseline
   const evaluations = []
 
   for (let level = 3; level <= maxLevel; level += 1) {
@@ -14,10 +16,10 @@ export function recommendAutonomyLevel({ policy, metrics = {}, currentLevel = 2,
   }
 
   return {
-    currentLevel: Number(currentLevel) || 0,
+    currentLevel: normalizedCurrent,
     eligibleLevel,
-    promoted: eligibleLevel > (Number(currentLevel) || 0),
-    demotionRequired: eligibleLevel < (Number(currentLevel) || 0),
+    promoted: eligibleLevel > normalizedCurrent,
+    demotionRequired: eligibleLevel < normalizedCurrent,
     evaluations,
   }
 }
