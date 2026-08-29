@@ -1,0 +1,70 @@
+export const mission02GovernmentHealthcare = Object.freeze({
+  id: 'research-mission-02-government-healthcare',
+  assignedTo: 'research-buyer-01',
+  purpose: 'design_partner_discovery',
+  question: 'Which German public-sector and hospital design partners provide the fastest credible proof that the Authority Control Plane generalises beyond ordinary companies?',
+  constraints: {
+    geography: ['Germany', 'Berlin preferred when fit is comparable'],
+    sectors: ['government_public_service', 'hospital_healthcare'],
+    evidenceRequired: true,
+    noSensitiveData: true,
+    noExternalOutreachWithoutApproval: true,
+    noCommercialCommitmentWithoutApproval: true,
+  },
+  scoreDimensions: Object.freeze([
+    'pain_and_workload',
+    'existing_agent_or_ai_activity',
+    'authority_risk_surface',
+    'access_and_feedback_speed',
+    'pilotability_with_synthetic_or_shadow_data',
+    'cross_sector_learning_value',
+    'path_to_real_deployment',
+  ]),
+  targetProofs: Object.freeze({
+    government: {
+      firstWorkflow: 'benefit_case_assistance',
+      examples: ['Wohngeld', 'Buergergeld', 'Kinderzuschlag'],
+      firstMode: 'P0 synthetic -> P1 shadow -> P2 prepare',
+      consequentialBoundary: 'adverse_or_official_state_action_requires_complete_governance_and_exact_accountable_approval',
+    },
+    hospital: {
+      firstWorkflow: 'clinical_administrative_assistance',
+      examples: ['documentation completeness', 'coding preparation', 'discharge/follow-up coordination', 'workflow/logistics assistance'],
+      firstMode: 'P0 synthetic -> P1 shadow/read-only -> P2 prepare',
+      consequentialBoundary: 'clinical_decision_or_patient-impacting_execution_stays_human-controlled_until separately validated and authorised',
+    },
+  }),
+  shortlist: Object.freeze([
+    {
+      sector: 'government_public_service',
+      candidate: 'BMDS / DigitalService Agentic AI Hub ecosystem',
+      priority: 1,
+      rationale: 'Existing municipal agent pilots, explicit scaling ambition, direct fit for an authority/governance layer, and a second implementation round beginning in September 2026.',
+    },
+    {
+      sector: 'government_public_service',
+      candidate: 'Municipality already piloting Wohngeld / social-benefit agents',
+      priority: 2,
+      rationale: 'Closest match to the synthetic benefits caseworker and strongest route to compare agent recommendations with real administrative workflows.',
+    },
+    {
+      sector: 'hospital_healthcare',
+      candidate: 'Charite IMI / CMIO / clinical implementation teams',
+      priority: 1,
+      rationale: 'Active work on AI-supported documentation, clinical implementation science, digital workflow integration and hospital-wide KIS transformation.',
+    },
+    {
+      sector: 'hospital_healthcare',
+      candidate: 'Charite IKIM / Digital Innovation Unit',
+      priority: 2,
+      rationale: 'Explicit work on agent-based automation, clinical intelligence and operational AI creates a direct authority-control-plane use case.',
+    },
+    {
+      sector: 'hospital_healthcare',
+      candidate: 'Smaller hospital or clinical department with a warm operator introduction',
+      priority: 3,
+      rationale: 'May beat large institutions on feedback speed; score above a prestigious target whenever the workflow pain and decision-maker access are materially better.',
+    },
+  ]),
+  recommendation: 'Run government and hospital tracks inside the Company 01 Design Partner Lab, not as separate companies. Start synthetic/shadow, isolate tenants and data, and promote only individual actions after evidence supports broader autonomy.',
+})
