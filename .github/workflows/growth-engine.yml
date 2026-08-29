@@ -41,7 +41,7 @@ jobs:
           grep -q "How much power" site/agent-authority-scorecard.html
           grep -q "Nothing is sent anywhere just to calculate it" site/agent-authority-scorecard.html
           grep -q "explicit follow-up consent" docs/GROWTH_ENGINE.md
-          grep -q "SUPABASE_SECRET_KEY" docs/GROWTH_ENGINE.md
+          grep -q "SUPABASE_SECRET_KEYS" docs/GROWTH_ENGINE.md
           grep -q "security invoker" docs/GROWTH_ENGINE_DATASTORE.sql
           grep -q "revoke all on function public.company01_create_inbound_lead" docs/GROWTH_ENGINE_DATASTORE.sql
           grep -q "company01_ingest_inbound_lead" docs/GROWTH_ENGINE_PUBLIC_INTAKE.sql
