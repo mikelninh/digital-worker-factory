@@ -10,22 +10,23 @@
 
 ## The wedge
 
-Start where authority is both valuable and measurable:
+Start where authority is valuable and measurable:
 
 1. agents that spend money or buy machine services;
 2. agents that perform consequential enterprise writes;
 3. regulated/public-sector workflows where delegated authority, legal basis, review and traceability matter.
 
-Payments are a **proof case**, not the category. The current x402 settlement anomaly is useful precisely because the authority boundary remained intact while an external payment facilitator failed.
+Payments are a **proof case**, not the category. The observed x402 settlement anomaly is useful precisely because the authority boundary remained intact while an external payment facilitator failed.
 
 ## Position against adjacent platforms
 
 | Adjacent layer | Their job | Our job |
 | --- | --- | --- |
 | Identity / IAM | Who is this actor? | Given that identity, is this action authorised now? |
-| MCP / tool protocol | How can a tool be discovered/called? | Should this invocation be permitted in this context? |
+| Portable governed contract | What intent/delegation is described? | Does the institution actually authorise execution now? |
+| MCP / tool protocol | How can a tool be discovered/called? | Should this invocation cross the consequence boundary? |
 | Payment rail / wallet | Can value be transferred? | Was this spend delegated for this purpose and inside its limits? |
-| Agent framework | How does the agent reason/orchestrate? | What power may cross the execution boundary? |
+| Agent framework | How does the agent reason/orchestrate? | What power may leave the framework? |
 | Observability | What happened? | Was it authorised, under which delegation, and can we prove the decision? |
 
 ## Product principles
@@ -34,7 +35,7 @@ Payments are a **proof case**, not the category. The current x402 settlement ano
 2. **Authority outside the model.** Prompt text never becomes permission.
 3. **Fail closed.** Missing or ambiguous authority cannot execute.
 4. **Progressive autonomy.** Humans define operating envelopes; agents earn wider autonomy with evidence.
-5. **Bound approvals.** Approval is scoped to an exact action/delegation, not a magic global yes.
+5. **Bound approvals.** Approval is scoped to an exact action/delegation, not a global yes.
 6. **Idempotent consequences.** Retry cannot become duplicate real-world action.
 7. **Proof over trust.** Every consequential attempt yields a receipt without leaking secrets.
 8. **Composable, not replacement infrastructure.** Consume existing IAM, MCP, payment and provider systems.
@@ -43,32 +44,24 @@ Payments are a **proof case**, not the category. The current x402 settlement ano
 
 Do **not** create a competing open action/delegation standard by default. Adopt and contribute to emerging neutral contracts where they fit, then concentrate differentiation in the organization-controlled authorization boundary.
 
-Reference architecture:
-
 ```text
-Open/portable governed contract
-(intent, delegation, purpose, constraints)
+portable governed contract / intent conformance
         ↓ conformance ≠ permission
 OUR AUTHORITY ENGINE
-(local policy, institutional rules, budget, risk, approval, revocation)
-        ↓ allow / deny / approval
+        ↓ institutional authorization
 framework-neutral enforcement seam
         ↓
 MCP / API / x402 / database / real-world action
         ↓
-proof + operational evidence
+proof receipt
 ```
 
-This makes the company complementary to standards rather than dependent on winning a standards war.
+Reference interop exists for portable Governed Contract-style results and Agent Hooks-style framework enforcement. These are mappings, not formal certification claims.
 
-### Open ecosystem we should interoperate with
-- portable governed-contract formats for delegation/intent exchange;
-- framework-neutral enforcement contracts such as Agent Hooks;
-- OAuth/OIDC/IAM for identity;
-- MCP/A2A for tool and agent transport;
-- x402/MPP/conventional rails for payment execution.
+## Commercial differentiation
 
-### Commercial differentiation
+The company value should concentrate in:
+
 - institution-specific policy compilation and enforcement;
 - enterprise/public-sector delegation lifecycle and revocation;
 - evidence-bound approvals and progressive autonomy;
@@ -78,62 +71,80 @@ This makes the company complementary to standards rather than dependent on winni
 - approval queues, kill switch and control centre;
 - regulated/public-sector profiles and deployment support.
 
-## Roadmap
+## What is built now
 
-### V0.1 — Universal kernel (now)
+### V0.1 — Universal authority kernel ✅
 - principal + delegation + purpose semantics;
 - ALLOW / APPROVAL / BLOCK;
 - progressive autonomy gates;
-- per-action and delegated budget limits;
+- action and delegated budget limits;
 - exact-bound approval;
+- fail-closed unknown/revoked/expired authority;
 - idempotent execution;
-- privacy-safe authority receipt;
+- privacy-safe authority receipts;
 - company, government and legal conformance cases.
 
-### V0.2 — Real adapters
-- wrap the existing Factory Agent Gateway;
-- MCP tool-call adapter;
-- x402/MPP payment decision adapter;
-- identity context adapter (OIDC/IAM claims);
-- durable idempotency + receipt store;
-- controlled concurrency and retry tests.
+### V0.2 — Integration + durable consequence control ✅ reference implementation
+- OIDC/IAM claims → actor/principal context;
+- MCP executor downstream of authority;
+- x402 paid-resource executor downstream of spend authority;
+- facilitator failure attribution;
+- durable JSON reference idempotency store;
+- durable JSONL receipt store;
+- replay suppression proven across gateway restart.
 
-### V0.3 — Obvious product
-- Agent Authority Control Centre;
-- policy authoring and simulation;
-- live "why allowed / why blocked" trace;
-- pause/revoke delegation;
-- budget and approval queue;
-- downloadable proof packet.
+These are reference adapters/stores. Production requires hardened shared infrastructure rather than local JSON files.
 
-### V0.4 — Regulated/public-sector profile
-- legal basis / purpose limitation;
-- data-minimisation claims;
+### V0.3 — Obvious product ✅ first demo slice
+- interactive Authority Control Centre at `/authority` in the site bundle;
+- live browser policy simulator;
+- UI decisions parity-tested against the Node kernel;
+- visible budgets, delegation and approval state;
+- pause control for the demo surface;
+- “why allowed / why blocked” explanations;
+- €10 mission + adversarial gauntlet.
+
+The current provider catalogue is deterministic fixture data for safe repeatability. It does **not** pretend the new mission is already making live external payments.
+
+### V0.4 — Public-sector profile 🟢 first reference profile
+- legal basis;
+- purpose and jurisdiction;
+- bounded data scope;
 - named accountable official;
-- contestability / appeal route;
-- reversibility / rollback metadata;
-- retention and evidence policy;
-- deployment profile for EU public administration.
+- contestability route + owner for adverse actions;
+- reversibility mode + owner;
+- fail-closed governance-incomplete escalation.
 
-### V1 — Interoperable trust layer
-- consume signed delegation credentials from compatible standards;
-- portable proof export mapped to compatible receipt formats;
-- cross-vendor runtime conformance evidence;
-- Trust Passport built from independently verifiable evidence, not self-attestation.
+This is an executable reference profile, **not a legal-compliance certification**.
+
+## Next production milestones
+
+1. **Network service** — expose the authority decision boundary as a versioned authenticated API/service, not only an in-process library.
+2. **Shared durable state** — transactional datastore for idempotency, delegation revocation, budgets and receipts across replicas.
+3. **Live adapters** — connect one real MCP workflow and the already-tested real x402 payment path behind the kernel.
+4. **Revocation + approvals API** — durable delegation lifecycle, approval queue, kill switch and emergency policy changes.
+5. **Concurrency proof** — controlled concurrent paid actions, retries, crash/restart and race-condition tests.
+6. **Policy simulation** — replay historical actions against proposed policy changes before rollout.
+7. **Public-sector evidence profile** — retention, provenance freshness, contestability/appeal receipt fields and deployment controls.
+8. **Portable evidence export** — signed receipts / compatible proof formats without creating another standards silo.
 
 ## North-star demo
 
-> **Give an autonomous agent a real €10 operating envelope and a useful job.**
+> **Give an autonomous agent a €10 operating envelope and a useful job.**
 
-It may discover and purchase useful machine services, call tools and complete work. Then attack it with overspend, prompt injection, wrong-purpose requests, stale approvals, revoked delegation, retries and payment-provider failures.
+The deterministic end-to-end version now completes a public-building research mission while testing overspend, unknown vendors, prompt injection, replay, external settlement failure and human approval.
 
-Success is not "nothing fails". Success is:
+Current deterministic mission result:
 
-- useful work completes;
-- unauthorised actions make zero provider calls;
-- duplicate consequences are zero;
-- external failures stay outside the authority boundary;
-- every decision is explainable from a safe receipt.
+- useful brief completed;
+- **€5.70 / €10** spent;
+- **€4.30** remains;
+- **0 unauthorised provider calls**;
+- **0 duplicate consequential executions**;
+- **0 sensitive payment payload leaks**;
+- every attempted action receives an authority receipt.
+
+The earlier real x402 repeat run remains separate evidence: 9/10 real Base Sepolia settlements succeeded, with the one failure isolated to facilitator settlement. Do not conflate that real payment evidence with this deterministic mission fixture.
 
 ## North-star metrics
 
@@ -142,6 +153,6 @@ Success is not "nothing fails". Success is:
 - **blocked-before-provider precision:** 100% on gold/adversarial set;
 - **receipt coverage:** 100% of attempted consequential actions;
 - **secret leakage in receipts:** 0;
-- **policy portability:** same authority semantics across 3+ providers/frameworks;
+- **policy portability:** same authority semantics across multiple providers/frameworks;
 - **time to integrate:** target < 30 minutes for a reference agent;
 - **operator burden:** decrease approval frequency as evidence-backed autonomy is earned.
