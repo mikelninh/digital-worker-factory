@@ -12,7 +12,7 @@ It is intentionally **not** an identity provider, wallet, payment rail, agent fr
 
 Authentication proves who an actor is. A tool protocol describes how to call something. A wallet proves it can pay. None of those facts alone answer whether a particular real-world action is authorised.
 
-The kernel therefore separates:
+The kernel separates:
 
 1. **identity** — who is acting;
 2. **principal** — on whose behalf;
@@ -30,15 +30,8 @@ import { AuthorityGateway } from './core/authority/index.mjs'
 const gateway = new AuthorityGateway({ policy, executors })
 
 const result = await gateway.invoke({
-  actor: {
-    id: 'research-agent-7',
-    role: 'research_agent',
-    autonomyLevel: 3,
-  },
-  principal: {
-    id: 'acme',
-    type: 'company',
-  },
+  actor: { id: 'research-agent-7', role: 'research_agent', autonomyLevel: 3 },
+  principal: { id: 'acme', type: 'company' },
   delegation: {
     id: 'delegation-42',
     delegateId: 'research-agent-7',
@@ -54,20 +47,9 @@ const result = await gateway.invoke({
     counterpartyApproved: true,
     idempotencyKey: 'research-2026-08-29-dataset-1',
   },
-  evidence: {
-    claims: ['vendor_terms_checked'],
-  },
-  budget: {
-    currency: 'EUR',
-    spent: 3,
-    limit: 10,
-  },
-  metrics: {
-    cases: 100,
-    acceptanceRate: 0.99,
-    correctionRate: 0.01,
-    unsafeExecutions: 0,
-  },
+  evidence: { claims: ['vendor_terms_checked'] },
+  budget: { currency: 'EUR', spent: 3, limit: 10 },
+  metrics: { cases: 100, acceptanceRate: 0.99, correctionRate: 0.01, unsafeExecutions: 0 },
 })
 ```
 
@@ -79,43 +61,82 @@ The result is one of:
 
 ## Current hard guarantees
 
-The conformance suite proves:
+The executable suites prove:
 
 - unknown or out-of-scope actions fail closed;
 - revoked and expired delegations cannot execute;
 - purpose and role boundaries are enforced outside the model;
-- hard escalation flags override model intent and human convenience;
+- hard escalation flags override model intent and convenience;
 - payment success never grants authority;
 - spend and counterparty limits block before provider execution;
 - approvals are bound to the exact action and delegation;
 - preflight performs zero external calls;
 - approved actions still require an idempotency key;
 - duplicate idempotency keys make at most one provider call;
+- replay suppression survives a gateway restart with the durable reference store;
 - failed providers do not alter authority;
 - facilitator settlement failures are attributed outside the authority kernel;
 - raw signed payment material and secrets are redacted from receipts.
 
-Run:
+## End-to-end proof slice
 
-```bash
-node --test core/authority/conformance.test.mjs
-```
+`core/authority/demo/mission.mjs` runs a deterministic €10 autonomous research mission through the real authority kernel:
 
-## Sector profiles already exercised
+- read a free source;
+- buy two approved datasets for **€5.70 total**;
+- block an unapproved vendor;
+- block delegated-budget overspend;
+- block prompt-injected purchasing instructions;
+- isolate a facilitator `replacement transaction underpriced` failure;
+- suppress a replayed purchase;
+- prepare an evidence-backed brief;
+- require human approval for external publication;
+- execute only after exact-bound approval.
+
+The mission uses deterministic provider fixtures so it is repeatable and safe. It does **not** claim these particular demo purchases are live payments. The earlier real Base Sepolia x402 payment run remains separate evidence.
+
+The browser surface at `site/authority-control-center.html` exposes the same ideas interactively. `core/authority/ui-parity.test.mjs` prevents the UI decision simulator from drifting away from the Node policy kernel.
+
+## Real integration seams
+
+Reference adapters now show how the boundary composes without replacing adjacent infrastructure:
+
+- `adapters/oidc.mjs` — OIDC/IAM claims → explicit actor/principal context;
+- `adapters/mcp.mjs` — MCP tool execution only downstream of ALLOW;
+- `adapters/x402.mjs` — paid-resource execution only downstream of spend authority;
+- `stores/json-file.mjs` — durable reference idempotency + receipt persistence across restart.
+
+The JSON stores are a reference implementation, not the production HA datastore.
+
+## Public-sector reference profile
+
+`profiles/public-sector.mjs` compiles institution-supplied governance context into evidence claims for the kernel. An adverse action can require:
+
+- case binding;
+- legal basis;
+- jurisdiction;
+- accountable official;
+- declared purpose;
+- bounded data scope;
+- contestability route + owner;
+- reversibility mode + owner.
+
+Incomplete governance becomes a hard fail-closed escalation. This is an executable governance profile, **not a claim of legal or AI Act compliance**.
+
+## Sector profiles exercised
 
 The same kernel is tested against:
 
 - **company:** an autonomous research agent purchasing approved data inside a budget;
-- **government:** a casework agent that may read under legal basis but cannot issue a consequential denial without bound human approval;
-- **regulated/legal:** a legal agent whose approved write is still blocked when instruction-injection evidence is present.
+- **government:** casework under legal basis with accountable approval for consequential adverse action;
+- **regulated/legal:** an approved write still blocked by instruction-injection evidence;
+- **finance:** payment success cannot override a hard-prohibited bank-detail change.
 
-The point is not that these three policies are production-complete. The point is that **the authority primitive is sector-independent**.
+The policies differ; the authority primitive stays the same.
 
 ## Relationship to existing Factory gateway
 
-The existing `core/agent-gateway.mjs` remains useful for capability registration, provider routing and current product integrations. The Authority Kernel is the next lower-level trust primitive: it adds principal/delegation semantics, progressive autonomy, spend/purpose limits, idempotency and proof receipts.
-
-The intended evolution is:
+The existing `core/agent-gateway.mjs` remains useful for capability registration, provider routing and current product integrations. The Authority Kernel is the lower-level trust primitive adding principal/delegation semantics, progressive autonomy, spend/purpose limits, idempotency and proof receipts.
 
 ```text
 model / workflow
@@ -131,26 +152,13 @@ provider / MCP / API / payment rail
 proof receipt
 ```
 
-## What we deliberately do not build
-
-To stay out of commodity fights, this layer should integrate with rather than replace:
-
-- OAuth/OIDC and enterprise IAM;
-- MCP and other tool protocols;
-- x402, MPP and conventional payments;
-- wallets and custody;
-- model and agent runtimes;
-- generic logs/traces/APM.
-
-The product opportunity is the organization-controlled **authorization + enforcement + proof layer** between them.
-
 ## Standards-first interop
 
-We should not invent another portable governance standard where strong open work already exists. The intended composition is:
+We should not invent another portable governance standard where strong open work already exists.
 
 ```text
 portable governed contract / intent conformance
-        ↓
+        ↓ conformance ≠ permission
 ORGANIZATION AUTHORITY ENGINE
         ↓ local authorization
 framework-neutral enforcement seam
@@ -160,7 +168,36 @@ MCP / API / payment rail / database / real-world action
 proof receipt
 ```
 
-The reference interop modules currently model two emerging seams without claiming formal certification:
+Reference interop currently models two emerging seams without claiming formal certification:
 
-- portable Governed Contract results are treated as upstream eligibility evidence; **conformance never becomes execution permission**;
-- local ALLOW / APPROVAL / BLOCK decisions can be projected into Agent Hooks-style `allow` / fail-closed `deny`, with approvals liftable only when bound to an exact context identity.
+- portable Governed Contract-style results are upstream eligibility evidence; **conformance never becomes execution permission**;
+- local ALLOW / APPROVAL / BLOCK decisions project into Agent Hooks-style `allow` / fail-closed `deny`, with approval liftable only when bound to an exact context identity.
+
+## What we deliberately do not build
+
+To stay out of commodity fights, this layer integrates with rather than replaces:
+
+- OAuth/OIDC and enterprise IAM;
+- portable governed-contract formats;
+- MCP and other tool protocols;
+- x402, MPP and conventional payments;
+- wallets and custody;
+- model and agent runtimes;
+- generic logs/traces/APM.
+
+The product opportunity is the organization-controlled **authorization + enforcement + proof layer** between them.
+
+## Run the proof
+
+```bash
+node --test \
+  core/authority/conformance.test.mjs \
+  core/authority/interop/interop.test.mjs \
+  core/authority/adapters/adapters.test.mjs \
+  core/authority/stores/json-file.test.mjs \
+  core/authority/profiles/public-sector.test.mjs \
+  core/authority/demo/mission.test.mjs \
+  core/authority/ui-parity.test.mjs
+
+node core/authority/demo/run.mjs
+```
