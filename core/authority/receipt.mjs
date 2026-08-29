@@ -24,14 +24,60 @@ function stable(value) {
   return Object.fromEntries(Object.keys(value).sort().map((key) => [key, stable(value[key])]))
 }
 
+function sha256(value) {
+  return `sha256:${crypto.createHash('sha256').update(String(value)).digest('hex')}`
+}
+
+function objectDigest(value) {
+  return sha256(JSON.stringify(stable(value)))
+}
+
 export function evidenceDigest(evidence = {}) {
   const stats = { redacted: 0 }
   const sanitized = redactSensitive(evidence, stats)
-  const hash = crypto.createHash('sha256').update(JSON.stringify(stable(sanitized))).digest('hex')
-  return { hash: `sha256:${hash}`, sanitized, redactedFields: stats.redacted }
+  return { hash: objectDigest(sanitized), sanitized, redactedFields: stats.redacted }
+}
+
+function actionReceipt(action = {}) {
+  const stats = { redacted: 0 }
+  const sanitized = redactSensitive(action, stats)
+  const summary = {
+    type: action?.type ?? null,
+    purpose: action?.purpose ?? null,
+  }
+
+  if (action?.amount && typeof action.amount === 'object') {
+    summary.amount = {
+      currency: action.amount.currency ?? null,
+      value: Number.isFinite(Number(action.amount.value)) ? Number(action.amount.value) : null,
+    }
+  }
+  if (typeof action?.counterpartyApproved === 'boolean') summary.counterpartyApproved = action.counterpartyApproved
+  if (action?.idempotencyKey) summary.idempotencyKeyDigest = sha256(action.idempotencyKey)
+
+  // Preserve only the fact that sensitive fields were present, never their values.
+  for (const key of Object.keys(action || {})) {
+    if (SENSITIVE_KEYS.test(key)) summary[key] = '[REDACTED]'
+  }
+
+  return {
+    summary,
+    digest: objectDigest(sanitized),
+    redactedFields: stats.redacted,
+  }
+}
+
+function safeFailureMessage(message) {
+  return String(message || '')
+    .replace(/Bearer\s+[A-Za-z0-9._~+\/-]+/gi, 'Bearer [REDACTED]')
+    .replace(/\bsk-[A-Za-z0-9_-]{12,}\b/g, '[REDACTED_TOKEN]')
+    .replace(/\b0x[a-fA-F0-9]{64,}\b/g, '[REDACTED_HEX]')
+    .replace(/\b[A-Za-z0-9+/=_-]{96,}\b/g, '[REDACTED_BLOB]')
+    .slice(0, 240)
 }
 
 export function classifyExecutionError(error, context = {}) {
+  const safeContext = context || {}
   const message = String(error?.message || error || '')
   const lower = message.toLowerCase()
 
@@ -45,9 +91,9 @@ export function classifyExecutionError(error, context = {}) {
   }
 
   return {
-    failureLayer: context.failureLayer || 'provider_execution',
-    errorReason: context.errorReason || 'provider_execution_failed',
-    detail: message.slice(0, 240) || 'unknown execution failure',
+    failureLayer: safeContext.failureLayer || 'provider_execution',
+    errorReason: safeContext.errorReason || 'provider_execution_failed',
+    detail: safeFailureMessage(message) || 'unknown execution failure',
     attributedToAuthorityKernel: false,
   }
 }
@@ -66,17 +112,17 @@ export function createAuthorityReceipt({
   failure = null,
 } = {}) {
   const evidenceInfo = evidenceDigest(evidence || {})
-  const safeActionStats = { redacted: 0 }
-  const safeAction = redactSensitive(action || {}, safeActionStats)
+  const actionInfo = actionReceipt(action || {})
 
   return {
-    spec: 'authority-receipt/0.1',
+    spec: 'authority-receipt/0.2',
     traceId,
     at,
     actor: { id: actor?.id ?? null, role: actor?.role ?? null },
     principal: { id: principal?.id ?? null, type: principal?.type ?? null },
     delegation: { id: delegation?.id ?? null },
-    action: safeAction,
+    action: actionInfo.summary,
+    actionDigest: actionInfo.digest,
     authority: {
       decision: decision?.decision ?? null,
       reasons: decision?.reasons ?? [],
@@ -88,8 +134,10 @@ export function createAuthorityReceipt({
     failure,
     evidence: { digest: evidenceInfo.hash },
     security: {
-      sensitiveFieldsRedacted: evidenceInfo.redactedFields + safeActionStats.redacted,
+      sensitiveFieldsRedacted: evidenceInfo.redactedFields + actionInfo.redactedFields,
       rawSignedTransactionLogged: false,
+      actionPayloadLogged: false,
+      evidencePayloadLogged: false,
     },
   }
 }
