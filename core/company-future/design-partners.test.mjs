@@ -1,6 +1,13 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { designPartners, evaluateTenantAuthority } from './design-partners.mjs'
+import {
+  company01Prospects,
+  designPartners,
+  evaluateTenantAuthority,
+  firstCrossSectorCohort,
+  prospectsBySector,
+  trustedAgentPilotSpecs,
+} from './design-partners.mjs'
 
 test('design partner lab has distinct law and commercial tenants', () => {
   assert.equal(designPartners.length, 2)
@@ -28,4 +35,20 @@ test('authority from one design partner can never be replayed in another tenant'
     actionType: 'prospect.research',
   })
   assert.deepEqual(result, { decision: 'BLOCK', reason: 'tenant_delegation_mismatch' })
+})
+
+test('research cohort contains exactly five prospects in each of four sectors', () => {
+  assert.equal(company01Prospects.length, 20)
+  assert.equal(new Set(company01Prospects.map((p) => p.id)).size, 20)
+  for (const sector of ['commercial', 'legal', 'government', 'healthcare']) {
+    assert.equal(prospectsBySector(sector).length, 5)
+  }
+})
+
+test('first cohort has one tailored pilot in each sector', () => {
+  assert.deepEqual(Object.keys(firstCrossSectorCohort).sort(), ['commercial', 'government', 'healthcare', 'legal'])
+  for (const prospectId of Object.values(firstCrossSectorCohort)) {
+    assert.ok(company01Prospects.some((p) => p.id === prospectId))
+    assert.ok(trustedAgentPilotSpecs[prospectId])
+  }
 })
