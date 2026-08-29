@@ -6,6 +6,7 @@ services:
     branch: feat/gov-launch-actual
     region: frankfurt
     plan: free
+    renderSubdomainPolicy: enabled
     dockerContext: .
     dockerfilePath: ./agent-commerce/Dockerfile.network
     dockerCommand: node network-server.mjs
