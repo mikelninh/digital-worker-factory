@@ -124,7 +124,8 @@ Security:
 - server `service_role` explicitly granted only what the backend needs
 - public function execution revoked
 - database mutation RPCs are `SECURITY INVOKER`
-- modern Supabase secret keys are server-only and sent via the `apikey` header
+- the Edge Function reads Supabase's built-in `SUPABASE_SECRET_KEYS` server environment and uses only the named server secret
+- modern Supabase secret keys are sent to PostgREST through the `apikey` header, never exposed to the browser
 
 A real permission test confirms `anon` receives `42501 permission denied`, while the service role can execute the atomic inbound RPC.
 
@@ -187,6 +188,8 @@ Low-consequence / mature-control leads:
 - do not queue a provider/sales action
 
 Live verification produced exactly one qualified and one nurture outcome from two synthetic public-intake leads. The qualified lead had one queued `ALLOW` acknowledgement; the nurture lead had zero queued actions. Both synthetic leads were deleted afterwards.
+
+The recurring cron job is active and its post-fix scheduled runs have completed successfully.
 
 ## Automatic onboarding packet
 
