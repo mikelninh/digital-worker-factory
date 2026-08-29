@@ -31,6 +31,9 @@ jobs:
           node --check core/authority/demo/mission.mjs
           node --check core/authority/demo/run.mjs
           node --check core/authority/demo/server.mjs
+          node --check core/company-future/policy.mjs
+          node --check core/company-future/workforce.mjs
+          node --check core/company-future/scale-gauntlet.mjs
           node --check site/authority-ui-engine.mjs
       - name: Run cross-sector authority conformance
         run: node --test core/authority/conformance.test.mjs core/authority/interop/interop.test.mjs
@@ -48,6 +51,8 @@ jobs:
         run: |
           node --test core/authority/demo/mission.test.mjs
           node core/authority/demo/run.mjs
+      - name: Run 100-agent 10k-decision scale gauntlet
+        run: node --test core/company-future/scale-gauntlet.test.mjs
       - name: Prove Control Centre parity with the kernel
         run: node --test core/authority/ui-parity.test.mjs
       - name: Verify Authority Control Centre surface
