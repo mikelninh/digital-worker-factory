@@ -33,6 +33,16 @@ Live and verified:
 - recurring cron runs verified successful
 - database cleaned to zero synthetic test leads after testing
 
+### Public build-in-public ledger backend
+
+Also live and verified:
+
+- aggregate-only `company01_public_growth_metrics()` RPC
+- public Edge Function: `company01-public-ledger`
+- real external HTTP GET returned 200
+- no organisation names, emails, scorecard answers or customer artifacts exposed
+- current live metrics correctly return zero because all synthetic test rows were removed
+
 ### Public acquisition product
 
 Prepared in the `site/` bundle:
@@ -46,6 +56,7 @@ Prepared in the `site/` bundle:
 - `/pilot/healthcare` — healthcare pilot
 - `/authority` — Authority Control Centre
 - `/company` — Company of the Future proof
+- `/ledger` — self-updating privacy-safe public operating ledger
 - `/factory` — preserved Digital Worker Factory V1
 
 The root homepage now explains:
@@ -57,7 +68,8 @@ The root homepage now explains:
 5. four sector examples,
 6. the free Scorecard,
 7. the Trusted Agent Pilot,
-8. what Company 01 has and has not proven yet.
+8. the live ledger,
+9. what Company 01 has and has not proven yet.
 
 Baseline security headers are configured in `site/vercel.json`.
 
@@ -83,14 +95,18 @@ Only account-level or explicitly human-authority work should remain.
 
 Preferred path: Vercel.
 
-One-time setup:
+Prefilled deploy/import link for the current launch branch:
+
+https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fmikelninh%2Fdigital-worker-factory%2Ftree%2Ffeat%2Fcompany01-growth-live%2Fsite&project-name=company-01&repository-name=company-01
+
+If Vercel does not infer the subdirectory from the link, use this one-time setup:
 
 1. Import GitHub repository `mikelninh/digital-worker-factory` into Vercel.
 2. Set **Root Directory** to `site`.
 3. Framework preset: **Other / static**.
 4. No Supabase database secret is needed in Vercel for lead intake.
 5. Deploy.
-6. Verify `/`, `/scorecard`, `/pilot`, `/authority`, `/company`.
+6. Verify `/`, `/scorecard`, `/pilot`, `/authority`, `/company`, `/ledger`.
 
 The `/api/leads` function is a secretless proxy to the already-live Supabase intake function.
 
@@ -134,7 +150,7 @@ Once the website is public:
 - send the Scorecard to warm design partners,
 - publish the first proof-driven posts,
 - route every content CTA to `/scorecard` or the relevant sector pilot,
-- begin the weekly Company 01 public ledger.
+- share `/ledger` as the continuously updating operating proof.
 
 ## What should stay human
 
@@ -174,11 +190,12 @@ Do not substitute synthetic stress metrics for these longitudinal real-company m
 When you come back:
 
 1. Check CI on PR #31.
-2. Import the repo into Vercel with `site/` as root and deploy.
+2. Open the prefilled Vercel deploy/import link above.
 3. Test `/scorecard` once from the public URL using a disposable test lead, then delete that lead.
-4. Connect Company 01 email.
-5. Connect Calendar.
-6. Send the live Scorecard to Bao + Christopher.
-7. Start the Week 01 public ledger.
+4. Check `/ledger` updates without exposing the test lead identity.
+5. Connect Company 01 email.
+6. Connect Calendar.
+7. Send the live Scorecard to Bao + Christopher.
+8. Start real traffic and let the public ledger move from zero.
 
 Everything before step 2 should be code/infrastructure rather than manual sales administration.
