@@ -32,6 +32,8 @@ jobs:
           node --check site/authority-ui-engine.mjs
       - name: Run cross-sector authority conformance
         run: node --test core/authority/conformance.test.mjs core/authority/interop/interop.test.mjs
+      - name: Prove concurrent consequence suppression
+        run: node --test core/authority/concurrency.test.mjs
       - name: Prove IAM MCP and x402 adapter boundaries
         run: node --test core/authority/adapters/adapters.test.mjs
       - name: Prove restart-safe consequence control
