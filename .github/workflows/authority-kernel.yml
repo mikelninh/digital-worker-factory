@@ -18,6 +18,7 @@ jobs:
           node --check core/authority/receipt.mjs
           node --check core/authority/execution.mjs
           node --check core/authority/gateway.mjs
+          node --check core/authority/service.mjs
           node --check core/authority/interop/portable-contract.mjs
           node --check core/authority/interop/agent-hooks.mjs
           node --check core/authority/adapters/oidc.mjs
@@ -29,11 +30,14 @@ jobs:
           node --check core/authority/demo/providers.mjs
           node --check core/authority/demo/mission.mjs
           node --check core/authority/demo/run.mjs
+          node --check core/authority/demo/server.mjs
           node --check site/authority-ui-engine.mjs
       - name: Run cross-sector authority conformance
         run: node --test core/authority/conformance.test.mjs core/authority/interop/interop.test.mjs
       - name: Prove concurrent consequence suppression
         run: node --test core/authority/concurrency.test.mjs
+      - name: Prove authenticated HTTP service boundary
+        run: node --test core/authority/service.test.mjs
       - name: Prove IAM MCP and x402 adapter boundaries
         run: node --test core/authority/adapters/adapters.test.mjs
       - name: Prove restart-safe consequence control
