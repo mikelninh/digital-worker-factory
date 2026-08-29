@@ -95,6 +95,7 @@ jobs:
           test -s docs/COMPANY_01_CHARTER.md
           test -s docs/DESIGN_PARTNER_LAB.md
           test -s docs/COMPANY_01_PROSPECTS.md
+          test -s docs/FIRST_COHORT_BRIEFS.md
           grep -q "Give agents real power" site/authority-control-center.html
           grep -q "Run the safety gauntlet" site/authority-control-center.html
           grep -q "0.*unauthorised provider calls" site/authority-control-center.html
@@ -102,6 +103,7 @@ jobs:
           grep -q "Authority Scale Gauntlet" site/company-of-the-future.html
           grep -q "Make autonomous agents safe enough to do real work" docs/COMPANY_01_CHARTER.md
           grep -q "Research Buyer Prospect Report" docs/COMPANY_01_PROSPECTS.md
+          grep -q "First Cohort Account Briefs" docs/FIRST_COHORT_BRIEFS.md
           grep -q '"source": "/authority"' site/vercel.json
           grep -q '"source": "/company"' site/vercel.json
       - name: Verify positioning contract
