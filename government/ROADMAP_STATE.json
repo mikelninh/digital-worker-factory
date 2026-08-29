@@ -1,5 +1,5 @@
 {
-  "schema": "ocn.roadmap-state/8",
+  "schema": "ocn.roadmap-state/9",
   "updated": "2026-08-29",
   "northStar": "Become the standard assurance rail agents call automatically before consequential actions and after important outputs.",
   "promise": "Before your agent acts, OCN checks evidence, authority, freshness, policy and intent. After it acts, OCN leaves a verifiable receipt.",
@@ -17,14 +17,14 @@
     "architectureAndCoreRail": "strong_green_ci",
     "formalTrustKernel": "production_bounded_plus_independent_TLA_TLC_green_ci",
     "trustedEvents": "six_events_built_green_ci_public_discovery_live",
-    "paymentIntentFraudGuard": "built_formally_model_checked_public_paid_single_proven_repeat_payment_diagnostic_pending",
+    "paymentIntentFraudGuard": "built_formally_model_checked_public_paid_repeat_9_of_10_settled",
     "ocnGuard": "built_green_ci",
-    "trustProofRegistry": "public_build_two_paid_capabilities_and_repeat_freshness_bound",
+    "trustProofRegistry": "public_build_two_paid_capabilities_repeat_freshness_and_payment_intent_evidence_bound",
     "shadowModeDemo": "built_synthetic_pre_external",
     "distributionPackages": "built_green_ci_publication_pending",
     "evidenceFlywheel": "reference_implementation_green_ci",
     "portableDeployment": "docker_green_ci_render_frankfurt_live",
-    "repeatPaymentHarness": "freshness_10_of_10_public_success_payment_intent_safe_402_diagnostics_available",
+    "repeatPaymentHarness": "continue_on_failure_plus_safe_facilitator_failure_decoding",
     "publicHosting": "achieved_https_render_build_97aeb6c5f0706724639ecb953589a40d543f4169",
     "firstPublicPaidTrustedEvent": {
       "capabilityId": "freshness.verify.v1",
@@ -55,18 +55,23 @@
       "latencyMs": {"min": 909, "p50": 992.5, "mean": 1135.6, "p95": 1599.2, "p99": 1658.24, "max": 1673},
       "interpretation": "operator-controlled public repeatability proof, not independent demand"
     },
-    "paymentIntentRepeat10Attempt": {
-      "status": "payment_layer_402_before_capability_result",
-      "successful": 0,
-      "diagnostics": "safe 402 payment headers and failing call index now exposed by the smoke harness",
-      "buyerBalanceCheck": {
-        "address": "0x2b36b350701f82bd25fa34Dc32fC52a2737eF523",
-        "network": "eip155:84532",
-        "usdc": "19.969",
-        "eth": "0",
-        "interpretation": "insufficient Base Sepolia test USDC is ruled out as the 402 cause; zero ETH does not explain the failure because the same wallet already completed x402 settlements"
+    "paymentIntentRepeat10": {
+      "attempted": 10,
+      "successful": 9,
+      "failed": 1,
+      "settlementSuccessRate": 0.9,
+      "latencyMsSuccessful": {"min": 642, "p50": 986, "mean": 980.33, "p95": 1342.6, "p99": 1350.92, "max": 1353},
+      "authorityInvariantOnSuccessfulCalls": {"paymentGrantedAuthority": false, "paymentExecutionPerformed": false},
+      "failure": {
+        "callIndex": 8,
+        "httpStatus": 402,
+        "failureLayer": "facilitator_settlement",
+        "errorReason": "invalid_exact_evm_transaction_failed",
+        "detail": "replacement transaction underpriced",
+        "interpretation": "Base rejected the facilitator relayer transaction as an underpriced replacement transaction; this is payment-settlement infrastructure evidence, not a deterministic OCN intent-kernel failure."
       },
-      "doesNotInvalidate": "the already-proven single public payment.intent.preflight settlement"
+      "evidence": "evidence/public-paid-repeat-payment-intent-10-2026-08-29.json",
+      "interpretation": "Strong small-sample public operation evidence, but 90% settlement success is not production-ready payment reliability and does not prove independent demand."
     },
     "externalRepeatUsage": "not_yet_proven",
     "buyerValueProof": "not_yet_proven",
@@ -75,11 +80,11 @@
     "independentAttestation": "not_yet_proven"
   },
   "currentSprint": {
-    "name": "Diagnose Payment 402 -> 20 Repeat -> Independent Payer -> Shadow -> Paid Pilot",
+    "name": "20-Call Reliability -> Independent Payer -> Shadow -> Paid Pilot",
     "nextCriticalMoves": [
-      "Rerun one payment.intent.preflight call with the safe 402 diagnostics and inspect PAYMENT-REQUIRED/payment metadata; insufficient USDC has been ruled out.",
-      "Fix or route around the identified payment-verification issue, then rerun 10 and 20 payment-intent calls.",
-      "Run 20 public paid freshness calls and publish p50/p95/p99/error/settlement distribution.",
+      "Run 20 payment-intent and 20 freshness calls with continue-on-failure and publish success/error/latency distributions without retrying failed signed payments.",
+      "Treat facilitator-settlement failures as a separate reliability layer; evaluate a facilitator fallback or dedicated facilitator only if the measured error rate remains material.",
+      "Add official x402 payment-identifier/idempotency semantics before any automatic retry policy so settlement ambiguity cannot create double-charge risk.",
       "Verify x402 Bazaar/Agentic.Market discovery and publish MCP/JS installation paths.",
       "Recruit independent x402/MCP/AgentCore builders; earn M4 only with a genuinely independent repeat-paying agent.",
       "Run Payment Intent Shadow with a real payment/AP/commerce workflow and Decision Assurance Shadow with a real public-sector/enterprise workflow.",
