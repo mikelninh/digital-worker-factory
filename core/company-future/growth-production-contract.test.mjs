@@ -6,11 +6,14 @@ const read = (path) => readFileSync(new URL(`../../${path}`, import.meta.url), '
 
 const homepage = read('site/index.html')
 const scorecard = read('site/agent-authority-scorecard.html')
+const ledgerPage = read('site/company-ledger.html')
 const docs = read('docs/GROWTH_ENGINE.md')
 const datastore = read('docs/GROWTH_ENGINE_DATASTORE.sql')
 const intake = read('docs/GROWTH_ENGINE_PUBLIC_INTAKE.sql')
 const autopilot = read('docs/GROWTH_ENGINE_AUTOPILOT.sql')
+const publicLedgerSql = read('docs/GROWTH_ENGINE_PUBLIC_LEDGER.sql')
 const edge = read('supabase/functions/company01-lead-intake/index.ts')
+const publicLedgerEdge = read('supabase/functions/company01-public-ledger/index.ts')
 const proxy = read('site/api/leads.js')
 const vercel = JSON.parse(read('site/vercel.json'))
 
@@ -19,14 +22,16 @@ test('Company 01 root is a conversion homepage, not the legacy Factory shell', (
   assert.match(homepage, /Give AI useful work/)
   assert.match(homepage, /\/scorecard/)
   assert.match(homepage, /\/pilot/)
+  assert.match(homepage, /\/ledger/)
   assert.match(homepage, /What is not yet proven/)
   assert.match(homepage, /Real customer revenue/)
   assert.doesNotMatch(homepage, /guaranteed ROI/i)
 })
 
-test('legacy Digital Worker Factory remains available as a separate route', () => {
+test('legacy Digital Worker Factory and acquisition surfaces remain separately routable', () => {
   const routes = new Map(vercel.rewrites.map(({ source, destination }) => [source, destination]))
   assert.equal(routes.get('/factory'), '/factory.html')
+  assert.equal(routes.get('/ledger'), '/company-ledger.html')
   assert.equal(routes.get('/scorecard'), '/agent-authority-scorecard.html')
   assert.equal(routes.get('/pilot'), '/trusted-agent-pilot.html')
   assert.equal(routes.get('/pilot/legal'), '/pilot-legal.html')
@@ -58,6 +63,17 @@ test('qualification autopilot is concurrency-safe and only queues consented ackn
   assert.match(autopilot, /growth\.inbound\.acknowledge/)
   assert.match(autopilot, /status = 'nurture'/)
   assert.match(autopilot, /data_mode, requested_artifacts, status/)
+})
+
+test('public ledger is aggregate-only and clearly separates live traction from synthetic proof', () => {
+  assert.match(publicLedgerSql, /aggregate counts only/i)
+  assert.match(publicLedgerSql, /company01_public_growth_metrics/)
+  assert.match(publicLedgerSql, /revoke all on function public\.company01_public_growth_metrics/i)
+  assert.match(publicLedgerEdge, /company01_public_growth_metrics/)
+  assert.match(publicLedgerEdge, /SUPABASE_SECRET_KEYS/)
+  assert.match(ledgerPage, /counts, not customers/i)
+  assert.match(ledgerPage, /not counting synthetic stress tests as customer traction/i)
+  assert.match(ledgerPage, /company01-public-ledger/)
 })
 
 test('site applies baseline security headers', () => {
