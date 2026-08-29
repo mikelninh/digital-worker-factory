@@ -15,6 +15,11 @@ function validEmail(value) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value) && value.length <= 160
 }
 
+function boundedInt(value, min, max) {
+  const n = Number(value)
+  return Number.isInteger(n) && n >= min && n <= max ? n : null
+}
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') return json(res, 405, { error: 'method_not_allowed' })
 
@@ -36,38 +41,36 @@ export default async function handler(req, res) {
   }
 
   const url = process.env.SUPABASE_URL
-  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
-  if (!url || !serviceKey) {
+  // Prefer Supabase's modern sb_secret_... key. Legacy service-role is compatibility only.
+  const secretKey = process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY
+  if (!url || !secretKey) {
     return json(res, 503, { error: 'lead_sink_unconfigured' })
   }
 
   const score = body?.result?.score || {}
-  const payload = {
-    organisation,
-    email,
-    explicit_followup_consent: true,
-    source: cleanString(body.source || 'authority_scorecard', 80),
-    sector: cleanString(body?.input?.sector, 40),
-    agent_stage: cleanString(body?.input?.agentStage, 40),
-    readiness_score: Number.isFinite(Number(score.readiness)) ? Number(score.readiness) : null,
-    authority_risk_score: Number.isFinite(Number(score.risk)) ? Number(score.risk) : null,
-    consequence_signals: Number.isFinite(Number(score.consequenceSignals)) ? Number(score.consequenceSignals) : null,
-    urgency: cleanString(score.urgency, 20),
-    recommended_pilot: cleanString(score.recommendedPilot, 120),
-    answers: body.input || {},
-    result: body.result || {},
-    status: 'new',
+  const rpcPayload = {
+    p_organisation: organisation,
+    p_email: email,
+    p_source: cleanString(body.source || 'authority_scorecard', 80),
+    p_sector: cleanString(body?.input?.sector, 40),
+    p_agent_stage: cleanString(body?.input?.agentStage, 40),
+    p_readiness_score: boundedInt(score.readiness, 0, 100),
+    p_authority_risk_score: boundedInt(score.risk, 0, 100),
+    p_consequence_signals: boundedInt(score.consequenceSignals, 0, 5),
+    p_urgency: ['low', 'medium', 'high'].includes(score.urgency) ? score.urgency : null,
+    p_recommended_pilot: cleanString(score.recommendedPilot, 120),
+    p_answers: body.input || {},
+    p_result: body.result || {},
   }
 
-  const response = await fetch(`${url.replace(/\/$/, '')}/rest/v1/company01_growth_leads`, {
+  const response = await fetch(`${url.replace(/\/$/, '')}/rest/v1/rpc/company01_create_inbound_lead`, {
     method: 'POST',
     headers: {
-      apikey: serviceKey,
-      authorization: `Bearer ${serviceKey}`,
+      apikey: secretKey,
+      authorization: `Bearer ${secretKey}`,
       'content-type': 'application/json',
-      prefer: 'return=minimal',
     },
-    body: JSON.stringify(payload),
+    body: JSON.stringify(rpcPayload),
   })
 
   if (!response.ok) {
@@ -76,5 +79,13 @@ export default async function handler(req, res) {
     return json(res, 502, { error: 'lead_sink_failed' })
   }
 
-  return json(res, 201, { accepted: true, status: 'new' })
+  let leadId = null
+  try { leadId = await response.json() } catch {}
+
+  return json(res, 201, {
+    accepted: true,
+    status: 'new',
+    leadId: typeof leadId === 'string' ? leadId : null,
+    next: 'qualify_and_prepare_inbound',
+  })
 }
