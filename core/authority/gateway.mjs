@@ -6,19 +6,30 @@ export class AuthorityGateway {
   #policy
   #executors
   #idempotencyStore
+  #receiptStore
   #clock
   #receipts
 
-  constructor({ policy, executors = {}, idempotencyStore = new InMemoryIdempotencyStore(), clock = () => new Date() } = {}) {
+  constructor({
+    policy,
+    executors = {},
+    idempotencyStore = new InMemoryIdempotencyStore(),
+    receiptStore = null,
+    clock = () => new Date(),
+  } = {}) {
     if (!policy?.version) throw new Error('authority_policy_version_required')
     this.#policy = policy
     this.#executors = { ...executors }
     this.#idempotencyStore = idempotencyStore
+    this.#receiptStore = receiptStore
     this.#clock = clock
     this.#receipts = []
   }
 
   receipts() {
+    if (this.#receiptStore && typeof this.#receiptStore.list === 'function') {
+      return this.#receiptStore.list().map((receipt) => structuredClone(receipt))
+    }
     return this.#receipts.map((receipt) => structuredClone(receipt))
   }
 
@@ -48,6 +59,7 @@ export class AuthorityGateway {
     })
 
     this.#receipts.push(result.receipt)
+    if (this.#receiptStore && typeof this.#receiptStore.append === 'function') this.#receiptStore.append(result.receipt)
     return result
   }
 }
