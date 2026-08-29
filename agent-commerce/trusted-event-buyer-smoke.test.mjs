@@ -1,7 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 
-import { isDirectRun, summarizeFailedResponse, TRUST_EVENT_SMOKES, validateTrustedBuyerConfig } from './trusted-event-buyer-smoke.mjs'
+import { decodeSafePaymentFailure, isDirectRun, summarizeFailedResponse, TRUST_EVENT_SMOKES, validateTrustedBuyerConfig } from './trusted-event-buyer-smoke.mjs'
 
 const TEST_KEY = `0x${'11'.repeat(32)}`
 
@@ -55,10 +55,36 @@ test('payment-intent smoke body is exact, time-bounded and approval-observed', (
   assert.equal(Date.parse(body.intent.validUntil), now + 3_600_000)
 })
 
-test('failed-response diagnostics expose safe x402 metadata without secrets', () => {
+test('failed payment response is decoded into safe facilitator diagnostics', () => {
+  const encoded = Buffer.from(JSON.stringify({
+    success: false,
+    errorReason: 'invalid_exact_evm_transaction_failed',
+    errorMessage: 'Request body: secret-noise\nDetails: replacement transaction underpriced\nVersion: viem@2.48.11',
+    payer: '0x0000000000000000000000000000000000000001',
+    network: 'eip155:84532',
+  })).toString('base64')
+  const decoded = decodeSafePaymentFailure(encoded)
+  assert.deepEqual(decoded, {
+    failureLayer: 'facilitator_settlement',
+    success: false,
+    errorReason: 'invalid_exact_evm_transaction_failed',
+    detail: 'replacement transaction underpriced',
+    payer: '0x0000000000000000000000000000000000000001',
+    network: 'eip155:84532',
+  })
+})
+
+test('failed-response diagnostics expose only safe x402 metadata without secrets or raw payment response', () => {
+  const paymentResponse = Buffer.from(JSON.stringify({
+    success: false,
+    errorReason: 'invalid_exact_evm_transaction_failed',
+    errorMessage: 'raw signed transaction omitted\nDetails: replacement transaction underpriced',
+    payer: '0x0000000000000000000000000000000000000001',
+    network: 'eip155:84532',
+  })).toString('base64')
   const headers = new Headers({
     'content-type': 'application/json',
-    'payment-required': 'diagnostic-payment-required',
+    'payment-response': paymentResponse,
     'authorization': 'Bearer must-not-leak',
     'x-request-id': 'req-123',
   })
@@ -66,9 +92,11 @@ test('failed-response diagnostics expose safe x402 metadata without secrets', ()
   const summary = summarizeFailedResponse(response, { error: 'payment_required' }, { callIndex: 3, capabilityId: 'payment.intent.preflight.v1' })
   assert.equal(summary.status, 402)
   assert.equal(summary.callIndex, 3)
-  assert.equal(summary.headers['payment-required'], 'diagnostic-payment-required')
   assert.equal(summary.headers['x-request-id'], 'req-123')
   assert.equal(summary.headers.authorization, undefined)
+  assert.equal(summary.headers['payment-response'], undefined)
+  assert.equal(summary.paymentFailure.failureLayer, 'facilitator_settlement')
+  assert.equal(summary.paymentFailure.detail, 'replacement transaction underpriced')
 })
 
 test('trusted buyer smoke can reuse existing AGENT_COMMERCE_URL config', () => {
