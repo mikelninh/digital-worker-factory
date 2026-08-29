@@ -78,7 +78,8 @@ export function createAuthorityHttpServer({
       if (req.method === 'POST' && url.pathname === '/v1/preflight') {
         const input = withRevocation(await readJson(req, maxBodyBytes), revocationStore)
         const decision = gateway.preflight(input)
-        return json(res, decision.executionAllowed ? 200 : decision.decision === 'APPROVAL' ? 202 : 403, { ok: decision.allowed === true, decision })
+        const status = decision.executionAllowed ? 200 : decision.decision === 'APPROVAL' ? 202 : 403
+        return json(res, status, { ok: true, decision })
       }
 
       if (req.method === 'POST' && url.pathname === '/v1/invoke') {
