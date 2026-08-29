@@ -34,6 +34,11 @@ jobs:
           node --check core/company-future/policy.mjs
           node --check core/company-future/workforce.mjs
           node --check core/company-future/scale-gauntlet.mjs
+          node --check core/company-future/autonomy.mjs
+          node --check core/company-future/government-caseworker.mjs
+          node --check core/company-future/operating-day.mjs
+          node --check core/company-future/research-buyer.mjs
+          node --check core/company-future/company-proof.mjs
           node --check site/authority-ui-engine.mjs
       - name: Run cross-sector authority conformance
         run: node --test core/authority/conformance.test.mjs core/authority/interop/interop.test.mjs
@@ -53,6 +58,21 @@ jobs:
           node core/authority/demo/run.mjs
       - name: Run 100-agent 10k-decision scale gauntlet
         run: node --test core/company-future/scale-gauntlet.test.mjs
+      - name: Prove evidence-earned progressive autonomy
+        run: node --test core/company-future/autonomy.test.mjs
+      - name: Prove synthetic benefits caseworker boundaries
+        run: node --test core/company-future/government-caseworker.test.mjs
+      - name: Prove one-person mature operating-day target
+        run: node --test core/company-future/operating-day.test.mjs
+      - name: Prove governed Research Buyer boundaries
+        run: node --test core/company-future/research-buyer.test.mjs
+      - name: Run live Research Buyer network smoke
+        run: node core/company-future/research-buyer.mjs
+      - name: Run unified company-of-the-future proof
+        run: |
+          node --test core/company-future/company-proof.test.mjs
+          node core/company-future/company-proof.mjs > /tmp/company-of-future-proof.json
+          node -e "const r=require('/tmp/company-of-future-proof.json'); if(!r.scale.passed || !r.operatingDay.onePersonSupervisionTarget.passed) process.exit(1); console.log(JSON.stringify({scale:r.scale,operatingDay:r.operatingDay,progressiveAutonomy:r.progressiveAutonomy,government:r.government},null,2))"
       - name: Prove Control Centre parity with the kernel
         run: node --test core/authority/ui-parity.test.mjs
       - name: Verify Authority Control Centre surface
