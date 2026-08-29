@@ -35,10 +35,32 @@ export class JsonFileIdempotencyStore {
     return this.#records[String(key)] ?? null
   }
 
-  set(key, value) {
-    this.#records[String(key)] = value
+  claim(key, value = {}) {
+    const normalized = String(key)
+    const existing = this.get(normalized)
+    if (existing) return { claimed: false, record: existing }
+    const record = { state: 'pending', ...value }
+    this.#records[normalized] = record
     atomicWriteJson(this.#filePath, this.#records)
-    return value
+    return { claimed: true, record }
+  }
+
+  complete(key, value = {}) {
+    const record = { state: 'completed', ...value }
+    this.#records[String(key)] = record
+    atomicWriteJson(this.#filePath, this.#records)
+    return record
+  }
+
+  fail(key, value = {}) {
+    const record = { state: 'failed', ...value }
+    this.#records[String(key)] = record
+    atomicWriteJson(this.#filePath, this.#records)
+    return record
+  }
+
+  set(key, value) {
+    return this.complete(key, value)
   }
 }
 
