@@ -68,18 +68,50 @@ export function validateTrustedBuyerConfig(env = process.env) {
   }
 }
 
+function extractErrorDetail(message) {
+  const match = String(message ?? '').match(/Details:\s*([^\n]+)/i)
+  return match?.[1]?.trim() || null
+}
+
+export function decodeSafePaymentFailure(paymentResponseHeader) {
+  if (!paymentResponseHeader) return null
+  try {
+    const decoded = decodePaymentResponseHeader(paymentResponseHeader)
+    if (!decoded || decoded.success !== false) return null
+    return {
+      failureLayer: 'facilitator_settlement',
+      success: false,
+      errorReason: decoded.errorReason ?? null,
+      detail: extractErrorDetail(decoded.errorMessage),
+      payer: decoded.payer ?? null,
+      network: decoded.network ?? null,
+    }
+  } catch {
+    return {
+      failureLayer: 'payment_response_decode',
+      success: false,
+      errorReason: 'payment_response_decode_failed',
+      detail: null,
+      payer: null,
+      network: null,
+    }
+  }
+}
+
 export function summarizeFailedResponse(response, body, { callIndex, capabilityId } = {}) {
   const safeHeaders = {}
-  for (const name of ['content-type', 'payment-required', 'payment-response', 'x-request-id', 'x-ratelimit-limit', 'x-ratelimit-remaining', 'x-ratelimit-reset']) {
+  for (const name of ['content-type', 'x-request-id', 'x-ratelimit-limit', 'x-ratelimit-remaining', 'x-ratelimit-reset']) {
     const value = response.headers.get(name)
     if (value) safeHeaders[name] = value
   }
+  const paymentFailure = decodeSafePaymentFailure(response.headers.get('payment-response'))
   return {
     callIndex: Number.isInteger(callIndex) ? callIndex : null,
     capabilityId: capabilityId ?? null,
     status: response.status,
     statusText: response.statusText || null,
     headers: safeHeaders,
+    paymentFailure,
     body,
   }
 }
