@@ -1,6 +1,7 @@
 -- Company 01 privacy-safe public growth ledger.
 -- Production version applied to dedicated Supabase project htffcvdopavknnylbowl.
 -- Returns aggregate counts only: no organisation names, emails, scorecard answers or customer artifacts.
+-- Never publish an invariant as zero unless it is actually measured by the production evidence path.
 
 create or replace function public.company01_public_growth_metrics()
 returns jsonb
@@ -10,7 +11,7 @@ security invoker
 set search_path = public
 as $$
   select jsonb_build_object(
-    'schema', 'company01-public-ledger/0.1',
+    'schema', 'company01-public-ledger/0.2',
     'generatedAt', now(),
     'leads', jsonb_build_object(
       'total', (select count(*) from public.company01_growth_leads),
@@ -43,7 +44,8 @@ as $$
     'authority', jsonb_build_object(
       'explicitConsentLeads', (select count(*) from public.company01_growth_leads where explicit_followup_consent = true),
       'missingConsentLeads', (select count(*) from public.company01_growth_leads where explicit_followup_consent = false),
-      'contractCommitmentExecutions', 0
+      'contractCommitmentExecutions', null,
+      'contractCommitmentMonitoring', 'not_wired'
     )
   );
 $$;
