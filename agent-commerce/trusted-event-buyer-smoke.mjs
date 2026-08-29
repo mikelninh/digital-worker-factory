@@ -57,12 +57,14 @@ export function validateTrustedBuyerConfig(env = process.env) {
   if (!Number.isInteger(repeats) || repeats < 1 || repeats > 20) throw new Error('OCN_SMOKE_REPEATS_invalid')
   const event = env.OCN_SMOKE_EVENT ?? 'freshness'
   if (!TRUST_EVENT_SMOKES[event]) throw new Error('OCN_SMOKE_EVENT_invalid')
+  const continueOnFailure = env.OCN_SMOKE_CONTINUE_ON_FAILURE === 'true'
   return {
     privateKey,
     baseUrl: baseUrl.toString().replace(/\/$/, ''),
     maxPaymentAtomic,
     repeats,
     event,
+    continueOnFailure,
   }
 }
 
@@ -96,6 +98,7 @@ export async function runTrustedEventBuyerSmoke({ env = process.env, fetchImpl =
   })
 
   const calls = []
+  const failures = []
   for (let i = 0; i < config.repeats; i += 1) {
     const callNow = now()
     const startedAt = callNow
@@ -111,8 +114,11 @@ export async function runTrustedEventBuyerSmoke({ env = process.env, fetchImpl =
     const latencyMs = Math.max(0, now() - startedAt)
     const body = await response.json().catch(() => ({}))
     if (!response.ok) {
+      const details = summarizeFailedResponse(response, body, { callIndex: i, capabilityId: target.capabilityId })
+      failures.push({ ...details, latencyMs })
+      if (config.continueOnFailure) continue
       const error = new Error(`trusted_event_paid_request_failed:${response.status}`)
-      error.details = summarizeFailedResponse(response, body, { callIndex: i, capabilityId: target.capabilityId })
+      error.details = details
       throw error
     }
     if (body?.receipt?.authority?.paymentGrantedAuthority !== false) throw new Error('receipt_authority_boundary_failed')
@@ -127,6 +133,7 @@ export async function runTrustedEventBuyerSmoke({ env = process.env, fetchImpl =
     if (!settlement?.success) throw new Error('settlement_proof_missing_or_failed')
 
     calls.push({
+      callIndex: i,
       status: response.status,
       latencyMs,
       trustEventId: body.trustEventId ?? null,
@@ -142,10 +149,14 @@ export async function runTrustedEventBuyerSmoke({ env = process.env, fetchImpl =
     capabilityId: target.capabilityId,
     endpoint: `${config.baseUrl}${target.path}`,
     repeats: config.repeats,
+    attemptedCalls: config.repeats,
     successfulCalls: calls.length,
+    failedCalls: failures.length,
+    successRate: config.repeats ? calls.length / config.repeats : null,
     settlements: calls.map((call) => call.settlement?.transaction ?? null),
     avgLatencyMs: calls.length ? Math.round(calls.reduce((sum, call) => sum + call.latencyMs, 0) / calls.length) : null,
     calls,
+    failures,
   }
 }
 
