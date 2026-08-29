@@ -39,6 +39,7 @@ jobs:
           node --check core/company-future/operating-day.mjs
           node --check core/company-future/research-buyer.mjs
           node --check core/company-future/company-proof.mjs
+          node --check core/company-future/chief-of-staff.mjs
           node --check site/authority-ui-engine.mjs
       - name: Run cross-sector authority conformance
         run: node --test core/authority/conformance.test.mjs core/authority/interop/interop.test.mjs
@@ -73,16 +74,22 @@ jobs:
           node --test core/company-future/company-proof.test.mjs
           node core/company-future/company-proof.mjs > /tmp/company-of-future-proof.json
           node -e "const r=require('/tmp/company-of-future-proof.json'); if(!r.scale.passed || !r.operatingDay.onePersonSupervisionTarget.passed) process.exit(1); console.log(JSON.stringify({scale:r.scale,operatingDay:r.operatingDay,progressiveAutonomy:r.progressiveAutonomy,government:r.government},null,2))"
+      - name: Prove one-person Chief of Staff boundary
+        run: node --test core/company-future/chief-of-staff.test.mjs
       - name: Prove Control Centre parity with the kernel
         run: node --test core/authority/ui-parity.test.mjs
-      - name: Verify Authority Control Centre surface
+      - name: Verify Authority and Company proof surfaces
         run: |
           test -s site/authority-control-center.html
           test -s site/authority-ui-engine.mjs
+          test -s site/company-of-the-future.html
           grep -q "Give agents real power" site/authority-control-center.html
           grep -q "Run the safety gauntlet" site/authority-control-center.html
           grep -q "0.*unauthorised provider calls" site/authority-control-center.html
+          grep -q "One human." site/company-of-the-future.html
+          grep -q "Authority Scale Gauntlet" site/company-of-the-future.html
           grep -q '"source": "/authority"' site/vercel.json
+          grep -q '"source": "/company"' site/vercel.json
       - name: Verify positioning contract
         run: |
           test -s core/authority/README.md
