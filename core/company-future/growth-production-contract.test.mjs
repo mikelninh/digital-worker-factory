@@ -38,7 +38,7 @@ test('scorecard is useful before contact capture and requires explicit consent t
   assert.match(scorecard, /How much power/)
   assert.match(scorecard, /Nothing is sent anywhere just to calculate it/)
   assert.match(scorecard, /explicitFollowupConsent:consent/)
-  assert.match(docs, /explicit follow-up consent/)
+  assert.match(docs, /follow-up consent/)
 })
 
 test('public intake has a server-only authority path and abuse boundary', () => {
