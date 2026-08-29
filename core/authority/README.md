@@ -72,7 +72,10 @@ The executable suites prove:
 - approvals are bound to the exact action and delegation;
 - preflight performs zero external calls;
 - approved actions still require an idempotency key;
-- duplicate idempotency keys make at most one provider call;
+- the idempotency key is atomically claimed before provider execution in the reference runtime;
+- two simultaneous identical requests make at most one provider call;
+- successful replay is suppressed;
+- uncertain/failed execution with the same key requires reconciliation rather than blind re-execution;
 - replay suppression survives a gateway restart with the durable reference store;
 - failed providers do not alter authority;
 - facilitator settlement failures are attributed outside the authority kernel;
@@ -97,6 +100,26 @@ The mission uses deterministic provider fixtures so it is repeatable and safe. I
 
 The browser surface at `site/authority-control-center.html` exposes the same ideas interactively. `core/authority/ui-parity.test.mjs` prevents the UI decision simulator from drifting away from the Node policy kernel.
 
+## Authenticated HTTP boundary
+
+`core/authority/service.mjs` exposes the gateway as a small authenticated reference service:
+
+- `GET /health`
+- `POST /v1/preflight`
+- `POST /v1/invoke`
+- `GET /v1/receipts`
+- `POST /v1/delegations/:id/revoke`
+
+All consequential endpoints require a bearer token. Revocation is applied before preflight/invoke. Malformed and oversized request bodies fail closed.
+
+A runnable local service is provided at `core/authority/demo/server.mjs`:
+
+```bash
+AUTHORITY_TOKEN=change-me node core/authority/demo/server.mjs
+```
+
+Local state is written under `.authority-data/` by default and is ignored by Git. The HTTP service is a reference integration boundary, not a hardened internet-facing production deployment.
+
 ## Real integration seams
 
 Reference adapters now show how the boundary composes without replacing adjacent infrastructure:
@@ -104,9 +127,9 @@ Reference adapters now show how the boundary composes without replacing adjacent
 - `adapters/oidc.mjs` — OIDC/IAM claims → explicit actor/principal context;
 - `adapters/mcp.mjs` — MCP tool execution only downstream of ALLOW;
 - `adapters/x402.mjs` — paid-resource execution only downstream of spend authority;
-- `stores/json-file.mjs` — durable reference idempotency + receipt persistence across restart.
+- `stores/json-file.mjs` — durable reference idempotency, receipts and delegation revocations.
 
-The JSON stores are a reference implementation, not the production HA datastore.
+The local JSON stores are deliberately simple reference implementations. Production needs a transactional shared datastore so claims and budget/revocation state remain correct across replicas and processes.
 
 ## Public-sector reference profile
 
@@ -192,6 +215,8 @@ The product opportunity is the organization-controlled **authorization + enforce
 ```bash
 node --test \
   core/authority/conformance.test.mjs \
+  core/authority/concurrency.test.mjs \
+  core/authority/service.test.mjs \
   core/authority/interop/interop.test.mjs \
   core/authority/adapters/adapters.test.mjs \
   core/authority/stores/json-file.test.mjs \
