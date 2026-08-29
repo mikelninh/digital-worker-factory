@@ -19,9 +19,11 @@ useful content / referrals / search / partner shares
                  ↓
  explicit prospect follow-up consent
                  ↓
-        Company 01 lead queue
+      transactional lead + event record
                  ↓
  Growth Agent qualification + account brief
+                 ↓
+ automatic acknowledgement + safe onboarding queue
                  ↓
  automated synthetic/non-sensitive onboarding
                  ↓
@@ -98,6 +100,32 @@ No contact details are required to receive the result.
 
 - autonomous contract/legal commitment
 
+## Live lead lifecycle
+
+`core/company-future/growth-live.mjs` plans the operational queue after a lead opts in.
+
+A qualified, explicitly consented, synthetic/non-sensitive lead can automatically receive:
+
+1. lead score,
+2. personalised authority report,
+3. CRM/lead record,
+4. requested-inbound acknowledgement,
+5. sandbox onboarding request.
+
+Each planned action receives:
+
+- an authority decision,
+- a canonical context digest,
+- an idempotency key.
+
+Production/sensitive onboarding becomes `APPROVAL`; autonomous contract commitment stays `BLOCK`.
+
+Lead state transitions are also explicit:
+
+`new -> qualified -> contacted/onboarding -> pilot -> won/lost`
+
+Skipping directly from `new` to `pilot` is rejected.
+
 ## Automatic onboarding packet
 
 A qualified inbound lead should be asked for only:
@@ -171,11 +199,22 @@ Initial lead storage should contain only business contact/context, scorecard ans
 The lead API expects server-side environment variables:
 
 - `SUPABASE_URL`
-- `SUPABASE_SERVICE_ROLE_KEY`
+- `SUPABASE_SECRET_KEY` — preferred modern `sb_secret_...` server key
 
-The service-role key must never enter public client code.
+`SUPABASE_SERVICE_ROLE_KEY` remains a temporary compatibility fallback only.
 
-A dedicated Company 01 Supabase project is preferable to reusing an unrelated existing project. Before public launch add rate limiting / bot protection and run Supabase security + performance advisors.
+The secret key must never enter public client code.
+
+The datastore reference:
+
+- enables RLS on every growth table,
+- revokes `anon` and `authenticated`,
+- explicitly grants only `service_role`,
+- uses a `SECURITY INVOKER` RPC,
+- revokes public function execution,
+- atomically creates the lead and first audit event.
+
+A dedicated Company 01 Supabase project is required rather than reusing an unrelated project. Before public launch add rate limiting / bot protection, test grants/RLS, and run Supabase security + performance advisors.
 
 ## Current state
 
@@ -186,13 +225,17 @@ Implemented:
 - instant personalised Authority Map
 - explicit-consent lead submission
 - fail-closed lead endpoint
+- transactional lead/event datastore schema
+- action queue / approvals / onboarding persistence schema
+- live lifecycle planner + state machine
+- operator-attention brief
 
-Not connected yet:
+Account wiring still required:
 
-- dedicated Company 01 Supabase project/table
+- dedicated Company 01 Supabase project
 - production rate limiting / bot protection
-- automated Gmail acknowledgement
-- Google Calendar slot confirmation
-- CRM UI / Chief-of-Staff lead summary
+- automated Gmail acknowledgement executor
+- Google Calendar slot-confirmation executor
+- public deployment + domain
 
-These are the next production wiring tasks, not reasons to weaken the authority boundaries.
+These are production wiring tasks, not reasons to weaken the authority boundaries.
