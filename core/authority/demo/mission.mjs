@@ -211,7 +211,7 @@ export async function runTenEuroMission() {
       brief: brief.result ?? null,
       publication: publishedResult.result ?? null,
       statusCounts,
-      unauthorisedProviderCalls: receipts.filter((receipt) => receipt.decision?.decision !== 'ALLOW' && receipt.execution?.providerCalled === true).length,
+      unauthorisedProviderCalls: receipts.filter((receipt) => receipt.authority?.decision !== 'ALLOW' && receipt.execution?.providerCalled === true).length,
       secretLeakDetected: JSON.stringify(receipts).includes('DEMO_SIGNED_TRANSACTION_MUST_NOT_LEAK') || JSON.stringify(receipts).includes('base64-demo-payment-response'),
       replayProviderCalls: attempts.filter((attempt) => attempt.label.includes('replay') && attempt.providerCalled).length,
     },
