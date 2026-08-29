@@ -8,7 +8,7 @@
   <title>Company 01 — Public Operating Ledger</title>
   <link rel="stylesheet" href="/pilot.css">
   <style>
-    .liveRow{display:flex;align-items:center;gap:8px;color:var(--green);font-size:12px;font-weight:850;text-transform:uppercase;letter-spacing:.08em}.metricGrid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:20px}.metric{border:1px solid var(--line);background:#0a141e;border-radius:15px;padding:16px}.metric b{display:block;font-size:30px;letter-spacing:-.05em}.metric span{font-size:12px;color:var(--muted)}.table{margin-top:14px;border:1px solid var(--line);border-radius:14px;overflow:hidden}.tr{display:grid;grid-template-columns:1fr auto;gap:14px;padding:12px 14px;border-bottom:1px solid var(--line);background:#0a141e}.tr:last-child{border-bottom:0}.tr span{color:var(--muted)}.truth{border:1px solid #4b375e;background:linear-gradient(135deg,#111a29,#1a1425);border-radius:18px;padding:22px}.stamp{font-size:12px;color:var(--muted);margin-top:10px}@media(max-width:700px){.metricGrid{grid-template-columns:1fr 1fr}}@media(max-width:460px){.metricGrid{grid-template-columns:1fr}}
+    .liveRow{display:flex;align-items:center;gap:8px;color:var(--green);font-size:12px;font-weight:850;text-transform:uppercase;letter-spacing:.08em}.metricGrid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:20px}.metric{border:1px solid var(--line);background:#0a141e;border-radius:15px;padding:16px}.metric b{display:block;font-size:30px;letter-spacing:-.05em}.metric span{font-size:12px;color:var(--muted)}.table{margin-top:14px;border:1px solid var(--line);border-radius:14px;overflow:hidden}.tr{display:grid;grid-template-columns:1fr auto;gap:14px;padding:12px 14px;border-bottom:1px solid var(--line);background:#0a141e}.tr:last-child{border-bottom:0}.tr span{color:var(--muted)}.truth{border:1px solid #4b375e;background:linear-gradient(135deg,#111a29,#1a1425);border-radius:18px;padding:22px}.stamp{font-size:12px;color:var(--muted);margin-top:10px}.notwired{color:var(--amber)}@media(max-width:700px){.metricGrid{grid-template-columns:1fr 1fr}}@media(max-width:460px){.metricGrid{grid-template-columns:1fr}}
   </style>
 </head>
 <body>
@@ -44,10 +44,10 @@
           </div>
         </div>
         <div class="card">
-          <div class="kicker">Authority health</div><h3>Boundaries that should stay boring</h3>
+          <div class="kicker">Authority health</div><h3>Publish only what we actually measure</h3>
           <div class="table">
             <div class="tr"><span>Leads missing explicit consent</span><b class="green" id="missingConsent">—</b></div>
-            <div class="tr"><span>Autonomous contract commitments</span><b class="green" id="contractExecutions">0</b></div>
+            <div class="tr"><span>Autonomous contract commitments</span><b class="notwired" id="contractExecutions">Not wired</b></div>
             <div class="tr"><span>Approval-gated queued actions</span><b id="approvalActions">—</b></div>
             <div class="tr"><span>Blocked queued actions</span><b id="blockActions">—</b></div>
           </div>
@@ -60,7 +60,7 @@
       <div class="truth">
         <div class="kicker">What these numbers do not prove</div>
         <h3 style="font-size:25px;margin:0 0 8px">We are not counting synthetic stress tests as customer traction.</h3>
-        <p style="color:var(--muted);margin:0">The 10,000-decision Scale Gauntlet is a system stress proof. This ledger is for longitudinal Company 01 evidence: real inbound leads, onboarding, pilot activity, human attention and eventually economic value. Revenue and customer outcomes will be added only when they are actually attributable.</p>
+        <p style="color:var(--muted);margin:0">The 10,000-decision Scale Gauntlet is a system stress proof. This ledger is for longitudinal Company 01 evidence: real inbound leads, onboarding, pilot activity, human attention and eventually economic value. Revenue and customer outcomes will be added only when they are actually attributable. An invariant stays “not wired” rather than showing a comforting zero until its production evidence path exists.</p>
       </div>
     </section>
 
@@ -80,7 +80,7 @@
 </div>
 <script>
 const ENDPOINT='https://htffcvdopavknnylbowl.supabase.co/functions/v1/company01-public-ledger';
-const set=(id,value)=>{document.getElementById(id).textContent=String(value ?? 0)};
+const set=(id,value)=>{document.getElementById(id).textContent=(value===null||value===undefined)?'—':String(value)};
 (async()=>{
   try{
     const r=await fetch(ENDPOINT,{headers:{accept:'application/json'}});
@@ -88,7 +88,10 @@ const set=(id,value)=>{document.getElementById(id).textContent=String(value ?? 0
     const d=await r.json();
     set('leadTotal',d.leads?.total);set('qualified',d.leads?.qualified);set('onboarding',d.onboarding?.total);set('pilots',d.leads?.pilot);
     set('actionsQueued',d.actions?.queued);set('actionsCompleted',d.actions?.completed);set('actionsFailed',d.actions?.failed);set('actionsReconcile',d.actions?.reconciliationRequired);
-    set('missingConsent',d.authority?.missingConsentLeads);set('contractExecutions',d.authority?.contractCommitmentExecutions);set('approvalActions',d.actions?.approval);set('blockActions',d.actions?.block);
+    set('missingConsent',d.authority?.missingConsentLeads);set('approvalActions',d.actions?.approval);set('blockActions',d.actions?.block);
+    const commitment=document.getElementById('contractExecutions');
+    if(d.authority?.contractCommitmentMonitoring==='not_wired'){commitment.textContent='Not wired';commitment.className='notwired'}
+    else{set('contractExecutions',d.authority?.contractCommitmentExecutions);commitment.className='green'}
     document.getElementById('liveState').textContent='Live backend connected';
     document.getElementById('generatedAt').textContent='Ledger generated '+new Date(d.generatedAt).toLocaleString();
   }catch(e){
