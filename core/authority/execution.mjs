@@ -8,9 +8,66 @@ export class InMemoryIdempotencyStore {
     return this.#records.get(key) ?? null
   }
 
+  claim(key, value = {}) {
+    const existing = this.get(key)
+    if (existing) return { claimed: false, record: existing }
+    const record = { state: 'pending', ...value }
+    this.#records.set(key, record)
+    return { claimed: true, record }
+  }
+
+  complete(key, value = {}) {
+    const record = { state: 'completed', ...value }
+    this.#records.set(key, record)
+    return record
+  }
+
+  fail(key, value = {}) {
+    const record = { state: 'failed', ...value }
+    this.#records.set(key, record)
+    return record
+  }
+
   set(key, value) {
-    this.#records.set(key, value)
-    return value
+    return this.complete(key, value)
+  }
+}
+
+function duplicateResult({ existing, decision, receiptFor }) {
+  const state = existing?.state || 'completed'
+  const originalTraceId = existing?.traceId ?? null
+
+  if (state === 'pending') {
+    return {
+      ok: false,
+      status: 'duplicate_in_flight',
+      decision,
+      originalTraceId,
+      receipt: receiptFor({ status: 'duplicate_in_flight', providerCalled: false, originalTraceId }),
+    }
+  }
+
+  if (state === 'failed') {
+    return {
+      ok: false,
+      status: 'reconciliation_required',
+      decision,
+      error: existing?.failure?.detail ?? 'prior_execution_failed',
+      originalTraceId,
+      receipt: receiptFor(
+        { status: 'reconciliation_required', providerCalled: false, originalTraceId },
+        existing?.failure ?? null,
+      ),
+    }
+  }
+
+  return {
+    ok: true,
+    status: 'duplicate_suppressed',
+    decision,
+    result: existing?.result,
+    originalTraceId,
+    receipt: receiptFor({ status: 'duplicate_suppressed', providerCalled: false, originalTraceId }),
   }
 }
 
@@ -55,18 +112,6 @@ export async function executeWithAuthority({
     }
   }
 
-  const existing = idempotencyStore?.get(key)
-  if (existing) {
-    return {
-      ok: true,
-      status: 'duplicate_suppressed',
-      decision,
-      result: existing.result,
-      originalTraceId: existing.traceId,
-      receipt: receiptFor({ status: 'duplicate_suppressed', providerCalled: false, originalTraceId: existing.traceId }),
-    }
-  }
-
   if (typeof executor !== 'function') {
     const blocked = { ...decision, decision: DECISIONS.BLOCK, executionAllowed: false, reasons: [...(decision.reasons || []), 'executor_not_configured'] }
     return {
@@ -80,9 +125,19 @@ export async function executeWithAuthority({
     }
   }
 
+  if (typeof idempotencyStore?.claim === 'function') {
+    const claim = idempotencyStore.claim(key, { traceId, at })
+    if (!claim.claimed) return duplicateResult({ existing: claim.record, decision, receiptFor })
+  } else {
+    const existing = idempotencyStore?.get(key)
+    if (existing) return duplicateResult({ existing, decision, receiptFor })
+    idempotencyStore?.set?.(key, { state: 'pending', traceId, at })
+  }
+
   try {
     const result = await executor({ actor, principal, delegation, action, evidence, approval, traceId })
-    idempotencyStore?.set(key, { traceId, result })
+    if (typeof idempotencyStore?.complete === 'function') idempotencyStore.complete(key, { traceId, at, result })
+    else idempotencyStore?.set?.(key, { state: 'completed', traceId, at, result })
     return {
       ok: true,
       status: 'executed',
@@ -92,6 +147,8 @@ export async function executeWithAuthority({
     }
   } catch (error) {
     const failure = classifyExecutionError(error, errorContext)
+    if (typeof idempotencyStore?.fail === 'function') idempotencyStore.fail(key, { traceId, at, failure })
+    else idempotencyStore?.set?.(key, { state: 'failed', traceId, at, failure })
     return {
       ok: false,
       status: 'failed',
