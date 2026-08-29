@@ -90,3 +90,38 @@ export class JsonLinesReceiptStore {
     }
   }
 }
+
+export class JsonFileRevocationStore {
+  #filePath
+  #records
+
+  constructor(filePath) {
+    if (!filePath) throw new Error('revocation_store_path_required')
+    this.#filePath = filePath
+    this.#records = readJson(filePath, {})
+  }
+
+  get(delegationId) {
+    return this.#records[String(delegationId)] ?? null
+  }
+
+  isRevoked(delegationId) {
+    return Boolean(this.get(delegationId))
+  }
+
+  revoke(delegationId, metadata = {}) {
+    if (!delegationId) throw new Error('delegation_id_required')
+    const key = String(delegationId)
+    const existing = this.get(key)
+    if (existing) return existing
+    const record = {
+      delegationId: key,
+      revokedAt: metadata.revokedAt ?? new Date().toISOString(),
+      revokedBy: metadata.revokedBy ?? null,
+      reason: metadata.reason ?? null,
+    }
+    this.#records[key] = record
+    atomicWriteJson(this.#filePath, this.#records)
+    return record
+  }
+}
