@@ -10,7 +10,6 @@ services:
     dockerfilePath: ./agent-commerce/Dockerfile.network
     autoDeployTrigger: off
     healthCheckPath: /v1/network/health
-    maxShutdownDelaySeconds: 30
     envVars:
       - key: NODE_ENV
         value: production
