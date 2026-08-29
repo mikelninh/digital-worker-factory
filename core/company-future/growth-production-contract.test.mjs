@@ -8,6 +8,9 @@ const homepage = read('site/index.html')
 const scorecard = read('site/agent-authority-scorecard.html')
 const ledgerPage = read('site/company-ledger.html')
 const onboardPage = read('site/company-onboard.html')
+const legalTemplate = read('site/legal-notice.template.html')
+const privacyTemplate = read('site/privacy.template.html')
+const legalGate = read('docs/COMPANY_01_LEGAL_LAUNCH_GATE.md')
 const docs = read('docs/GROWTH_ENGINE.md')
 const datastore = read('docs/GROWTH_ENGINE_DATASTORE.sql')
 const intake = read('docs/GROWTH_ENGINE_PUBLIC_INTAKE.sql')
@@ -104,6 +107,18 @@ test('public ledger is aggregate-only and refuses to fake unmeasured zeros', () 
   assert.match(ledgerPage, /not counting synthetic stress tests as customer traction/i)
   assert.match(ledgerPage, /Not wired/)
   assert.match(ledgerPage, /company01-public-ledger/)
+})
+
+test('German legal/privacy launch templates are prepared but cannot be accidentally routed with placeholders', () => {
+  assert.match(legalGate, /§ 5 DDG/)
+  assert.match(legalGate, /GDPR Article 13/)
+  assert.match(legalTemplate, /\{\{LEGAL_PROVIDER_NAME\}\}/)
+  assert.match(privacyTemplate, /\{\{CONTROLLER_NAME\}\}/)
+
+  const destinations = new Set(vercel.rewrites.map(({ destination }) => destination))
+  assert.equal(destinations.has('/legal-notice.template.html'), false)
+  assert.equal(destinations.has('/privacy.template.html'), false)
+  assert.equal(vercel.rewrites.some(({ source }) => source === '/legal' || source === '/privacy'), false)
 })
 
 test('site applies baseline security headers', () => {
