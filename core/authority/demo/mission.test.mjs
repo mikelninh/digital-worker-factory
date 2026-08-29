@@ -32,5 +32,5 @@ test('ten euro mission completes useful work while authority invariants stay int
 test('every mission attempt emits one proof receipt', async () => {
   const run = await runTenEuroMission()
   assert.equal(run.receipts.length, run.attempts.length)
-  assert.ok(run.receipts.every((receipt) => receipt.traceId && receipt.decision && receipt.execution))
+  assert.ok(run.receipts.every((receipt) => receipt.traceId && receipt.authority && receipt.execution))
 })
