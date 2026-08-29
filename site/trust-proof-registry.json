@@ -1,7 +1,7 @@
 {
-  "schema": "ocn.trust-proof-registry/4",
+  "schema": "ocn.trust-proof-registry/5",
   "asOf": "2026-08-29",
-  "status": "public-rail-live-paid-public-validation-pending",
+  "status": "public-rail-live-first-paid-trusted-event-proven",
   "principle": "Verifiable assurance for specific claims in a specific context at a specific time; never a universal trust score.",
   "publicRail": {
     "url": "https://ocn-trust-rail.onrender.com",
@@ -12,7 +12,7 @@
     "trustedEvents": 6,
     "healthStatus": "degraded_optional_judge_provider_not_configured",
     "coreRailReachable": true,
-    "paidPublicSettlement": "pending"
+    "paidPublicSettlement": "proven"
   },
   "assuranceLevels": {
     "A0": "unknown",
@@ -24,13 +24,37 @@
   },
   "globalProofs": [
     {
+      "id": "public-paid-trusted-event-1",
+      "type": "public_x402_testnet_settlement_with_service_receipt",
+      "status": "proven",
+      "capabilityId": "freshness.verify.v1",
+      "endpoint": "https://ocn-trust-rail.onrender.com/v1/freshness/verify",
+      "publicBuildSha": "97aeb6c5f0706724639ecb953589a40d543f4169",
+      "buyer": "0x2b36b350701f82bd25fa34Dc32fC52a2737eF523",
+      "network": "eip155:84532",
+      "amountUsd": "0.001",
+      "transaction": "0x327a9381f4f821c535f6bd2cc209545c92d73e9ae2594668334a8d7b8662c147",
+      "trustEventId": "c8fa5c18-a824-400e-a2cf-2cb0471868ad",
+      "httpStatus": 200,
+      "latencyMs": 23599,
+      "settlement": {"success": true, "settlementProof": "PAYMENT-RESPONSE"},
+      "authority": {"paymentGrantedAuthority": false, "consequentialActionExecuted": false},
+      "result": {"status": "fresh", "fresh": true, "policy": "explicit-max-age"},
+      "claim": "A public external HTTP client paid for freshness.verify.v1 through x402 on Base Sepolia, received HTTP 200 plus a receipt, and payment did not grant authority or execute a consequential action.",
+      "limitations": [
+        "payer is the operator-controlled test buyer, so this proves public operation and repeatability potential, not independent demand",
+        "Base Sepolia is testnet and this is not production revenue",
+        "single-call latency is not a performance baseline; free-tier cold start and payment-facilitator latency must be separated with repeated calls"
+      ]
+    },
+    {
       "id": "public-rail-health-1",
       "type": "operator_verified_public_https_health",
       "status": "proven",
       "url": "https://ocn-trust-rail.onrender.com/v1/network/health",
       "buildSha": "97aeb6c5f0706724639ecb953589a40d543f4169",
       "observed": {"service":"ocn-trust-rail","trustedEvents":6,"paymentsMode":"x402","network":"eip155:84532"},
-      "limitation": "Health is degraded only because the optional Judge provider is not configured; public paid trusted-event settlement is a separate pending gate."
+      "limitation": "Health is degraded only because the optional Judge provider is not configured."
     },
     {
       "id": "production-trust-kernel-bounded-v2",
@@ -91,7 +115,7 @@
   "capabilities": [
     {
       "id": "trust.preflight.v1",
-      "readiness": "public_rail_live_paid_public_validation_pending",
+      "readiness": "public_rail_live",
       "claimFamilies": ["authority", "evidence", "freshness", "human-oversight"],
       "assurance": {"deterministicKernel": "A3", "operational": "A1"},
       "formalCoverage": "production bounded checker plus independent TLA+ state-machine invariants for the high-impact authorization/execution lifecycle",
@@ -100,7 +124,7 @@
     },
     {
       "id": "authority.check.v1",
-      "readiness": "public_rail_live_paid_public_validation_pending",
+      "readiness": "public_rail_live",
       "claimFamilies": ["authority"],
       "assurance": {"explicitGrantLogic": "A3", "externalCredentialTruth": "A0", "operational": "A1"},
       "formalCoverage": "bounded actor/capability/action/scope/active-grant checker plus TLA+ authorization-before-execution invariant",
@@ -109,15 +133,15 @@
     },
     {
       "id": "freshness.verify.v1",
-      "readiness": "public_rail_live_paid_public_validation_pending",
+      "readiness": "public_paid_settlement_proven_repeat_validation_next",
       "claimFamilies": ["freshness"],
-      "assurance": {"timestampPolicy": "A3", "sourceTruth": "A0", "operational": "A1"},
-      "proves": ["observation timestamp satisfies explicit max-age policy"],
-      "doesNotProve": ["that fresh information is substantively correct"]
+      "assurance": {"timestampPolicy": "A3", "sourceTruth": "A0", "publicOperation": "A2"},
+      "proves": ["observation timestamp satisfies explicit max-age policy", "public x402 paid invocation completed with receipt and preserved authority boundaries"],
+      "doesNotProve": ["that fresh information is substantively correct", "independent market demand", "production-scale reliability"]
     },
     {
       "id": "evidence.verify.v1",
-      "readiness": "public_rail_live_paid_public_validation_pending",
+      "readiness": "public_rail_live",
       "claimFamilies": ["evidence", "provenance"],
       "assurance": {"bindingStructure": "A3", "substantiveTruth": "A0", "operational": "A1"},
       "proves": ["claims are covered by supplied evidence references", "provenance locator/hash structure is present"],
@@ -125,7 +149,7 @@
     },
     {
       "id": "entity.resolve.org.v1",
-      "readiness": "public_rail_live_paid_public_validation_pending",
+      "readiness": "public_rail_live",
       "claimFamilies": ["entity-resolution"],
       "assurance": {"boundedIdentifierMatch": "A2", "realWorldIdentity": "A0", "operational": "A1"},
       "proves": ["bounded supplied identifiers match under the published scoring rule"],
@@ -155,11 +179,9 @@
     }
   ],
   "nextPromotionGates": [
-    "verify public trusted-event discovery from an external/operator client",
-    "one successful public paid freshness settlement",
     "one successful public paid payment.intent.preflight settlement",
-    "10 then 20 repeated public settlements",
-    "first external repeat-paying agent",
+    "10 then 20 repeated public settlements with latency/error distribution",
+    "first independent repeat-paying agent",
     "first external Shadow Mode workflow",
     "measured buyer-confirmed useful trust-gap finding",
     "buyer adjudication of false positives and false negatives",
