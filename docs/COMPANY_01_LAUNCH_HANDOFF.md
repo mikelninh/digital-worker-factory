@@ -98,6 +98,18 @@ The `/onboard` route has stricter privacy controls because its URL contains a sh
 
 Baseline site security headers are also configured globally in `site/vercel.json`.
 
+### Legal/privacy launch preparation
+
+Prepared, but intentionally **not public** until real controller/provider details are supplied:
+
+- `docs/COMPANY_01_LEGAL_LAUNCH_GATE.md`
+- `site/legal-notice.template.html`
+- `site/privacy.template.html`
+
+The templates are not routed, and CI asserts that placeholder legal/controller data cannot accidentally become the public `/legal` or `/privacy` pages.
+
+The missing fields are human/legal facts (provider name/address/business email, legal form/register IDs if applicable, final privacy controller/legal-basis/processor details). They must not be guessed by an agent.
+
 ### Governed customer lifecycle
 
 Already encoded and tested:
@@ -115,9 +127,9 @@ Provider-boundary tests prove non-ALLOW actions make zero email/calendar provide
 
 ## What Michael still needs to do
 
-Only account-level or explicitly human-authority work should remain.
+Only account-level, legal-identity or explicitly human-authority work should remain.
 
-### 1. Deploy the public website
+### 1. Create the website deployment
 
 Preferred path: Vercel.
 
@@ -125,23 +137,32 @@ Prefilled deploy/import link for the current launch branch:
 
 https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fmikelninh%2Fdigital-worker-factory%2Ftree%2Ffeat%2Fcompany01-growth-live%2Fsite&project-name=company-01&repository-name=company-01
 
-If Vercel does not infer the subdirectory from the link, use this one-time setup:
+If Vercel does not infer the subdirectory from the link:
 
-1. Import GitHub repository `mikelninh/digital-worker-factory` into Vercel.
+1. Import GitHub repository `mikelninh/digital-worker-factory`.
 2. Set **Root Directory** to `site`.
 3. Framework preset: **Other / static**.
 4. No Supabase database secret is needed in Vercel for lead intake/onboarding/ledger.
-5. Deploy.
+5. Deploy a preview.
 6. Verify `/`, `/scorecard`, `/pilot`, `/authority`, `/company`, `/ledger`, `/onboard`.
 
-The public form backends are already hosted by Supabase. After a Vercel project exists, future website deployments can be automated from Git.
+The public form backends are already hosted by Supabase. Once a Vercel project exists, future website deployments can be automated from Git.
 
-Optional later:
+### 2. Complete the legal/privacy identity before real public traffic
 
-- connect a custom domain,
-- set canonical/OG URL metadata once the final domain is known.
+Open `docs/COMPANY_01_LEGAL_LAUNCH_GATE.md` and fill the human-only facts once.
 
-### 2. Connect the real sender mailbox
+Then:
+
+1. replace every `{{...}}` placeholder in the two templates,
+2. review the actual legal/privacy setup,
+3. publish them as `/legal` and `/privacy`,
+4. add global footer + consent-area links,
+5. only then send real public acquisition traffic.
+
+Do not publish a private address by guesswork.
+
+### 3. Connect the real sender mailbox
 
 The authority and executor seams are ready, but a production Gmail/OAuth provider is not yet attached to the queue worker.
 
@@ -151,7 +172,7 @@ Desired sender identity:
 
 The first automatic email should only be the **explicitly requested inbound acknowledgement / pilot packet**, containing the qualified lead's short-lived `/onboard?t=...` invitation. Unsolicited outbound remains human-approved.
 
-### 3. Connect Google Calendar
+### 4. Connect Google Calendar
 
 The executor contract is ready.
 
@@ -161,15 +182,15 @@ Calendar automation should only confirm a meeting when:
 - the slot is still available,
 - the relevant authority decision is `ALLOW`.
 
-### 4. Approve the PR stack when ready
+### 5. Approve the PR stack when ready
 
 Do not merge blindly. The current work is intentionally kept in draft PRs.
 
 Review/merge the stacked chain in dependency order, then deploy the merged site.
 
-### 5. Start real traffic
+### 6. Start real traffic
 
-Once the website is public:
+Once the website + legal/privacy launch gate are complete:
 
 - send the Scorecard to warm design partners,
 - publish the first proof-driven posts,
@@ -180,6 +201,8 @@ Once the website is public:
 
 Do not automate these away merely to improve the automation percentage:
 
+- legal identity/address publication
+- final privacy/legal basis decisions
 - contract signature / legal commitment
 - unusual pricing or discounts
 - production or sensitive-system access
@@ -195,6 +218,7 @@ Company 01 has passed the next milestone only when all of these are true:
 
 ```text
 real public website                         live
+legal/privacy launch gate                   complete
 real scorecard completion                   > 0
 qualified inbound lead                      > 0
 safe onboarding packet submitted            > 0
@@ -215,14 +239,15 @@ If a production evidence path is not wired yet, publish **not measured / not wir
 When you come back:
 
 1. Check CI on PR #31.
-2. Open the prefilled Vercel deploy/import link above.
-3. Test `/scorecard` once from the public URL using a disposable test lead.
-4. Issue that lead a disposable onboarding invitation and test `/onboard?t=...`.
-5. Check `/ledger` shows only aggregate counts and never exposes the test identity.
-6. Delete the disposable lead (its onboarding/token state cascades away).
-7. Connect Company 01 email.
-8. Connect Calendar.
-9. Send the live Scorecard to the first warm design partners.
-10. Start real traffic and let the public ledger move from zero.
+2. Open the prefilled Vercel deploy/import link and create a preview deployment.
+3. Fill `COMPANY_01_LEGAL_LAUNCH_GATE.md` human-only facts and publish reviewed `/legal` + `/privacy` pages before real traffic.
+4. Test `/scorecard` once using a disposable test lead.
+5. Issue that lead a disposable onboarding invitation and test `/onboard?t=...`.
+6. Check `/ledger` shows only aggregate counts and never exposes the test identity.
+7. Delete the disposable lead (its onboarding/token state cascades away).
+8. Connect Company 01 email.
+9. Connect Calendar.
+10. Send the live Scorecard to the first warm design partners.
+11. Start real traffic and let the public ledger move from zero.
 
-Everything before step 2 is already code/infrastructure rather than manual sales administration.
+Everything that does not require account ownership, legal identity or reserved human authority has been pushed into code/infrastructure.
