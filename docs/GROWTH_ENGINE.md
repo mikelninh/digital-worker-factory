@@ -19,16 +19,18 @@ useful content / referrals / search / partner shares
                  ↓
  explicit prospect follow-up consent
                  ↓
-      transactional lead + event record
+ public rate-limited lead intake
                  ↓
- Growth Agent qualification + account brief
+ transactional lead + audit event
                  ↓
- automatic acknowledgement + safe onboarding queue
-                 ↓
- automated synthetic/non-sensitive onboarding
-                 ↓
-      sandbox / shadow authority proof
-                 ↓
+ deterministic qualification autopilot
+           ↙ qualified     nurture ↘
+ synthetic onboarding       read-only guidance
+         ↓
+ consented acknowledgement queue
+         ↓
+ sandbox / shadow authority proof
+         ↓
  human approval only for real commitments,
  sensitive/production access, exceptions or contract
 ```
@@ -41,24 +43,7 @@ Promise:
 
 > How much power does your AI actually have?
 
-The prospect maps whether their agents can:
-
-- send externally
-- write systems
-- spend money
-- access sensitive data
-- affect people
-
-and whether they already have:
-
-- explicit purpose
-- tool/action allowlists
-- approval rules
-- immediate revocation
-- replay/idempotency protection
-- proof receipts
-- authority outside the model
-- bounded data scope
+The prospect maps whether their agents can send externally, write systems, spend money, access sensitive data and affect people, plus whether explicit purpose, action allowlists, approvals, revocation, replay safety, receipts, external policy enforcement and bounded data scope already exist.
 
 They receive immediately:
 
@@ -70,7 +55,7 @@ They receive immediately:
 - first `ALLOW / APPROVAL / BLOCK` map
 - top missing controls
 
-No contact details are required to receive the result.
+No contact details are required to receive the result. Score calculation stays in-browser.
 
 ## Growth Agent authority
 
@@ -102,7 +87,7 @@ No contact details are required to receive the result.
 
 ## Live lead lifecycle
 
-`core/company-future/growth-live.mjs` plans the operational queue after a lead opts in.
+`core/company-future/growth-live.mjs` and the persisted queue model encode the operating lifecycle.
 
 A qualified, explicitly consented, synthetic/non-sensitive lead can automatically receive:
 
@@ -112,23 +97,100 @@ A qualified, explicitly consented, synthetic/non-sensitive lead can automaticall
 4. requested-inbound acknowledgement,
 5. sandbox onboarding request.
 
-Each planned action receives:
+Each planned consequence receives an authority decision, canonical context digest and idempotency key. Production/sensitive onboarding becomes `APPROVAL`; autonomous contract commitment stays `BLOCK`.
 
-- an authority decision,
-- a canonical context digest,
-- an idempotency key.
+## Production datastore
 
-Production/sensitive onboarding becomes `APPROVAL`; autonomous contract commitment stays `BLOCK`.
+Dedicated Supabase project:
 
-Lead state transitions are also explicit:
+- name: `company-01`
+- ref: `htffcvdopavknnylbowl`
+- region: `eu-central-1`
 
-`new -> qualified -> contacted/onboarding -> pilot -> won/lost`
+Persisted state:
 
-Skipping directly from `new` to `pilot` is rejected.
+- `company01_growth_leads`
+- `company01_growth_events`
+- `company01_growth_onboarding`
+- `company01_growth_approvals`
+- `company01_growth_action_queue`
+- private hashed-IP rate-limit state
+
+Security:
+
+- RLS enabled on all public growth tables
+- no browser database access
+- `anon` / `authenticated` table access revoked
+- server `service_role` explicitly granted only what the backend needs
+- public function execution revoked
+- database mutation RPCs are `SECURITY INVOKER`
+- modern Supabase secret keys are server-only and sent via the `apikey` header
+
+A real permission test confirms `anon` receives `42501 permission denied`, while the service role can execute the atomic inbound RPC.
+
+## Public intake
+
+Deployed Supabase Edge Function:
+
+`company01-lead-intake`
+
+It is public by design (`verify_jwt=false`) but has no direct table authority. It validates payload size, organisation, work-email shape and explicit consent; uses a honeypot; hashes the caller IP; and invokes only the service-role RPC through a server-side Supabase secret.
+
+Rate limit:
+
+- 10 accepted submissions per hashed IP per 10 minutes
+- the 11th returns HTTP 429
+- raw IPs are not persisted
+
+The site keeps the stable browser contract `/api/leads`; `site/api/leads.js` is only a secretless proxy to the public Supabase intake function.
+
+### Verified E2E
+
+Using Supabase `pg_net`, the real public HTTP path was exercised:
+
+```text
+HTTP POST
+  → deployed Edge Function
+  → input + consent validation
+  → hashed-IP rate limit
+  → server-secret RPC
+  → transactional lead + audit event
+  → HTTP 201 { accepted: true, status: "new" }
+```
+
+The created row and audit event were verified and then removed. Synthetic test data count returned to zero.
+
+## Deterministic qualification autopilot
+
+`company01-growth-autopilot` runs every minute via `pg_cron` and processes up to 25 new consented leads with `FOR UPDATE SKIP LOCKED`.
+
+Reference qualification rule:
+
+```text
+consequence_signals >= 1
+AND
+(readiness < 90 OR agent_stage = production)
+```
+
+Qualified leads:
+
+- become `qualified`
+- receive a synthetic onboarding record
+- get audit events for qualification, report preparation, pilot recommendation and sandbox onboarding
+- queue exactly one consented `growth.inbound.acknowledge` action with a SHA-256 context digest and unique idempotency key
+
+Low-consequence / mature-control leads:
+
+- become `nurture`
+- receive read-only guidance as the next action
+- do not create a synthetic onboarding workspace
+- do not queue a provider/sales action
+
+Live verification produced exactly one qualified and one nurture outcome from two synthetic public-intake leads. The qualified lead had one queued `ALLOW` acknowledgement; the nurture lead had zero queued actions. Both synthetic leads were deleted afterwards.
 
 ## Automatic onboarding packet
 
-A qualified inbound lead should be asked for only:
+A qualified inbound lead is asked for only:
 
 1. one recurring workflow they want to delegate,
 2. 3–5 synthetic/redacted/non-sensitive examples,
@@ -136,31 +198,7 @@ A qualified inbound lead should be asked for only:
 4. accountable human owner,
 5. systems/actions the agent would eventually touch.
 
-Company 01 does not need production credentials for P0/P1.
-
-The Growth Agent can then prepare:
-
-- proposed authority envelope
-- gold cases
-- synthetic/shadow runner
-- success metrics
-- pilot timeline
-- operator review form
-
-## Conversion events
-
-Track separately:
-
-- scorecard started
-- scorecard completed
-- qualified
-- follow-up consented
-- onboarding packet submitted
-- synthetic pilot started
-- shadow pilot started
-- design-partner conversation
-- paid pilot
-- production conversion
+No production credentials are required for P0/P1.
 
 ## North-star funnel metrics
 
@@ -188,54 +226,29 @@ Authority:
 - follow-up without explicit consent = 0
 - cross-tenant data leakage = 0
 
-## Data minimisation
-
-The public scorecard calculates locally in the browser. A lead record is only created after explicit follow-up consent.
-
-Initial lead storage should contain only business contact/context, scorecard answers/results and funnel state. It should not collect confidential case/patient/customer records.
-
-## Datastore deployment
-
-The lead API expects server-side environment variables:
-
-- `SUPABASE_URL`
-- `SUPABASE_SECRET_KEY` — preferred modern `sb_secret_...` server key
-
-`SUPABASE_SERVICE_ROLE_KEY` remains a temporary compatibility fallback only.
-
-The secret key must never enter public client code.
-
-The datastore reference:
-
-- enables RLS on every growth table,
-- revokes `anon` and `authenticated`,
-- explicitly grants only `service_role`,
-- uses a `SECURITY INVOKER` RPC,
-- revokes public function execution,
-- atomically creates the lead and first audit event.
-
-A dedicated Company 01 Supabase project is required rather than reusing an unrelated project. Before public launch add rate limiting / bot protection, test grants/RLS, and run Supabase security + performance advisors.
-
 ## Current state
 
-Implemented:
+Live and verified:
 
 - governed Growth Agent policy + tests
 - browser Authority Scorecard
 - instant personalised Authority Map
-- explicit-consent lead submission
-- fail-closed lead endpoint
-- transactional lead/event datastore schema
-- action queue / approvals / onboarding persistence schema
-- live lifecycle planner + state machine
-- operator-attention brief
-
-Account wiring still required:
-
 - dedicated Company 01 Supabase project
-- production rate limiting / bot protection
-- automated Gmail acknowledgement executor
-- Google Calendar slot-confirmation executor
-- public deployment + domain
+- production datastore + RLS/grants
+- public rate-limited Edge Function intake
+- real HTTP `201` E2E lead-ingestion proof
+- deterministic every-minute qualification autopilot
+- safe synthetic onboarding state
+- action queue / approvals / events
+- rate-limit proof: 10 accepted, 11th rejected with 429
+- database cleaned back to zero synthetic leads after tests
+- email/calendar authority executor seams and zero-provider-call tests
 
-These are production wiring tasks, not reasons to weaken the authority boundaries.
+Still not live:
+
+- actual Gmail acknowledgement provider behind the queued action
+- actual Google Calendar booking provider behind the governed executor
+- public website/domain (connected Vercel account currently has no project)
+- cold-traffic acquisition metrics and real customer conversion evidence
+
+These are now integration and market-evidence gaps, not missing funnel architecture.
