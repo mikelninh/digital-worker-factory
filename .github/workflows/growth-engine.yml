@@ -16,10 +16,13 @@ jobs:
         run: |
           node --check core/company-future/growth-agent.mjs
           node --check core/company-future/growth-content.mjs
+          node --check core/company-future/growth-live.mjs
           node --check site/authority-scorecard.mjs
           node --check site/api/leads.js
       - name: Prove governed Growth Agent
         run: node --test core/company-future/growth-agent.test.mjs
+      - name: Prove live inbound lifecycle and human attention boundary
+        run: node --test core/company-future/growth-live.test.mjs
       - name: Prove browser/server score parity
         run: node --test core/company-future/growth-scorecard-parity.test.mjs
       - name: Prove proof-driven content queue
@@ -32,9 +35,12 @@ jobs:
           grep -q "How much power" site/agent-authority-scorecard.html
           grep -q "Nothing is sent anywhere just to calculate it" site/agent-authority-scorecard.html
           grep -q "explicit follow-up consent" docs/GROWTH_ENGINE.md
-          grep -q "service-role key must never enter public client code" docs/GROWTH_ENGINE.md
+          grep -q "SUPABASE_SECRET_KEY" docs/GROWTH_ENGINE.md
+          grep -q "security invoker" docs/GROWTH_ENGINE_DATASTORE.sql
+          grep -q "revoke all on function public.company01_create_inbound_lead" docs/GROWTH_ENGINE_DATASTORE.sql
           grep -q '"source": "/scorecard"' site/vercel.json
           grep -q "lead_sink_unconfigured" site/api/leads.js
+          grep -q "company01_create_inbound_lead" site/api/leads.js
       - name: Verify attraction loop points to useful proof
         run: |
           grep -q "agent-authority-scorecard" core/company-future/growth-content.mjs
