@@ -2,3 +2,4 @@ export { AUTONOMY_LEVELS, DECISIONS, evaluateAuthority, evaluatePromotionGate } 
 export { AuthorityGateway } from './gateway.mjs'
 export { InMemoryIdempotencyStore, executeWithAuthority } from './execution.mjs'
 export { classifyExecutionError, createAuthorityReceipt, evidenceDigest, redactSensitive } from './receipt.mjs'
+export { buildCitizenAuthorityRequest, evaluateCitizenIntelligenceAction, validateCitizenIntelligence } from './adapters/citizen-intelligence.mjs'
