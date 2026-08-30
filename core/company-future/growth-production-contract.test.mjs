@@ -1,0 +1,131 @@
+import test from 'node:test'
+import assert from 'node:assert/strict'
+import { readFileSync } from 'node:fs'
+
+const read = (path) => readFileSync(new URL(`../../${path}`, import.meta.url), 'utf8')
+
+const homepage = read('site/index.html')
+const scorecard = read('site/agent-authority-scorecard.html')
+const ledgerPage = read('site/company-ledger.html')
+const onboardPage = read('site/company-onboard.html')
+const legalTemplate = read('site/legal-notice.template.html')
+const privacyTemplate = read('site/privacy.template.html')
+const legalGate = read('docs/COMPANY_01_LEGAL_LAUNCH_GATE.md')
+const docs = read('docs/GROWTH_ENGINE.md')
+const datastore = read('docs/GROWTH_ENGINE_DATASTORE.sql')
+const intake = read('docs/GROWTH_ENGINE_PUBLIC_INTAKE.sql')
+const autopilot = read('docs/GROWTH_ENGINE_AUTOPILOT.sql')
+const onboardingSql = read('docs/GROWTH_ENGINE_ONBOARDING.sql')
+const publicLedgerSql = read('docs/GROWTH_ENGINE_PUBLIC_LEDGER.sql')
+const edge = read('supabase/functions/company01-lead-intake/index.ts')
+const onboardingEdge = read('supabase/functions/company01-onboarding-intake/index.ts')
+const publicLedgerEdge = read('supabase/functions/company01-public-ledger/index.ts')
+const proxy = read('site/api/leads.js')
+const vercel = JSON.parse(read('site/vercel.json'))
+
+test('Company 01 root is a conversion homepage, not the legacy Factory shell', () => {
+  assert.match(homepage, /Company 01 — Authority infrastructure for autonomous systems/)
+  assert.match(homepage, /Give AI useful work/)
+  assert.match(homepage, /\/scorecard/)
+  assert.match(homepage, /\/pilot/)
+  assert.match(homepage, /\/ledger/)
+  assert.match(homepage, /What is not yet proven/)
+  assert.match(homepage, /Real customer revenue/)
+  assert.doesNotMatch(homepage, /guaranteed ROI/i)
+})
+
+test('legacy Factory and acquisition surfaces remain separately routable', () => {
+  const routes = new Map(vercel.rewrites.map(({ source, destination }) => [source, destination]))
+  assert.equal(routes.get('/factory'), '/factory.html')
+  assert.equal(routes.get('/ledger'), '/company-ledger.html')
+  assert.equal(routes.get('/onboard'), '/company-onboard.html')
+  assert.equal(routes.get('/scorecard'), '/agent-authority-scorecard.html')
+  assert.equal(routes.get('/pilot'), '/trusted-agent-pilot.html')
+  assert.equal(routes.get('/pilot/legal'), '/pilot-legal.html')
+  assert.equal(routes.get('/pilot/government'), '/pilot-government.html')
+  assert.equal(routes.get('/pilot/healthcare'), '/pilot-healthcare.html')
+})
+
+test('scorecard is useful before contact capture and requires explicit consent to submit', () => {
+  assert.match(scorecard, /How much power/)
+  assert.match(scorecard, /Nothing is sent anywhere just to calculate it/)
+  assert.match(scorecard, /explicitFollowupConsent:consent/)
+  assert.match(docs, /follow-up consent/)
+})
+
+test('public intake has a server-only authority path and abuse boundary', () => {
+  assert.match(datastore, /security invoker/i)
+  assert.match(datastore, /revoke all on function public\.company01_create_inbound_lead/i)
+  assert.match(intake, /company01_ingest_inbound_lead/)
+  assert.match(intake, /10 minutes/)
+  assert.match(edge, /SUPABASE_SECRET_KEYS/)
+  assert.match(edge, /company01_ingest_inbound_lead/)
+  assert.match(edge, /x-forwarded-for/)
+  assert.match(proxy, /company01-lead-intake/)
+})
+
+test('qualification autopilot is concurrency-safe and only queues consented acknowledgement', () => {
+  assert.match(autopilot, /company01-growth-autopilot/)
+  assert.match(autopilot, /for update skip locked/i)
+  assert.match(autopilot, /growth\.inbound\.acknowledge/)
+  assert.match(autopilot, /status = 'nurture'/)
+  assert.match(autopilot, /data_mode, requested_artifacts, status/)
+})
+
+test('tokenized onboarding accepts only explicitly safe synthetic inputs and queues pilot preparation', () => {
+  assert.match(onboardingSql, /company01_growth_onboarding_tokens/)
+  assert.match(onboardingSql, /token_hash/)
+  assert.match(onboardingSql, /interval '14 days'/)
+  assert.match(onboardingSql, /company01_issue_onboarding_token/)
+  assert.match(onboardingSql, /safe_data_attestation_required/)
+  assert.match(onboardingSql, /pilot\.synthetic\.prepare/)
+  assert.match(onboardingEdge, /company01_submit_safe_onboarding/)
+  assert.match(onboardingEdge, /safeDataAttestation/)
+  assert.match(onboardPage, /Do not submit real client, patient, citizen or customer data/i)
+  assert.match(onboardPage, /No production credentials are needed/i)
+  assert.match(onboardPage, /company01-onboarding-intake/)
+  assert.match(onboardPage, /noindex,nofollow/)
+  assert.match(onboardPage, /no-referrer/)
+
+  const onboardingHeaders = vercel.headers.find((entry) => entry.source === '/onboard')
+  assert.ok(onboardingHeaders)
+  const headers = new Map(onboardingHeaders.headers.map(({ key, value }) => [key, value]))
+  assert.equal(headers.get('Referrer-Policy'), 'no-referrer')
+  assert.match(headers.get('X-Robots-Tag'), /noindex/)
+  assert.equal(headers.get('Cache-Control'), 'no-store')
+})
+
+test('public ledger is aggregate-only and refuses to fake unmeasured zeros', () => {
+  assert.match(publicLedgerSql, /aggregate counts only/i)
+  assert.match(publicLedgerSql, /company01_public_growth_metrics/)
+  assert.match(publicLedgerSql, /revoke all on function public\.company01_public_growth_metrics/i)
+  assert.match(publicLedgerSql, /contractCommitmentExecutions', null/)
+  assert.match(publicLedgerSql, /contractCommitmentMonitoring', 'not_wired'/)
+  assert.match(publicLedgerEdge, /company01_public_growth_metrics/)
+  assert.match(publicLedgerEdge, /SUPABASE_SECRET_KEYS/)
+  assert.match(ledgerPage, /counts, not customers/i)
+  assert.match(ledgerPage, /not counting synthetic stress tests as customer traction/i)
+  assert.match(ledgerPage, /Not wired/)
+  assert.match(ledgerPage, /company01-public-ledger/)
+})
+
+test('German legal/privacy launch templates are prepared but cannot be accidentally routed with placeholders', () => {
+  assert.match(legalGate, /§ 5 DDG/)
+  assert.match(legalGate, /GDPR Article 13/)
+  assert.match(legalTemplate, /\{\{LEGAL_PROVIDER_NAME\}\}/)
+  assert.match(privacyTemplate, /\{\{CONTROLLER_NAME\}\}/)
+
+  const destinations = new Set(vercel.rewrites.map(({ destination }) => destination))
+  assert.equal(destinations.has('/legal-notice.template.html'), false)
+  assert.equal(destinations.has('/privacy.template.html'), false)
+  assert.equal(vercel.rewrites.some(({ source }) => source === '/legal' || source === '/privacy'), false)
+})
+
+test('site applies baseline security headers', () => {
+  const all = vercel.headers.find((entry) => entry.source === '/(.*)')
+  assert.ok(all)
+  const headers = new Map(all.headers.map(({ key, value }) => [key, value]))
+  assert.equal(headers.get('X-Content-Type-Options'), 'nosniff')
+  assert.equal(headers.get('X-Frame-Options'), 'DENY')
+  assert.equal(headers.get('Referrer-Policy'), 'strict-origin-when-cross-origin')
+})

@@ -3,7 +3,12 @@
     { "source": "/agents", "destination": "/agent-capabilities.html" },
     { "source": "/authority", "destination": "/authority-control-center.html" },
     { "source": "/company", "destination": "/company-of-the-future.html" },
+    { "source": "/ledger", "destination": "/company-ledger.html" },
+    { "source": "/onboard", "destination": "/company-onboard.html" },
+    { "source": "/factory", "destination": "/factory.html" },
     { "source": "/scorecard", "destination": "/agent-authority-scorecard.html" },
+    { "source": "/kanzlei", "destination": "/kanzlei-timefresser.html" },
+    { "source": "/kanzlei/scan", "destination": "/kanzlei-timefresser.html" },
     { "source": "/pilot", "destination": "/trusted-agent-pilot.html" },
     { "source": "/pilot/legal", "destination": "/pilot-legal.html" },
     { "source": "/pilot/brettinghams", "destination": "/pilot-brettinghams.html" },
@@ -16,6 +21,23 @@
     { "source": "/proof/:slug", "destination": "/index.html" }
   ],
   "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        { "key": "X-Content-Type-Options", "value": "nosniff" },
+        { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" },
+        { "key": "Permissions-Policy", "value": "camera=(), microphone=(), geolocation=()" },
+        { "key": "X-Frame-Options", "value": "DENY" }
+      ]
+    },
+    {
+      "source": "/onboard",
+      "headers": [
+        { "key": "Referrer-Policy", "value": "no-referrer" },
+        { "key": "X-Robots-Tag", "value": "noindex, nofollow, noarchive" },
+        { "key": "Cache-Control", "value": "no-store" }
+      ]
+    },
     {
       "source": "/proof/:slug",
       "headers": [

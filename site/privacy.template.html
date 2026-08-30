@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <title>Company 01 — Privacy Information Template</title>
+  <link rel="stylesheet" href="/pilot.css">
+</head>
+<body>
+<div class="wrap">
+  <nav class="nav"><div class="brand">Company 01 / Privacy</div><a href="/">Home</a></nav>
+  <main>
+    <section class="hero"><div class="eyebrow">Template — review before public use</div><h1>Privacy information</h1><p class="lede">Information about how Company 01 processes prospect and pilot data.</p></section>
+
+    <section class="section"><div class="card"><h3>Controller</h3><p><strong>{{CONTROLLER_NAME}}</strong><br>{{CONTROLLER_ADDRESS}}<br>Email: {{PRIVACY_CONTACT_EMAIL}}<br>{{DPO_CONTACT_IF_APPLICABLE}}</p></div></section>
+
+    <section class="section"><div class="card"><h3>Authority Scorecard</h3><p>The Scorecard result is calculated in the browser. Contact information is not required to receive the result, and the Scorecard is not submitted to Company 01 merely to calculate it.</p></div></section>
+
+    <section class="section"><div class="card"><h3>Requested follow-up</h3><p>If you explicitly ask Company 01 to follow up, the service stores your organisation, work email, consent timestamp, sector/agent-stage information, Scorecard answers/results, recommended pilot and funnel status in order to respond to your request and prepare the relevant pilot process.</p><p><strong>Purpose:</strong> respond to the requested contact, qualify the requested use case and prepare a safe pilot.</p><p><strong>Legal basis:</strong> {{FOLLOWUP_LEGAL_BASIS_AFTER_REVIEW}}</p><p><strong>Retention:</strong> the current technical default sets a lead expiry date 180 days after creation. Confirm the final deletion/retention policy before launch.</p></div></section>
+
+    <section class="section"><div class="card"><h3>Abuse prevention</h3><p>The public lead endpoint processes the caller IP transiently and stores only a SHA-256 hash for rate limiting. Raw IP addresses are not written into the Company 01 growth tables. The rate-limit implementation removes records older than one day during intake.</p><p><strong>Legal basis:</strong> {{SECURITY_LEGAL_BASIS_AFTER_REVIEW}}</p></div></section>
+
+    <section class="section"><div class="card"><h3>Safe pilot onboarding</h3><p>Qualified prospects may receive a short-lived onboarding invitation. Company 01 stores only a SHA-256 hash of the invitation token. The token expires after 14 days and can be revoked or replaced.</p><p>The onboarding form asks for one workflow, an accountable human owner, system names, desired output and 1–5 synthetic, redacted or otherwise non-sensitive examples. The form explicitly instructs users not to submit production credentials, passwords, access tokens, real client/case records, patient records or other sensitive production data.</p><p><strong>Purpose:</strong> prepare the requested synthetic/shadow pilot.</p><p><strong>Legal basis:</strong> {{PILOT_LEGAL_BASIS_AFTER_REVIEW}}</p></div></section>
+
+    <section class="section"><div class="card"><h3>Processors / recipients</h3><p>Current prospect/pilot state is hosted in a dedicated Supabase project in the `eu-central-1` region. The website is intended to be hosted on Vercel. Before launch, confirm the actual processor agreements, subprocessor disclosures and any applicable international-transfer safeguards.</p><p>{{FINAL_PROCESSOR_AND_TRANSFER_DETAILS}}</p></div></section>
+
+    <section class="section"><div class="card"><h3>Automated processing</h3><p>Company 01 uses deterministic rules to calculate readiness/risk and to classify a consented inbound lead for a safe onboarding path or read-only nurture path. The current funnel does not use this classification to make legal or similarly significant decisions about an individual. {{FINAL_AUTOMATED_DECISION_DISCLOSURE_AFTER_REVIEW}}</p></div></section>
+
+    <section class="section"><div class="card"><h3>Your rights</h3><p>Depending on the circumstances, data subjects may have rights of access, rectification, erasure, restriction, objection and portability. Where processing relies on consent, consent can be withdrawn for the future. You also have a right to lodge a complaint with a competent data-protection supervisory authority.</p><p>Contact: {{PRIVACY_CONTACT_EMAIL}}<br>Supervisory authority: {{COMPETENT_SUPERVISORY_AUTHORITY}}</p></div></section>
+
+    <section class="section"><div class="card"><h3>Template status</h3><p>This page is deliberately not routed publicly while placeholders remain. Confirm the actual controller, processing bases, processor/DPA setup, retention and supervisory authority before publication.</p></div></section>
+  </main>
+</div>
+</body>
+</html>

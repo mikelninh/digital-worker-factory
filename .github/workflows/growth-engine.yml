@@ -16,25 +16,27 @@ jobs:
         run: |
           node --check core/company-future/growth-agent.mjs
           node --check core/company-future/growth-content.mjs
+          node --check core/company-future/growth-live.mjs
+          node --check core/company-future/growth-executors.mjs
           node --check site/authority-scorecard.mjs
+          node --check site/kanzlei-timefresser.mjs
           node --check site/api/leads.js
       - name: Prove governed Growth Agent
         run: node --test core/company-future/growth-agent.test.mjs
+      - name: Prove live inbound lifecycle and human attention boundary
+        run: node --test core/company-future/growth-live.test.mjs
+      - name: Prove governed email and calendar provider boundaries
+        run: node --test core/company-future/growth-executors.test.mjs
       - name: Prove browser/server score parity
         run: node --test core/company-future/growth-scorecard-parity.test.mjs
+      - name: Prove Kanzlei workload prioritisation without fake ROI
+        run: node --test core/company-future/kanzlei-timefresser.test.mjs
+      - name: Prove Kanzlei scan to Proof Week revenue funnel contracts
+        run: node --test core/company-future/kanzlei-revenue-funnel.test.mjs
       - name: Prove proof-driven content queue
         run: node --test core/company-future/growth-content.test.mjs
-      - name: Verify lead magnet and onboarding boundary
-        run: |
-          test -s site/agent-authority-scorecard.html
-          test -s docs/GROWTH_ENGINE.md
-          test -s docs/GROWTH_ENGINE_DATASTORE.sql
-          grep -q "How much power" site/agent-authority-scorecard.html
-          grep -q "Nothing is sent anywhere just to calculate it" site/agent-authority-scorecard.html
-          grep -q "explicit follow-up consent" docs/GROWTH_ENGINE.md
-          grep -q "service-role key must never enter public client code" docs/GROWTH_ENGINE.md
-          grep -q '"source": "/scorecard"' site/vercel.json
-          grep -q "lead_sink_unconfigured" site/api/leads.js
+      - name: Verify production growth + public website contract
+        run: node --test core/company-future/growth-production-contract.test.mjs
       - name: Verify attraction loop points to useful proof
         run: |
           grep -q "agent-authority-scorecard" core/company-future/growth-content.mjs
