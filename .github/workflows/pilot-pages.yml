@@ -14,24 +14,32 @@ jobs:
           test -s site/pilot.css
           test -s site/trusted-agent-pilot.html
           test -s site/pilot-legal.html
+          test -s site/kanzlei-timefresser.html
           test -s site/pilot-brettinghams.html
           test -s site/pilot-government.html
           test -s site/pilot-healthcare.html
           grep -q "Give AI useful work" site/trusted-agent-pilot.html
-          grep -q "Weniger Kanzlei-Routine" site/pilot-legal.html
+          grep -q "Weniger Aktenarbeit" site/pilot-legal.html
+          grep -q "€990 netto" site/pilot-legal.html
+          grep -qi "keine automatische Verlängerung" site/pilot-legal.html
           grep -q "Weniger Koordination" site/pilot-brettinghams.html
           grep -q "Staatliche Autorität bleibt beim Staat" site/pilot-government.html
           grep -q "Keine stille klinische Autorität" site/pilot-healthcare.html
+          grep -q '"source": "/kanzlei"' site/vercel.json
           grep -q '"source": "/pilot"' site/vercel.json
           grep -q '"source": "/pilot/legal"' site/vercel.json
           grep -q '"source": "/pilot/brettinghams"' site/vercel.json
           grep -q '"source": "/pilot/government"' site/vercel.json
           grep -q '"source": "/pilot/healthcare"' site/vercel.json
-      - name: Verify authority language stays explicit
+      - name: Verify authority and evidence language stays explicit
         run: |
           grep -q "ALLOW" site/trusted-agent-pilot.html
           grep -q "APPROVAL" site/trusted-agent-pilot.html
           grep -q "BLOCK" site/trusted-agent-pilot.html
-          grep -q "synthetischen oder redigierten" site/pilot-legal.html
+          grep -q "ALLOW" site/pilot-legal.html
+          grep -q "APPROVAL" site/pilot-legal.html
+          grep -q "BLOCK" site/pilot-legal.html
+          grep -q "10–20 sichere" site/pilot-legal.html
+          grep -q "Keine Fake-ROI" site/pilot-legal.html
           grep -q "unautorisierte Staatsaktionen" site/pilot-government.html
           grep -q "no autonomous treatment" site/pilot-healthcare.html
