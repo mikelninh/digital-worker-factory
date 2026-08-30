@@ -7,6 +7,8 @@
     { "source": "/onboard", "destination": "/company-onboard.html" },
     { "source": "/factory", "destination": "/factory.html" },
     { "source": "/scorecard", "destination": "/agent-authority-scorecard.html" },
+    { "source": "/kanzlei", "destination": "/kanzlei-timefresser.html" },
+    { "source": "/kanzlei/scan", "destination": "/kanzlei-timefresser.html" },
     { "source": "/pilot", "destination": "/trusted-agent-pilot.html" },
     { "source": "/pilot/legal", "destination": "/pilot-legal.html" },
     { "source": "/pilot/brettinghams", "destination": "/pilot-brettinghams.html" },
