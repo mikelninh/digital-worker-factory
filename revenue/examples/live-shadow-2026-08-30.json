@@ -1,0 +1,104 @@
+{
+  "snapshotDate": "2026-08-30",
+  "mode": "live_public_signal_shadow",
+  "notes": [
+    "Evidence facts are from public pages observed on 2026-08-30.",
+    "All economics fields are scenario assumptions for prioritisation only; they are not claims about the organisations.",
+    "No contact, internal workflow, budget, case volume or willingness-to-buy claim is inferred from a job posting alone."
+  ],
+  "signals": [
+    {
+      "id": "live-berlinhaus-2026-08-30",
+      "vertical": "hauspilot",
+      "account": "Berlinhaus Verwaltung GmbH",
+      "signalType": "multi_role_hiring",
+      "hypothesis": "Multiple current property-management and operational roles make this account worth researching for one bounded, repeated workflow that a 7-day governed pilot could prepare or automate.",
+      "evidence": [
+        {
+          "source": "https://berlinhaus-verwaltung-gmbh.jobs.personio.de/?language=de",
+          "observedAt": "2026-08-30",
+          "fact": "The public careers page listed nine Berlin positions, including Property Manager/Hausverwalter, Objektmanager, Teamassistenz for Vermietung/Immobilienverwaltung, and an Instandhaltung/Bestandsanierung project role."
+        }
+      ],
+      "economicsAssumptions": {
+        "basis": "HausPilot 7-day sprint scenario; not observed company economics",
+        "closeProbability": "assumption",
+        "customerValueEur": "assumption",
+        "expansionCashEur": "assumption"
+      },
+      "economics": {
+        "closeProbability": 0.35,
+        "upfrontCashEur": 1900,
+        "founderHours": 2,
+        "urgency": 1.3,
+        "proofReuse": 1.8,
+        "riskPenalty": 1,
+        "expansionProbability": 0.35,
+        "expansionCashEur": 5000,
+        "customerValueEur": 7000
+      }
+    },
+    {
+      "id": "live-helipa-2026-08-30",
+      "vertical": "hauspilot",
+      "account": "Helipa GmbH",
+      "signalType": "hiring_ops",
+      "hypothesis": "A small digital property-management team hiring for daily commercial administration is worth researching for one low-risk workflow such as inbox triage, document preparation or maintenance-intake preparation.",
+      "evidence": [
+        {
+          "source": "https://www.arbeitsagentur.de/jobsuche/jobdetail/10001-1003591658-S",
+          "observedAt": "2026-08-30",
+          "fact": "The public job page described a Berlin property manager hiring for commercial administration and daily office work, with structured onboarding into property-management software, largely digital processes, and a small team with short decision paths."
+        }
+      ],
+      "economicsAssumptions": {
+        "basis": "HausPilot 7-day sprint scenario; not observed company economics",
+        "closeProbability": "assumption",
+        "customerValueEur": "assumption",
+        "expansionCashEur": "assumption"
+      },
+      "economics": {
+        "closeProbability": 0.45,
+        "upfrontCashEur": 1900,
+        "founderHours": 1.5,
+        "urgency": 1.5,
+        "proofReuse": 1.5,
+        "riskPenalty": 1,
+        "expansionProbability": 0.25,
+        "expansionCashEur": 3000,
+        "customerValueEur": 5000
+      }
+    },
+    {
+      "id": "live-wentzel-2026-08-30",
+      "vertical": "hauspilot",
+      "account": "Wentzel Dr. GmbH",
+      "signalType": "hiring_ops",
+      "hypothesis": "A current Berlin team-assistant opening in property management is a weak-to-medium signal worth lightweight research, but not enough by itself to claim process pain or automation demand.",
+      "evidence": [
+        {
+          "source": "https://www.arbeitsagentur.de/jobsuche/suche?angebotsart=1&suchbereich=jobs&was=Immobilienverwaltung&wo=Berlin",
+          "observedAt": "2026-08-30",
+          "fact": "The Federal Employment Agency search results listed a current full-time Teamassistenz Immobilienverwaltung role for Wentzel Dr. GmbH in Berlin."
+        }
+      ],
+      "economicsAssumptions": {
+        "basis": "HausPilot 7-day sprint scenario; not observed company economics",
+        "closeProbability": "assumption",
+        "customerValueEur": "assumption",
+        "expansionCashEur": "assumption"
+      },
+      "economics": {
+        "closeProbability": 0.25,
+        "upfrontCashEur": 1900,
+        "founderHours": 1.5,
+        "urgency": 1.1,
+        "proofReuse": 1.2,
+        "riskPenalty": 1,
+        "expansionProbability": 0.2,
+        "expansionCashEur": 3000,
+        "customerValueEur": 4500
+      }
+    }
+  ]
+}
