@@ -22,8 +22,8 @@ jobs:
         run: node --test core/agent-gateway.test.mjs core/providers/gitlaw.test.mjs core/factory-gateway.test.mjs
       - name: Run RevenueOS economic + approval contracts
         run: node --test core/revenue-os.test.mjs
-      - name: Run RevenueOS lifecycle + learning contracts
-        run: node --test core/revenue-loop.test.mjs
+      - name: Run RevenueOS lifecycle + persistence + operator contracts
+        run: node --test core/revenue-loop.test.mjs core/revenue-store.test.mjs scripts/revenue-os.test.mjs
       - name: Run RevenueOS end-to-end shadow readiness gate
         run: node evals/revenue-os-e2e.mjs
       - name: Run 30-scenario adversarial policy suite
