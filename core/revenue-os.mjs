@@ -1,6 +1,7 @@
 const APPROVAL_ACTIONS = new Set([
   'external_message',
   'commit_price',
+  'send_proposal',
   'spend_money',
   'sign_terms',
   'production_write',
