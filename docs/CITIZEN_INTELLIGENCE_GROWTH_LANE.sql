@@ -1,0 +1,58 @@
+-- Citizen Agents Intelligence Proof -> Company 01 growth lane.
+-- Production-equivalent migration applied to Company 01 Supabase on 2026-08-30.
+-- The full function definition is maintained as a source-specific extension of
+-- company01_process_new_growth_leads(integer).
+--
+-- Invariant:
+--   source = 'citizen_intelligence_proof'
+--   + explicit follow-up consent
+--   -> qualified proof request
+--   -> synthetic onboarding only
+--   -> exactly one consented acknowledgement action
+--
+-- Required onboarding artifacts:
+--   - 3_to_5_topics_or_jurisdictions
+--   - current_monitoring_workflow
+--   - one_accountable_reviewer
+--
+-- Commercial facts encoded in the audit event:
+--   priceEurNet = 490
+--   durationDays = 14
+--   automaticSubscription = false
+--
+-- IMPORTANT: Citizen Intelligence workload/scope data is not mapped into
+-- authority_readiness, authority_risk or consequence_signals. Those fields
+-- remain semantically reserved for the Authority Scorecard.
+--
+-- Runtime event sequence proven in production with a synthetic lead:
+--   lead.qualified                          ALLOW
+--   citizen_intelligence_proof.requested   ALLOW
+--   proof_onboarding.requested             ALLOW
+--   growth.inbound.acknowledge             exactly one queued ALLOW action
+--
+-- The synthetic test trail was deleted after verification.
+
+-- Canonical source-specific branch to preserve when editing the production RPC:
+--
+-- v_is_intelligence_proof := r.source = 'citizen_intelligence_proof';
+--
+-- if v_is_intelligence_proof then
+--   v_qualified := true; -- explicit paid Proof request after explicit contact consent
+-- elsif v_is_kanzlei_scan then
+--   v_qualified := v_scan_qualified;
+-- else
+--   -- existing Authority Scorecard logic
+-- end if;
+--
+-- For a qualified Citizen Intelligence Proof request:
+--   next_action = 'send_consented_ack_and_collect_intelligence_proof_inputs'
+--   data_mode = 'synthetic'
+--   requested_artifacts = [
+--     '3_to_5_topics_or_jurisdictions',
+--     'current_monitoring_workflow',
+--     'one_accountable_reviewer'
+--   ]
+--
+-- The public Citizen Agents form posts directly to the already-public,
+-- rate-limited company01-lead-intake Edge Function. No Supabase secret is
+-- embedded in the browser; only the public Edge Function URL is exposed.
