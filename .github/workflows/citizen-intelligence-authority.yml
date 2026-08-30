@@ -1,0 +1,20 @@
+name: citizen-intelligence-authority
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Check adapter syntax
+        run: node --check core/authority/adapters/citizen-intelligence.mjs
+      - name: Prove intelligence cannot self-authorize consequences
+        run: node --test core/authority/adapters/citizen-intelligence.test.mjs
+      - name: Prove core authority remains green
+        run: node --test core/authority/conformance.test.mjs core/authority/adapters/adapters.test.mjs
