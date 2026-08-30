@@ -19,6 +19,7 @@ jobs:
           node --check core/company-future/growth-live.mjs
           node --check core/company-future/growth-executors.mjs
           node --check site/authority-scorecard.mjs
+          node --check site/kanzlei-timefresser.mjs
           node --check site/api/leads.js
       - name: Prove governed Growth Agent
         run: node --test core/company-future/growth-agent.test.mjs
@@ -28,6 +29,10 @@ jobs:
         run: node --test core/company-future/growth-executors.test.mjs
       - name: Prove browser/server score parity
         run: node --test core/company-future/growth-scorecard-parity.test.mjs
+      - name: Prove Kanzlei workload prioritisation without fake ROI
+        run: node --test core/company-future/kanzlei-timefresser.test.mjs
+      - name: Prove Kanzlei scan to Proof Week revenue funnel contracts
+        run: node --test core/company-future/kanzlei-revenue-funnel.test.mjs
       - name: Prove proof-driven content queue
         run: node --test core/company-future/growth-content.test.mjs
       - name: Verify production growth + public website contract
