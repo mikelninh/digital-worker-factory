@@ -26,6 +26,8 @@ jobs:
         run: node --test core/revenue-loop.test.mjs core/revenue-store.test.mjs scripts/revenue-os.test.mjs
       - name: Run RevenueOS end-to-end shadow readiness gate
         run: node evals/revenue-os-e2e.mjs
+      - name: Run RevenueOS current public-signal shadow fixture
+        run: node evals/revenue-os-live-shadow.mjs
       - name: Run 30-scenario adversarial policy suite
         run: node packs/hauspilot/runtime/adversarial-eval.mjs
       - name: Run 60-case entity resolution benchmark
