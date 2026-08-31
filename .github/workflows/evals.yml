@@ -28,6 +28,10 @@ jobs:
         run: node evals/revenue-os-e2e.mjs
       - name: Run RevenueOS current public-signal shadow fixture
         run: node evals/revenue-os-live-shadow.mjs
+      - name: Run CommercialOS lifecycle + approval contracts
+        run: node --test core/commercial-os.test.mjs
+      - name: Run CommercialOS five-customer supervised revenue loop
+        run: node evals/commercial-os-e2e.mjs
       - name: Run 30-scenario adversarial policy suite
         run: node packs/hauspilot/runtime/adversarial-eval.mjs
       - name: Run 60-case entity resolution benchmark
