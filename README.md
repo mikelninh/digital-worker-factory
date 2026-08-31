@@ -1,55 +1,82 @@
 # Digital Worker Factory 🤖
 
-**Trustworthy AI workers for repeatable operational work.**
+**AI workers for repeatable operational work — with authority kept outside the model.**
 
-Digital Worker Factory is a reusable architecture for AI workers that can interpret context, use tools and prepare actions — while deterministic runtime rules control permissions, evidence requirements, approval gates and audit.
+Digital Worker Factory is a reusable runtime for agents that can understand context, use tools and prepare or execute bounded work. Deterministic rules control capabilities, evidence, permissions, approval gates and audit.
 
-**[Open the live demo →](https://digital-worker-factory-hallochupi-7378s-projects.vercel.app/)** · [Portfolio](https://mikelninh.github.io/)
+**[Try the 10-second live proof →](https://mikelninh.github.io/agents/)** · [Portfolio](https://mikelninh.github.io/)
 
-## Commercial wedge — HausPilot
+## See it in seconds
 
-The first productised commercial offer is **HausPilot: a €1,900 net, 7-day AI Operations Sprint for property managers**.
+The public proof lets you run three synthetic workflows:
 
-The sprint deliberately starts with one repeated workflow — for example maintenance-request triage, contractor coordination or document/invoice review — and measures the before/after result. AI prepares work; consequential actions remain behind a human approval gate.
+- **Data brief** — read permitted sources, reconcile fragmented data and prepare a structured internal brief.
+- **Document review** — inspect a document pack, identify missing evidence and prepare a bounded case update.
+- **External update** — prepare an outbound action and watch the runtime block it until human approval is recorded.
 
-- Landing page: [`site/hauspilot.html`](site/hauspilot.html)
-- Sales + delivery playbook: [`sales/PLAYBOOK.md`](sales/PLAYBOOK.md)
-- First Berlin target accounts: [`sales/TARGETS_BERLIN_2026-08-26.md`](sales/TARGETS_BERLIN_2026-08-26.md)
-- Human-supervised FCF agent system: [`agents/FCF_ENGINE.md`](agents/FCF_ENGINE.md)
+The point is not that an LLM can write text. The proof is that **tool use, authority and failure states are explicit and testable**.
 
-**Commercial north star: collected cash and measured client value, not agent count or demo complexity.**
-
-## The contract
+## The runtime contract
 
 ```text
 input / event
     ↓
-worker capabilities
+named capabilities
     ↓
 observable tool trace
     ↓
-evidence contract
-    ↓
-policy gate
+evidence + policy checks
     ↓
 proposed action
     ↓
-human approval
+human approval when required
     ↓
-audit + eval
+authenticated provider
+    ↓
+audit + eval / replay
 ```
 
-The model can interpret and propose. **Authority lives outside the model.**
+The model can interpret and propose. **The system authorizes.**
 
-## What the demo proves
+## What is implemented
 
-- explicit worker capabilities instead of unrestricted tool access
+- explicit capability registry instead of unrestricted tool access
+- role and policy gates that fail closed
 - evidence requirements before actions advance
-- visible tool traces and state transitions
-- human approval for consequential steps
-- replayable failure cases
-- reliability checks for missing tools, artifacts, evidence and unsafe autonomy
+- human approval for consequential writes and external actions
+- provider adapters behind the shared gateway
+- visible execution traces and durable state
+- replayable synthetic failure cases
+- reliability checks for missing tools, evidence, loops and unsafe autonomy
 - declarative worker specifications rather than cloned one-off agents
+
+## Current layers
+
+### Capability Gateway
+
+The shared agent runtime defines what a worker may request, checks role and risk policy, records approval state and emits an audit trace before provider execution.
+
+### RevenueOS
+
+A closed-loop economic control plane for qualifying opportunities, choosing evidence-backed next actions, deduplicating work and keeping supervised execution state durable.
+
+### CommercialOS
+
+A commercial execution layer that connects qualified opportunities to product mapping, approval-gated outreach, pricing, proposals, payment requests, onboarding, delivery proof and recurring revenue.
+
+No external adapter executes from a model-generated intention alone.
+
+## Commercial wedge — HausPilot
+
+The first productised offer is **HausPilot: a €1,900 net, 7-day AI Operations Sprint for property managers**.
+
+The sprint starts with one repeated workflow — for example maintenance-request triage, contractor coordination or document/invoice review — and measures the before/after result. AI prepares work; consequential actions remain behind a human approval gate.
+
+- Landing page: [`site/hauspilot.html`](site/hauspilot.html)
+- Sales + delivery playbook: [`sales/PLAYBOOK.md`](sales/PLAYBOOK.md)
+- Human-supervised FCF agent system: [`agents/FCF_ENGINE.md`](agents/FCF_ENGINE.md)
+
+**Commercial north star: collected cash and measured client value, not agent count or demo complexity.**
 
 ## Reliability loop
 
@@ -61,36 +88,14 @@ DRAFT → EVAL → SHADOW → COPILOT → LIMITED AUTO → TRUSTED
 
 ## Synthetic evaluation suite
 
-The repository includes a deterministic synthetic suite across multiple worker families. It checks failure modes such as:
-
-- required tool not called
-- required artifact missing
-- weak evidence coverage
-- policy violation
-- loop-budget violation
-- action crossing a human boundary
+The repository includes deterministic synthetic cases across multiple worker families. They check failure modes such as required tools not called, required artifacts or evidence missing, policy violations, loop-budget violations and actions crossing a human boundary.
 
 Synthetic evals demonstrate testability and regression discipline; they do **not** claim real-world task accuracy.
 
-## Architecture
+## Related proofs
 
-```text
-shared runtime
-   ├─ capabilities
-   ├─ evidence contract
-   ├─ policy gate
-   ├─ approval state
-   ├─ audit trace
-   └─ eval harness
-        ↓
- specialised worker specs
-```
-
-Related proofs feed into the same architecture:
-
-- **GitLaw** → grounded legal retrieval + citation verification
-- **PrüfPilot** → evidence-first document review
-- **Council** → evidence-gated multi-agent decisions
+- **PrüfPilot** → evidence-first document review: https://mikelninh.github.io/pruefpilot/
+- **GitLaw** → grounded legal retrieval + citation verification: https://mikelninh.github.io/gitlaw/
 
 ## Stack
 
