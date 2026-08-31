@@ -1,0 +1,38 @@
+name: production-readiness
+
+on:
+  pull_request:
+    paths:
+      - 'core/production-boundary.mjs'
+      - 'core/production-boundary.test.mjs'
+      - 'production/**'
+      - '.github/workflows/production-readiness.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'core/production-boundary.mjs'
+      - 'core/production-boundary.test.mjs'
+      - 'production/**'
+      - '.github/workflows/production-readiness.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  production-boundary:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Test production boundary
+        run: node --test core/production-boundary.test.mjs
+      - name: Verify truth boundaries
+        run: |
+          grep -q 'tenant_required' core/production-boundary.mjs
+          grep -q 'idempotency_key_required' core/production-boundary.mjs
+          grep -q 'cross_tenant_actor_blocked' core/production-boundary.mjs
+          grep -q 'Engineering readiness does not replace domain validation' core/production-boundary.mjs
+          grep -q 'working proof != production ready' production/README.md
