@@ -1,119 +1,35 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <meta name="description" content="A proof-first architecture for trustworthy AI workers: explicit capabilities, permissions, human approval, audit and evals." />
-  <title>Trustworthy Agents — Digital Worker Factory</title>
-  <style>
-    :root{--bg:#080a0f;--panel:#0f131c;--panel2:#141a25;--ink:#f7f7f2;--muted:#a6adba;--line:#242b39;--lime:#c9ff66;--blue:#89b8ff;--amber:#ffd166;--red:#ff8d8d;--max:1160px}
-    *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:radial-gradient(circle at 80% 0%,#17223a 0,transparent 31%),radial-gradient(circle at 0% 28%,#152319 0,transparent 25%),var(--bg);color:var(--ink);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;line-height:1.55}.wrap{max-width:var(--max);margin:auto;padding:0 24px}.nav{height:76px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(255,255,255,.07)}.brand{font-weight:750;letter-spacing:-.03em}.brand span{color:var(--lime)}a{color:inherit}.navlinks{display:flex;gap:20px;align-items:center}.navlinks a{text-decoration:none;color:var(--muted);font-size:14px}.button{display:inline-flex;align-items:center;gap:8px;padding:11px 16px;border:1px solid var(--line);border-radius:12px;text-decoration:none;background:rgba(255,255,255,.035);font-weight:650}.button.primary{background:var(--lime);color:#0b0d0f;border-color:var(--lime)}.hero{padding:92px 0 62px}.eyebrow{display:inline-flex;gap:8px;align-items:center;padding:7px 10px;border:1px solid #355126;background:#142014;border-radius:999px;color:var(--lime);font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.09em}.dot{width:7px;height:7px;border-radius:50%;background:var(--lime);box-shadow:0 0 18px var(--lime)}h1{font-size:clamp(48px,7vw,88px);line-height:.98;letter-spacing:-.065em;max-width:980px;margin:24px 0}.lede{max-width:800px;font-size:clamp(18px,2vw,23px);color:var(--muted);letter-spacing:-.015em}.actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:32px}.proofbar{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:18px;overflow:hidden;margin:26px 0 90px}.proof{background:rgba(12,15,22,.96);padding:22px}.proof strong{display:block;font-size:18px;margin-bottom:4px}.proof span{color:var(--muted);font-size:13px}.section{padding:58px 0}.section h2{font-size:clamp(34px,4vw,54px);letter-spacing:-.045em;line-height:1.04;margin:0 0 16px}.sectionlead{font-size:18px;color:var(--muted);max-width:770px;margin:0 0 34px}.flow{display:grid;grid-template-columns:repeat(7,1fr);gap:10px;align-items:stretch}.step{min-height:130px;padding:17px;border:1px solid var(--line);border-radius:16px;background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(255,255,255,.015));display:flex;flex-direction:column;justify-content:space-between}.step b{font-size:14px}.step small{color:var(--muted)}.step.gate{border-color:#53682e;background:linear-gradient(180deg,rgba(201,255,102,.12),rgba(201,255,102,.025))}.step.audit{border-color:#304e78}.cards{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}.card{border:1px solid var(--line);border-radius:20px;background:rgba(15,19,28,.88);padding:26px}.card .tag{font-size:12px;color:var(--blue);text-transform:uppercase;letter-spacing:.1em;font-weight:750}.card h3{font-size:26px;letter-spacing:-.035em;margin:8px 0}.card p{color:var(--muted);margin:0 0 20px}.caplist{list-style:none;padding:0;margin:0}.caplist li{padding:11px 0;border-top:1px solid var(--line);display:flex;justify-content:space-between;gap:18px;font-size:14px}.risk{font-size:11px;padding:3px 8px;border-radius:999px;background:#1e293b;color:#cbd5e1;white-space:nowrap}.risk.write{background:#3b2d13;color:#ffdc8a}.risk.read{background:#13293b;color:#9bd2ff}.matrix{width:100%;border-collapse:separate;border-spacing:0;border:1px solid var(--line);border-radius:18px;overflow:hidden;background:rgba(15,19,28,.88)}.matrix th,.matrix td{text-align:left;padding:15px 16px;border-bottom:1px solid var(--line);font-size:14px}.matrix th{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.08em}.matrix tr:last-child td{border-bottom:none}.yes{color:var(--lime);font-weight:700}.no{color:var(--red);font-weight:700}.code{border:1px solid var(--line);background:#090c12;border-radius:18px;padding:24px;font:14px/1.65 ui-monospace,SFMono-Regular,Menlo,monospace;overflow:auto;color:#d8deea}.code .c{color:#6f7a8c}.quote{font-size:clamp(28px,4vw,48px);line-height:1.12;letter-spacing:-.045em;max-width:850px;margin:0}.quote em{color:var(--lime);font-style:normal}.footer{padding:54px 0 70px;color:var(--muted);border-top:1px solid var(--line);margin-top:70px}.footerline{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap}.tiny{font-size:12px;color:#7d8593}.status{display:inline-flex;align-items:center;gap:7px;color:var(--lime);font-weight:650;font-size:13px}.status:before{content:"";width:8px;height:8px;border-radius:50%;background:var(--lime)}
-    @media(max-width:900px){.proofbar{grid-template-columns:repeat(2,1fr)}.flow{grid-template-columns:repeat(2,1fr)}.cards{grid-template-columns:1fr}.navlinks>a:not(.button){display:none}}
-    @media(max-width:560px){.wrap{padding:0 18px}.hero{padding-top:64px}.proofbar{grid-template-columns:1fr}.flow{grid-template-columns:1fr}.matrix{display:block;overflow-x:auto}.nav{height:66px}}
-  </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Digital Worker Factory: a working proof of AI agents with explicit capabilities, deterministic policy gates, human approval and replayable evals.">
+<title>Digital Worker Factory · Trustworthy AI Workers</title>
+<style>
+:root{--bg:#f4f6f3;--paper:#fff;--ink:#101310;--muted:#69716b;--line:#dce2dc;--green:#18664a;--green2:#e5f1eb;--amber:#8a5b12;--amber2:#fff2d7;--red:#9f3a32;--red2:#fde9e7;--dark:#101814;--max:1180px;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--ink);line-height:1.5}a{color:inherit}.wrap{width:min(var(--max),calc(100% - 36px));margin:auto}.top{position:sticky;top:0;z-index:20;background:rgba(244,246,243,.92);backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}nav{height:68px;display:flex;align-items:center;justify-content:space-between;gap:18px}.brand{font-weight:850;letter-spacing:-.04em}.brand span{color:var(--green)}.navlinks{display:flex;align-items:center;gap:18px;font-size:13px}.navlinks a{text-decoration:none;color:var(--muted)}.btn{border:1px solid var(--ink);background:var(--paper);border-radius:10px;padding:11px 15px;font:inherit;font-size:13px;font-weight:750;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;justify-content:center}.btn.primary{background:var(--ink);color:#fff}.hero{padding:78px 0 42px}.heroGrid{display:grid;grid-template-columns:1fr 1fr;gap:54px;align-items:center}.eyebrow{font-size:11px;text-transform:uppercase;letter-spacing:.13em;font-weight:800;color:var(--green)}h1{font-size:clamp(54px,7vw,92px);line-height:.92;letter-spacing:-.065em;margin:14px 0 24px}.lede{font-size:21px;max-width:700px;color:#465048}.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:25px}.signals{display:flex;flex-wrap:wrap;gap:8px;margin-top:28px}.signal{font-size:12px;border:1px solid var(--line);background:var(--paper);padding:8px 10px;border-radius:999px}.demo{background:var(--dark);color:#fff;border-radius:24px;padding:22px;box-shadow:0 24px 70px rgba(20,30,24,.16)}.demoTop{display:flex;justify-content:space-between;gap:16px;align-items:start}.demo small{color:#9eaaa2;font-size:10px;letter-spacing:.1em;text-transform:uppercase;font-weight:750}.demo h2{font-size:28px;letter-spacing:-.04em;margin:5px 0}.status{font-size:11px;color:#9de0bf;padding:6px 9px;border-radius:999px;background:#153326;white-space:nowrap}.scenarios{display:flex;gap:7px;flex-wrap:wrap;margin:18px 0}.scenario{border:1px solid #334139;background:#162019;color:#bdc8c0;border-radius:9px;padding:8px 10px;font:inherit;font-size:11px;cursor:pointer}.scenario.active{background:#f0f6f2;color:#122017;border-color:#f0f6f2}.request{background:#17221b;border:1px solid #334139;border-radius:14px;padding:15px;margin:12px 0}.request b{display:block;margin-top:3px}.trace{display:grid;gap:8px;margin-top:12px}.step{display:grid;grid-template-columns:28px 1fr auto;gap:10px;align-items:center;border-top:1px solid #2a352e;padding:11px 0;opacity:.35}.step.on{opacity:1}.num{width:25px;height:25px;border-radius:50%;background:#25342b;display:grid;place-items:center;font-size:11px}.step b{font-size:13px}.step span{display:block;font-size:11px;color:#9eaaa2}.badge{font-size:9px!important;border-radius:999px;padding:4px 7px;color:#fff!important;background:#254533}.badge.block{background:#63352e}.badge.wait{background:#675225}.demoActions{display:flex;gap:8px;margin-top:14px}.demoActions .btn{flex:1;border-color:#34433a;background:#fff}.demoActions #approve{display:none;background:#dfffcd;border-color:#dfffcd}.section{padding:70px 0}.sectionHead{display:grid;grid-template-columns:.8fr 1.2fr;gap:40px;align-items:end;margin-bottom:28px}.label{font-size:10px;letter-spacing:.13em;text-transform:uppercase;color:var(--green);font-weight:800}.section h2{font-size:clamp(38px,5vw,62px);line-height:.98;letter-spacing:-.055em;margin:8px 0 0}.sectionHead p{color:var(--muted);font-size:16px;margin:0}.proofGrid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.proof{background:var(--paper);border:1px solid var(--line);border-radius:16px;padding:20px}.proof b{display:block;font-size:18px;margin-bottom:8px}.proof p{margin:0;color:var(--muted);font-size:13px}.architecture{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}.arch{min-height:140px;border:1px solid var(--line);border-radius:15px;padding:17px;background:var(--paper);display:flex;flex-direction:column;justify-content:space-between}.arch.gate{background:var(--green2);border-color:#b9d3c4}.arch strong{font-size:14px}.arch span{font-size:11px;color:var(--muted)}.latest{background:#111712;color:#fff}.latest .sectionHead p{color:#aab4ad}.layers{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.layer{border:1px solid #334139;border-radius:16px;padding:21px;background:#151d17}.layer small{color:#95a49a}.layer h3{font-size:24px;letter-spacing:-.04em;margin:6px 0 8px}.layer p{color:#aeb8b1;font-size:13px;margin:0}.footer{padding:28px 0;border-top:1px solid var(--line);font-size:11px;color:var(--muted)}.footer .wrap{display:flex;justify-content:space-between;gap:16px}
+@media(max-width:900px){.heroGrid,.sectionHead{grid-template-columns:1fr}.proofGrid{grid-template-columns:1fr 1fr}.architecture{grid-template-columns:1fr 1fr}.layers{grid-template-columns:1fr}.hero{padding-top:54px}}@media(max-width:600px){.navlinks>a:not(.btn){display:none}h1{font-size:50px}.proofGrid,.architecture{grid-template-columns:1fr}.demoTop{display:block}.status{display:inline-block;margin-top:8px}.footer .wrap{display:block}.footer span{display:block;margin:5px 0}}
+</style>
 </head>
 <body>
-  <div class="wrap">
-    <nav class="nav">
-      <div class="brand">Digital Worker <span>Factory</span></div>
-      <div class="navlinks">
-        <a href="#architecture">Architecture</a><a href="#proof">Proof</a><a href="#products">Products</a>
-        <a class="button" href="https://github.com/mikelninh/digital-worker-factory" target="_blank" rel="noreferrer">View source ↗</a>
-      </div>
-    </nav>
-
-    <main>
-      <section class="hero">
-        <div class="eyebrow"><span class="dot"></span> Agent-ready, authority outside the model</div>
-        <h1>Build capabilities agents can be trusted to use.</h1>
-        <p class="lede">One reusable runtime for AI workers across legal, operations and healthcare-adjacent workflows: explicit tools, role permissions, human approval for consequential actions, audit trails and regression evals.</p>
-        <div class="actions">
-          <a class="button primary" href="#proof">See the proof ↓</a>
-          <a class="button" href="https://mikelninh.github.io/gitlaw/" target="_blank" rel="noreferrer">Open GitLaw demo ↗</a>
-        </div>
-      </section>
-
-      <section class="proofbar" aria-label="system guarantees">
-        <div class="proof"><strong>Fail closed</strong><span>Unknown capability or missing executor → blocked.</span></div>
-        <div class="proof"><strong>Human approval</strong><span>Writes and consequential actions cannot silently execute.</span></div>
-        <div class="proof"><strong>Same state</strong><span>Human UI and agent calls operate on the existing product boundaries.</span></div>
-        <div class="proof"><strong>Auditable</strong><span>Every attempt gets a trace: blocked, shadowed, failed or executed.</span></div>
-      </section>
-
-      <section class="section" id="architecture">
-        <h2>One brain. Explicit capabilities. Deterministic authority.</h2>
-        <p class="sectionlead">The model may interpret context and propose work. The runtime decides what is allowed. Existing product authentication and persistence remain authoritative.</p>
-        <div class="flow">
-          <div class="step"><b>1 · Context</b><small>case, inbox, document, task</small></div>
-          <div class="step"><b>2 · Capability</b><small>named, typed, scoped tool</small></div>
-          <div class="step"><b>3 · Permission</b><small>role + tenant + risk checks</small></div>
-          <div class="step gate"><b>4 · Policy gate</b><small>fail closed by default</small></div>
-          <div class="step gate"><b>5 · Human approval</b><small>required for consequential writes</small></div>
-          <div class="step"><b>6 · Provider</b><small>existing authenticated API</small></div>
-          <div class="step audit"><b>7 · Audit + eval</b><small>trace, replay, regression</small></div>
-        </div>
-      </section>
-
-      <section class="section" id="products">
-        <h2>First real capability providers.</h2>
-        <p class="sectionlead">Not a collection of disconnected chatbots. Products expose stable capabilities behind one shared permission and audit model.</p>
-        <div class="cards">
-          <article class="card">
-            <div class="tag">Legal · GitLaw Pro</div>
-            <h3>Case Agent capabilities</h3>
-            <p>GitLaw keeps its existing authenticated entity layer as the source of authority. The agent contract describes what may be requested; it does not bypass product security.</p>
-            <ul class="caplist">
-              <li><span>Read authenticated case</span><span class="risk read">READ</span></li>
-              <li><span>Read research / letters</span><span class="risk read">READ</span></li>
-              <li><span>Update a case</span><span class="risk write">APPROVAL</span></li>
-            </ul>
-          </article>
-          <article class="card">
-            <div class="tag">Operations · HausPilot</div>
-            <h3>Operations Agent capabilities</h3>
-            <p>Interpret repeated property-management workflows, prepare next actions and route consequential steps through deterministic policy and human review.</p>
-            <ul class="caplist">
-              <li><span>Read / classify workflow context</span><span class="risk read">READ</span></li>
-              <li><span>Prepare review decision</span><span class="risk write">REVIEW</span></li>
-              <li><span>External action</span><span class="risk write">APPROVAL</span></li>
-            </ul>
-          </article>
-        </div>
-      </section>
-
-      <section class="section" id="proof">
-        <h2>What the gateway actually proves.</h2>
-        <p class="sectionlead">The safety boundary is executable and regression-tested, not a prompt instruction.</p>
-        <table class="matrix">
-          <thead><tr><th>Scenario</th><th>Expected</th><th>Enforced by</th></tr></thead>
-          <tbody>
-            <tr><td>Allowed read capability</td><td class="yes">Executes</td><td>role + capability registry</td></tr>
-            <tr><td>Wrong role</td><td class="no">Blocked</td><td>permission gate</td></tr>
-            <tr><td>Write without human approval</td><td class="no">Blocked before network</td><td>policy gate</td></tr>
-            <tr><td>Approved write</td><td class="yes">Exactly one provider call</td><td>gateway + provider adapter</td></tr>
-            <tr><td>Shadow mode</td><td class="no">Zero external calls</td><td>execution mode</td></tr>
-            <tr><td>Unknown capability</td><td class="no">Fail closed</td><td>registry</td></tr>
-            <tr><td>Every attempt</td><td class="yes">Trace emitted</td><td>audit log</td></tr>
-          </tbody>
-        </table>
-      </section>
-
-      <section class="section">
-        <h2>The contract is simple.</h2>
-        <div class="code"><span class="c">// model proposes; runtime authorizes</span><br>request → capability registry → role check → policy gate<br>→ human approval <span class="c">(when required)</span> → authenticated provider<br>→ audit trace → eval / replay</div>
-      </section>
-
-      <section class="section">
-        <p class="quote">“Build capabilities agents can use” is useful. Our version is stricter: <em>build capabilities agents can be trusted to use.</em></p>
-      </section>
-    </main>
-
-    <footer class="footer">
-      <div class="footerline">
-        <div><div class="brand">Digital Worker <span>Factory</span></div><div class="tiny">Synthetic/demo data only. No production client data is exposed on this page.</div></div>
-        <div><div class="status">Shared gateway integrated</div><div class="tiny">GitLaw · HausPilot · reusable provider architecture</div></div>
-      </div>
-    </footer>
-  </div>
+<header class="top"><nav class="wrap"><a class="brand" href="#top" style="text-decoration:none">Digital Worker <span>Factory</span></a><div class="navlinks"><a href="#proof">Proof</a><a href="#architecture">How it works</a><a class="btn" href="https://github.com/mikelninh/digital-worker-factory" target="_blank" rel="noreferrer">View code ↗</a></div></nav></header>
+<main id="top">
+<section class="hero"><div class="wrap heroGrid"><div><div class="eyebrow">Working agent-system proof</div><h1>AI workers that do the repetitive work — <span style="color:var(--green)">without hidden authority.</span></h1><p class="lede">The model can understand a task and use tools. A deterministic runtime decides what it may do, what evidence is required, and when a human must approve.</p><div class="actions"><button class="btn primary" onclick="document.getElementById('run').click()">Run the 10-second demo</button><a class="btn" href="#proof">See what is proven</a></div><div class="signals"><span class="signal">explicit capabilities</span><span class="signal">fail-closed policy</span><span class="signal">human approval</span><span class="signal">audit + replay</span><span class="signal">synthetic evals</span></div></div>
+<aside class="demo" aria-label="interactive agent demo"><div class="demoTop"><div><small>Try it</small><h2>One task. Visible control.</h2></div><span class="status" id="demoStatus">ready</span></div><div class="scenarios"><button class="scenario active" data-s="data">Data brief</button><button class="scenario" data-s="document">Document review</button><button class="scenario" data-s="external">External update</button></div><div class="request"><small>REQUEST</small><b id="requestText">Prepare the weekly operations brief from fragmented data sources.</b></div><div class="trace" id="trace"></div><div class="demoActions"><button class="btn" id="run">Run workflow</button><button class="btn" id="approve">Approve final action</button></div></aside></div></section>
+<section class="section" id="proof"><div class="wrap"><div class="sectionHead"><div><div class="label">What this proves</div><h2>Not a chatbot. A controlled worker.</h2></div><p>The interesting part is not that an LLM can generate text. It is that the surrounding system makes tool use, evidence, permissions and failure states explicit and testable.</p></div><div class="proofGrid"><article class="proof"><b>Capabilities are named</b><p>Workers receive a small, typed set of tools instead of unrestricted access.</p></article><article class="proof"><b>Risky actions stop</b><p>Writes and external actions fail closed until the required authority is present.</p></article><article class="proof"><b>Every attempt leaves a trace</b><p>Executed, blocked, shadowed and failed paths are inspectable and replayable.</p></article><article class="proof"><b>Autonomy is earned</b><p>Synthetic regression cases test missing evidence, tool misuse, loops and unsafe actions.</p></article></div></div></section>
+<section class="section" id="architecture"><div class="wrap"><div class="sectionHead"><div><div class="label">Runtime</div><h2>The model proposes. The system authorizes.</h2></div><p>This same boundary can sit behind legal, document, operations or commercial workflows without giving the model ownership of identity, permissions or money.</p></div><div class="architecture"><div class="arch"><strong>1 · Context</strong><span>case, inbox, document, data request</span></div><div class="arch"><strong>2 · Tool use</strong><span>named capabilities + structured inputs</span></div><div class="arch gate"><strong>3 · Policy gate</strong><span>role, evidence, risk and approval checks</span></div><div class="arch"><strong>4 · Provider</strong><span>existing authenticated API / adapter</span></div><div class="arch"><strong>5 · Audit + eval</strong><span>trace, replay, regression</span></div></div></div></section>
+<section class="section latest"><div class="wrap"><div class="sectionHead"><div><div class="label" style="color:#9de0bf">Current repository</div><h2>One runtime, several real layers.</h2></div><p>The repository now includes the shared capability gateway plus operational and commercial control layers. The public demo stays focused on the core idea: useful work with explicit authority.</p></div><div class="layers"><article class="layer"><small>Agent runtime</small><h3>Capability Gateway</h3><p>Fail-closed capabilities, role checks, provider boundaries and approval-gated writes.</p></article><article class="layer"><small>Economic control plane</small><h3>RevenueOS</h3><p>Evidence-aware opportunity and next-action lifecycle with durable state and supervised execution.</p></article><article class="layer"><small>Commercial execution</small><h3>CommercialOS</h3><p>Approval-gated outreach, pricing, proposals, payment requests, onboarding and recurring revenue workflow.</p></article></div></div></section>
+</main>
+<footer class="footer"><div class="wrap"><span>Digital Worker Factory · synthetic/demo data only</span><span><a href="https://github.com/mikelninh/digital-worker-factory">GitHub</a> · <a href="https://mikelninh.github.io/pruefpilot/">PrüfPilot</a> · <a href="https://mikelninh.github.io/gitlaw/">GitLaw</a></span></div></footer>
+<script>
+const scenarios={data:{request:'Prepare the weekly operations brief from fragmented data sources.',steps:[['load_sources','Read the permitted structured sources','READ'],['reconcile_data','Resolve duplicated and inconsistent records','READ'],['prepare_brief','Create a structured brief with evidence links','READY'],['publish_internal','Publish to the approved internal destination','EXECUTE']]},document:{request:'Review this document pack and tell me what is missing before a human decision.',steps:[['parse_documents','Extract typed fields and document fingerprints','READ'],['check_evidence','Compare required evidence with the case pack','READ'],['prepare_next_action','Draft the missing-evidence request','READY'],['case_update','Write the reviewed next action to the case','APPROVAL']]},external:{request:'Send the prepared customer update and record the action.',steps:[['read_case','Load the approved case context','READ'],['draft_message','Prepare the external update','READY'],['external_message','Send outside the system','APPROVAL'],['audit_event','Record the approved execution','WAIT']]}};
+let active='data',ran=false;
+const trace=document.getElementById('trace'),requestText=document.getElementById('requestText'),run=document.getElementById('run'),approve=document.getElementById('approve'),status=document.getElementById('demoStatus');
+function render(empty=true){const s=scenarios[active];requestText.textContent=s.request;trace.innerHTML=s.steps.map((x,i)=>`<div class="step ${empty?'':'on'}" data-i="${i}"><div class="num">${i+1}</div><div><b>${x[0]}</b><span>${x[1]}</span></div><span class="badge ${x[2]==='APPROVAL'?'wait':''}">${x[2]}</span></div>`).join('');approve.style.display='none';status.textContent='ready';status.style.color='#9de0bf';ran=false}
+document.querySelectorAll('.scenario').forEach(b=>b.onclick=()=>{document.querySelectorAll('.scenario').forEach(x=>x.classList.remove('active'));b.classList.add('active');active=b.dataset.s;render(true)});
+run.onclick=()=>{render(false);ran=true;const steps=[...document.querySelectorAll('.step')];steps.forEach((el,i)=>{el.classList.remove('on');setTimeout(()=>{el.classList.add('on');if(i===steps.length-1){const needs=scenarios[active].steps.some(x=>x[2]==='APPROVAL');if(needs){status.textContent='blocked · human approval required';status.style.color='#ffd69b';approve.style.display='inline-flex';const ap=steps.find((_,j)=>scenarios[active].steps[j][2]==='APPROVAL');if(ap){ap.querySelector('.badge').textContent='BLOCKED';ap.querySelector('.badge').classList.add('block')}}else{status.textContent='completed · trace recorded';status.style.color='#9de0bf'}}},180*i)});};
+approve.onclick=()=>{if(!ran)return;status.textContent='approved · executed once · audited';status.style.color='#9de0bf';document.querySelectorAll('.step').forEach((el,i)=>{if(scenarios[active].steps[i][2]==='APPROVAL'){const badge=el.querySelector('.badge');badge.textContent='EXECUTED';badge.classList.remove('block','wait')}});approve.style.display='none'};
+render(true);
+</script>
 </body>
 </html>
