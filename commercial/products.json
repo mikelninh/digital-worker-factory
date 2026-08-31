@@ -70,6 +70,53 @@
       "kickoffPercent": 70,
       "deliveryTemplate": "openproof",
       "successMetricRequired": true
+    },
+    {
+      "id": "trustready-starter",
+      "name": "TrustReady Starter",
+      "status": "sellable_beta",
+      "pricingMode": "fixed",
+      "currency": "EUR",
+      "priceEurNet": 149,
+      "kickoffPercent": 100,
+      "deliveryTemplate": "trustready-starter",
+      "successMetricRequired": true,
+      "recurringExpansion": "trustready-monitor"
+    },
+    {
+      "id": "trustready-enterprise-pack",
+      "name": "TrustReady Enterprise Buyer Pack",
+      "status": "sellable_beta",
+      "pricingMode": "fixed",
+      "currency": "EUR",
+      "priceEurNet": 499,
+      "kickoffPercent": 100,
+      "deliveryTemplate": "trustready-enterprise-pack",
+      "successMetricRequired": true,
+      "recurringExpansion": "trustready-monitor"
+    },
+    {
+      "id": "trustready-monitor",
+      "name": "TrustReady Monitor",
+      "status": "sellable_beta",
+      "pricingMode": "fixed",
+      "currency": "EUR",
+      "priceEurNet": 149,
+      "kickoffPercent": 100,
+      "deliveryTemplate": "trustready-monitor",
+      "successMetricRequired": true,
+      "recurring": true
+    },
+    {
+      "id": "trustready-deal-rescue",
+      "name": "TrustReady Deal Rescue",
+      "status": "sellable_beta",
+      "pricingMode": "fixed",
+      "currency": "EUR",
+      "priceEurNet": 999,
+      "kickoffPercent": 100,
+      "deliveryTemplate": "trustready-deal-rescue",
+      "successMetricRequired": true
     }
   ]
 }
