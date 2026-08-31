@@ -34,6 +34,18 @@ jobs:
           node --test core/commercial-os.test.mjs commercial/operator/command-center.test.mjs
       - name: Run CommercialOS five-customer supervised revenue loop
         run: node evals/commercial-os-e2e.mjs
+      - name: Run TrustReady evidence + remediation contracts
+        run: |
+          node --check scripts/trustready.mjs
+          node --test core/trustready.test.mjs core/trustready-github.test.mjs
+      - name: Run TrustReady our-products dogfood baseline
+        run: node evals/trustready-our-products.mjs
+      - name: Verify TrustReady self-serve demo surface
+        run: |
+          test -s site/trustready.html
+          grep -q "Will procurement let it through" site/trustready.html
+          grep -q "The scan is only the beginning" site/trustready.html
+          grep -q "NOT A LEGAL CERTIFICATION" site/trustready.html
       - name: Run 30-scenario adversarial policy suite
         run: node packs/hauspilot/runtime/adversarial-eval.mjs
       - name: Run 60-case entity resolution benchmark
