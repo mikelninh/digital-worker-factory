@@ -1,0 +1,173 @@
+{
+  "schema": "trustready-portfolio-fixture-v1",
+  "mode": "public_repo_evidence_only",
+  "note": "These fixtures score only evidence visible in the referenced public repositories/pages. Missing evidence means not evidenced in this scan, not necessarily absent in reality.",
+  "products": [
+    {
+      "id": "digital-worker-factory",
+      "name": "Digital Worker Factory",
+      "url": "https://github.com/mikelninh/digital-worker-factory",
+      "known": {
+        "intendedPurpose": "Reusable runtime for bounded AI workers with evidence, permissions, approval gates and audit.",
+        "intendedUsers": "Teams building or operating supervised AI workflows.",
+        "nonGoals": "Unbounded autonomous authority or model-only authorization.",
+        "humanApproval": "- external messages\n- committed prices and proposals\n- consequential production writes\n- other actions explicitly marked approval-required",
+        "finalAuthority": "Authorised human operator / policy owner",
+        "dataProcessing": "Capability-gated worker execution with evidence and policy checks.",
+        "audit": "Visible execution traces and durable audit state.",
+        "proven": "- shared capability gateway contracts\n- RevenueOS and CommercialOS approval contracts\n- replayable synthetic failure cases",
+        "notProven": "- deployment-specific buyer acceptance\n- production reliability for every provider/integration\n- legal compliance in any particular customer deployment"
+      },
+      "evidence": {
+        "product_identity": {"status":"verified","source":"https://github.com/mikelninh/digital-worker-factory/blob/main/README.md","note":"README states intended purpose, runtime contract and non-autonomy boundary."},
+        "ai_act_role": {"status":"missing","note":"No explicit provider/deployer/risk-classification assessment found in public repo evidence."},
+        "ai_interaction_disclosure": {"status":"partial","source":"https://mikelninh.github.io/agents/","note":"Public surface is clearly an AI/agent proof, but no explicit Article 50 implementation record is attached."},
+        "human_oversight": {"status":"verified","source":"https://github.com/mikelninh/digital-worker-factory/blob/main/README.md","note":"Human approval and authority-outside-model rule are explicit."},
+        "model_vendor_inventory": {"status":"missing"},
+        "subprocessor_inventory": {"status":"missing"},
+        "data_flow": {"status":"partial","source":"https://github.com/mikelninh/digital-worker-factory/blob/main/README.md","note":"Runtime flow is documented, but full customer-data/provider flow is not buyer-ready."},
+        "retention_deletion": {"status":"partial","source":"https://github.com/mikelninh/digital-worker-factory","note":"Shared production work includes durable state, but a buyer-facing retention/deletion policy is not evidenced here."},
+        "dpa_tom_package": {"status":"missing"},
+        "security_contact": {"status":"missing"},
+        "incident_response": {"status":"partial","source":"https://github.com/mikelninh/digital-worker-factory/blob/main/README.md","note":"Failure/replay discipline exists; buyer-facing incident-response procedure is not evidenced."},
+        "access_tenant_controls": {"status":"partial","source":"https://github.com/mikelninh/digital-worker-factory/blob/main/README.md","note":"Role/policy gates are explicit; deployment-specific tenant evidence is not in this README."},
+        "audit_trace": {"status":"verified","source":"https://github.com/mikelninh/digital-worker-factory/blob/main/README.md","note":"Audit, visible traces and replay are core runtime claims."},
+        "evals_limitations": {"status":"verified","source":"https://github.com/mikelninh/digital-worker-factory/blob/main/README.md","note":"Synthetic proof boundary and limitations are explicitly stated."},
+        "trust_center": {"status":"missing"},
+        "questionnaire_library": {"status":"missing"}
+      }
+    },
+    {
+      "id": "pruefpilot",
+      "name": "PruefPilot Document AI",
+      "url": "https://github.com/mikelninh/pruefpilot",
+      "known": {
+        "intendedPurpose": "Document AI for reviewable public-sector workflows that prepares evidence-backed next steps for human reviewers.",
+        "intendedUsers": "Public-sector and administrative reviewers in bounded document workflows.",
+        "nonGoals": "Autonomous legal, funding or benefit decisions.",
+        "humanApproval": "- final administrative decisions\n- consequential case actions\n- release beyond tested production boundaries",
+        "finalAuthority": "Qualified human reviewer / administrative authority",
+        "dataInput": "Uploaded case documents and domain-specific rule/evidence data.",
+        "dataProcessing": "Structured intake, versioned retrieval, evidence checks and reviewable next-action preparation.",
+        "storage": "Tenant-scoped Postgres 17 including original PDF bytes in the production reference implementation.",
+        "audit": "Tenant-scoped state, health/readiness gates and tested human approval boundary.",
+        "deletion": "Admin/owner tenant-data deletion endpoint is implemented in the production reference implementation.",
+        "proven": "- real PDF intake\n- prompt-injection detection\n- tenant-scoped Postgres path\n- idempotent writes\n- human-approval boundary",
+        "notProven": "- qualified-reviewer accuracy on representative real cases\n- external security/privacy acceptance\n- production SLOs and real backup/restore drill"
+      },
+      "evidence": {
+        "product_identity": {"status":"verified","source":"https://github.com/mikelninh/pruefpilot/blob/main/README.md"},
+        "ai_act_role": {"status":"missing","note":"No explicit AI Act role/risk assessment is published in the README."},
+        "ai_interaction_disclosure": {"status":"partial","source":"https://mikelninh.github.io/pruefpilot/","note":"AI nature is evident, but explicit Article 50 placement evidence is not attached."},
+        "human_oversight": {"status":"verified","source":"https://github.com/mikelninh/pruefpilot/blob/main/README.md"},
+        "model_vendor_inventory": {"status":"missing"},
+        "subprocessor_inventory": {"status":"missing"},
+        "data_flow": {"status":"verified","source":"https://github.com/mikelninh/pruefpilot/blob/main/README.md","note":"Production reference flow, storage and tenant boundary are described."},
+        "retention_deletion": {"status":"verified","source":"https://github.com/mikelninh/pruefpilot/blob/main/README.md","note":"Tenant deletion and readiness/retention gate are explicitly described."},
+        "dpa_tom_package": {"status":"missing"},
+        "security_contact": {"status":"missing"},
+        "incident_response": {"status":"partial","source":"https://github.com/mikelninh/pruefpilot/blob/main/README.md","note":"Fail-closed engineering controls exist; buyer-facing incident process is not published."},
+        "access_tenant_controls": {"status":"verified","source":"https://github.com/mikelninh/pruefpilot/blob/main/README.md","note":"Principal-to-tenant/actor/role binding and cross-tenant blocking are described."},
+        "audit_trace": {"status":"partial","source":"https://github.com/mikelninh/pruefpilot/blob/main/README.md","note":"Durable case/reviewer state is described, but a complete buyer-facing audit trace contract is not evidenced."},
+        "evals_limitations": {"status":"verified","source":"https://github.com/mikelninh/pruefpilot/blob/main/README.md","note":"Engineering proof and unproven external boundaries are explicitly distinguished."},
+        "trust_center": {"status":"missing"},
+        "questionnaire_library": {"status":"missing"}
+      }
+    },
+    {
+      "id": "gitlaw",
+      "name": "GitLaw",
+      "url": "https://github.com/mikelninh/gitlaw",
+      "known": {
+        "intendedPurpose": "Source-grounded legal research and preparation with inspectable citations, uncertainty and human-reviewable next steps.",
+        "intendedUsers": "Citizens for orientation and legal professionals for research/preparation workflows.",
+        "nonGoals": "Qualified legal advice replacement or autonomous consequential legal decisions.",
+        "humanApproval": "- consequential legal work\n- final lawyer review\n- productive actions beyond explicitly authorised capabilities",
+        "finalAuthority": "Qualified lawyer / authorised human reviewer",
+        "dataProcessing": "Hybrid retrieval, paragraph graph lookup, deterministic citation checks and structured preparation.",
+        "audit": "Local audit replay in the Pro playground and governed capability contracts for pilot workflows.",
+        "proven": "- citation-resolution regression\n- browser E2E for public Pro flow\n- law-firm pilot privacy/authority edge cases\n- MCP and API contracts",
+        "notProven": "- complete legal-answer accuracy\n- production reliability for every law-firm vendor\n- equivalence of synthetic demo and real pilot"
+      },
+      "evidence": {
+        "product_identity": {"status":"verified","source":"https://github.com/mikelninh/gitlaw/blob/main/README.md"},
+        "ai_act_role": {"status":"missing"},
+        "ai_interaction_disclosure": {"status":"partial","source":"https://mikelninh.github.io/gitlaw/","note":"AI function is explicit in product messaging; formal Article 50 evidence is not attached."},
+        "human_oversight": {"status":"verified","source":"https://github.com/mikelninh/gitlaw/blob/main/README.md"},
+        "model_vendor_inventory": {"status":"missing"},
+        "subprocessor_inventory": {"status":"missing"},
+        "data_flow": {"status":"partial","source":"https://github.com/mikelninh/gitlaw/blob/main/README.md","note":"Engineering flow is documented; buyer-facing customer-data flow is incomplete."},
+        "retention_deletion": {"status":"partial","source":"https://github.com/mikelninh/gitlaw/blob/main/README.md","note":"Retention edge cases are tested, but a published policy is not evidenced."},
+        "dpa_tom_package": {"status":"missing"},
+        "security_contact": {"status":"missing"},
+        "incident_response": {"status":"partial","source":"https://github.com/mikelninh/gitlaw/blob/main/README.md","note":"Failure cases are regression-tested; formal incident-response procedure is not evidenced."},
+        "access_tenant_controls": {"status":"partial","source":"https://github.com/mikelninh/gitlaw/blob/main/README.md","note":"Authenticated pilot and fail-closed authority/privacy tests are described; deployment evidence remains limited."},
+        "audit_trace": {"status":"verified","source":"https://github.com/mikelninh/gitlaw/blob/main/README.md","note":"Public Pro flow includes local audit replay and approval/release trace."},
+        "evals_limitations": {"status":"verified","source":"https://github.com/mikelninh/gitlaw/blob/main/README.md","note":"README separates tested claims from unproven legal-answer/production claims."},
+        "trust_center": {"status":"missing"},
+        "questionnaire_library": {"status":"missing"}
+      }
+    },
+    {
+      "id": "hauspilot",
+      "name": "HausPilot",
+      "url": "https://github.com/mikelninh/digital-worker-factory",
+      "known": {
+        "intendedPurpose": "Human-supervised AI operations workflow for property-management work such as maintenance triage, contractor coordination and document/invoice review.",
+        "intendedUsers": "Property-management operations teams.",
+        "nonGoals": "Autonomous consequential tenant/vendor decisions without human approval.",
+        "humanApproval": "- external messages\n- consequential operational actions\n- production actions outside the explicit capability allow-list",
+        "finalAuthority": "Property-management operator / authorised client reviewer",
+        "proven": "- template and policy safety suite\n- adversarial policy suite\n- tenant inbox gold set\n- human review queue contracts\n- privacy fail-closed contracts",
+        "notProven": "- buyer-specific deployment acceptance\n- measured production value outside a real paid pilot"
+      },
+      "evidence": {
+        "product_identity": {"status":"verified","source":"https://github.com/mikelninh/digital-worker-factory/blob/main/README.md"},
+        "ai_act_role": {"status":"missing"},
+        "ai_interaction_disclosure": {"status":"partial","source":"https://github.com/mikelninh/digital-worker-factory/blob/main/site/hauspilot.html"},
+        "human_oversight": {"status":"verified","source":"https://github.com/mikelninh/digital-worker-factory/blob/main/README.md"},
+        "model_vendor_inventory": {"status":"missing"},
+        "subprocessor_inventory": {"status":"missing"},
+        "data_flow": {"status":"partial","source":"https://github.com/mikelninh/digital-worker-factory/blob/main/agents/FCF_ENGINE.md","note":"Governed delivery architecture is described, but buyer-specific provider/data flow is not."},
+        "retention_deletion": {"status":"partial","source":"https://github.com/mikelninh/digital-worker-factory","note":"Privacy fail-closed controls exist; public policy evidence remains incomplete."},
+        "dpa_tom_package": {"status":"missing"},
+        "security_contact": {"status":"missing"},
+        "incident_response": {"status":"missing"},
+        "access_tenant_controls": {"status":"partial","source":"https://github.com/mikelninh/digital-worker-factory","note":"Policy/role gates are tested but client deployment tenant controls are not fully evidenced here."},
+        "audit_trace": {"status":"verified","source":"https://github.com/mikelninh/digital-worker-factory/blob/main/README.md"},
+        "evals_limitations": {"status":"verified","source":"https://github.com/mikelninh/digital-worker-factory","note":"Multiple CI suites and proof boundaries are maintained."},
+        "trust_center": {"status":"partial","source":"https://github.com/mikelninh/digital-worker-factory/blob/main/site/hauspilot-privacy.html","note":"Privacy proof exists, but not one consolidated trust centre."},
+        "questionnaire_library": {"status":"missing"}
+      }
+    },
+    {
+      "id": "opportunity-radar",
+      "name": "Opportunity Radar",
+      "url": "https://github.com/mikelninh/digital-worker-factory",
+      "known": {
+        "intendedPurpose": "Evidence-backed monitoring of grants, tenders, partnerships, programmes and other time-sensitive opportunities for organisations.",
+        "intendedUsers": "Organisations that need to avoid missing relevant funding, procurement or partnership windows.",
+        "nonGoals": "Submitting consequential applications or commitments without human approval.",
+        "finalAuthority": "Authorised organisation representative"
+      },
+      "evidence": {
+        "product_identity": {"status":"partial","source":"https://github.com/mikelninh/digital-worker-factory/blob/main/commercial/products.json","note":"Product exists in commercial catalogue; dedicated buyer trust/product documentation remains thin."},
+        "ai_act_role": {"status":"missing"},
+        "ai_interaction_disclosure": {"status":"missing"},
+        "human_oversight": {"status":"partial","source":"https://github.com/mikelninh/digital-worker-factory/blob/main/core/commercial-os.mjs","note":"Commercial consequential actions are approval-gated; product-specific authority statement is not published."},
+        "model_vendor_inventory": {"status":"missing"},
+        "subprocessor_inventory": {"status":"missing"},
+        "data_flow": {"status":"missing"},
+        "retention_deletion": {"status":"missing"},
+        "dpa_tom_package": {"status":"missing"},
+        "security_contact": {"status":"missing"},
+        "incident_response": {"status":"missing"},
+        "access_tenant_controls": {"status":"missing"},
+        "audit_trace": {"status":"partial","source":"https://github.com/mikelninh/digital-worker-factory/blob/main/README.md","note":"Shared Factory audit model exists; product-specific evidence is incomplete."},
+        "evals_limitations": {"status":"partial","source":"https://github.com/mikelninh/digital-worker-factory/blob/main/README.md","note":"Shared synthetic proof boundaries exist; dedicated Radar evaluation claims are not consolidated."},
+        "trust_center": {"status":"missing"},
+        "questionnaire_library": {"status":"missing"}
+      }
+    }
+  ]
+}
