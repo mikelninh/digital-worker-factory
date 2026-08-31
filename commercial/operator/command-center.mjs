@@ -2,6 +2,7 @@
 
 import http from 'node:http'
 import { readFile } from 'node:fs/promises'
+import { fileURLToPath } from 'node:url'
 
 import {
   buildCommercialQueue,
@@ -87,7 +88,7 @@ export function createCommercialCommandCenter({ ledgerPath }) {
   })
 }
 
-if (process.argv[1] && import.meta.url === new URL(`file://${process.argv[1]}`).href) {
+if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
   const ledgerPath = process.argv[2] || '.commercial/ledger.json'
   const port = Number(process.env.PORT || 4310)
   createCommercialCommandCenter({ ledgerPath }).listen(port, '127.0.0.1', () => {
