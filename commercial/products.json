@@ -1,0 +1,75 @@
+{
+  "schema": "commercial-product-catalog-v1",
+  "products": [
+    {
+      "id": "hauspilot-sprint",
+      "name": "HausPilot 7-day AI Operations Sprint",
+      "status": "sellable_now",
+      "pricingMode": "fixed",
+      "currency": "EUR",
+      "priceEurNet": 1900,
+      "kickoffPercent": 70,
+      "deliveryTemplate": "hauspilot",
+      "successMetricRequired": true,
+      "recurringExpansion": "hauspilot-managed-ops"
+    },
+    {
+      "id": "hauspilot-managed-ops",
+      "name": "HausPilot Managed Operations",
+      "status": "sellable_after_proof",
+      "pricingMode": "manual_quote",
+      "currency": "EUR",
+      "priceEurNet": null,
+      "kickoffPercent": 100,
+      "deliveryTemplate": "hauspilot-retainer",
+      "successMetricRequired": true,
+      "recurring": true
+    },
+    {
+      "id": "opportunity-radar",
+      "name": "Opportunity Radar",
+      "status": "sellable_beta",
+      "pricingMode": "manual_quote",
+      "currency": "EUR",
+      "priceEurNet": null,
+      "kickoffPercent": 100,
+      "deliveryTemplate": "opportunity-radar",
+      "successMetricRequired": true,
+      "recurring": true
+    },
+    {
+      "id": "pruefpilot",
+      "name": "PruefPilot Document AI",
+      "status": "sellable_pilot",
+      "pricingMode": "manual_quote",
+      "currency": "EUR",
+      "priceEurNet": null,
+      "kickoffPercent": 70,
+      "deliveryTemplate": "document-ai",
+      "successMetricRequired": true
+    },
+    {
+      "id": "gitlaw-workflow",
+      "name": "GitLaw Governed Legal Workflow Pilot",
+      "status": "sellable_pilot",
+      "pricingMode": "manual_quote",
+      "currency": "EUR",
+      "priceEurNet": null,
+      "kickoffPercent": 70,
+      "deliveryTemplate": "gitlaw",
+      "successMetricRequired": true,
+      "sensitiveDomain": true
+    },
+    {
+      "id": "openproof-integration",
+      "name": "OpenProof Trust Layer Integration",
+      "status": "sellable_pilot",
+      "pricingMode": "manual_quote",
+      "currency": "EUR",
+      "priceEurNet": null,
+      "kickoffPercent": 70,
+      "deliveryTemplate": "openproof",
+      "successMetricRequired": true
+    }
+  ]
+}
