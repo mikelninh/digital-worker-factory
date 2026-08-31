@@ -59,7 +59,7 @@ export function createProductionPlatform({ persistence, objectStore, queue, audi
       if (!reservation.created) return { ok: true, duplicate: true, jobId: reservation.result?.jobId ?? null }
       const job = await queue.enqueue({ tenantId: ctx.tenantId, kind, payload: redact(payload), idempotencyKey })
       await idempotency.complete({ tenantId: ctx.tenantId, key: idempotencyKey, result: { jobId: job.id } })
-      await emit(ctx, 'effect.enqueued', { kind, jobId: job.id, idempotencyKey })
+      await emit(ctx, 'effect.enqueued', { kind, jobId: job.id, idempotencyKey, effectPayload: payload })
       return { ok: true, duplicate: false, jobId: job.id }
     },
 
