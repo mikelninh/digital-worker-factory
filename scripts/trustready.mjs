@@ -9,13 +9,32 @@ import {
   generateTrustReadyArtifacts,
   scanTrustReadiness,
 } from '../core/trustready.mjs'
+import { collectGitHubTrustEvidence } from '../core/trustready-github.mjs'
 
 function usage() {
-  console.log(`TrustReady\n\nUsage:\n  node scripts/trustready.mjs scan <product.json>\n  node scripts/trustready.mjs remediate <product.json> <output-dir>\n  node scripts/trustready.mjs buyer-pack <product.json> <output.json>\n  node scripts/trustready.mjs portfolio <portfolio.json>\n\nProduct JSON must contain { id, name, url?, known?, evidence }.\n100 means every configured buyer-readiness control is evidence-backed or explicitly human-attested; it is not a legal-compliance guarantee.`)
+  console.log(`TrustReady\n\nUsage:\n  node scripts/trustready.mjs scan <product.json>\n  node scripts/trustready.mjs scan-github <https://github.com/owner/repo>\n  node scripts/trustready.mjs remediate <product.json> <output-dir>\n  node scripts/trustready.mjs remediate-github <https://github.com/owner/repo> <output-dir>\n  node scripts/trustready.mjs buyer-pack <product.json> <output.json>\n  node scripts/trustready.mjs portfolio <portfolio.json>\n\nProduct JSON must contain { id, name, url?, known?, evidence }.\n100 means every configured buyer-readiness control is evidence-backed or explicitly human-attested; it is not a legal-compliance guarantee.`)
 }
 
 async function loadJson(file) {
   return JSON.parse(await readFile(file, 'utf8'))
+}
+
+async function writeRemediation(product, outputDir) {
+  const scan = scanTrustReadiness(product, controls)
+  const plan = buildTrustReadyRemediationPlan(scan)
+  const generated = generateTrustReadyArtifacts(product, scan)
+  const dir = outputDir || path.join('trustready-output', product.id)
+  await mkdir(dir, { recursive: true })
+
+  for (const artifact of generated.artifacts) {
+    await writeFile(path.join(dir, artifact.path), artifact.content, 'utf8')
+  }
+  await writeFile(path.join(dir, 'product-evidence.json'), JSON.stringify(product, null, 2) + '\n', 'utf8')
+  await writeFile(path.join(dir, 'scan.json'), JSON.stringify(scan, null, 2) + '\n', 'utf8')
+  await writeFile(path.join(dir, 'remediation-plan.json'), JSON.stringify(plan, null, 2) + '\n', 'utf8')
+  await writeFile(path.join(dir, 'README.txt'), `${generated.warning}\nCurrent readiness: ${scan.score}/100\nRemaining controls: ${plan.remainingTo100}\n`, 'utf8')
+
+  return { dir, scan, plan, generated }
 }
 
 const controls = JSON.parse(await readFile(new URL('../trustready/controls.json', import.meta.url), 'utf8'))
@@ -34,22 +53,25 @@ if (command === 'scan') {
   process.exit(0)
 }
 
-if (command === 'remediate') {
-  const product = await loadJson(inputPath)
+if (command === 'scan-github') {
+  const product = await collectGitHubTrustEvidence(inputPath)
   const scan = scanTrustReadiness(product, controls)
   const plan = buildTrustReadyRemediationPlan(scan)
-  const generated = generateTrustReadyArtifacts(product, scan)
-  const dir = outputPath || path.join('trustready-output', product.id)
-  await mkdir(dir, { recursive: true })
+  console.log(JSON.stringify({ product, scan, remediation: plan }, null, 2))
+  process.exit(0)
+}
 
-  for (const artifact of generated.artifacts) {
-    await writeFile(path.join(dir, artifact.path), artifact.content, 'utf8')
-  }
-  await writeFile(path.join(dir, 'scan.json'), JSON.stringify(scan, null, 2) + '\n', 'utf8')
-  await writeFile(path.join(dir, 'remediation-plan.json'), JSON.stringify(plan, null, 2) + '\n', 'utf8')
-  await writeFile(path.join(dir, 'README.txt'), `${generated.warning}\nCurrent readiness: ${scan.score}/100\nRemaining controls: ${plan.remainingTo100}\n`, 'utf8')
+if (command === 'remediate') {
+  const product = await loadJson(inputPath)
+  const result = await writeRemediation(product, outputPath)
+  console.log(JSON.stringify({ outputDir: result.dir, score: result.scan.score, remaining: result.plan.remainingTo100, artifacts: result.generated.artifacts.map((item) => item.path) }, null, 2))
+  process.exit(0)
+}
 
-  console.log(JSON.stringify({ outputDir: dir, score: scan.score, remaining: plan.remainingTo100, artifacts: generated.artifacts.map((item) => item.path) }, null, 2))
+if (command === 'remediate-github') {
+  const product = await collectGitHubTrustEvidence(inputPath)
+  const result = await writeRemediation(product, outputPath)
+  console.log(JSON.stringify({ outputDir: result.dir, score: result.scan.score, remaining: result.plan.remainingTo100, filesObserved: product.collection.filesObserved, artifacts: result.generated.artifacts.map((item) => item.path) }, null, 2))
   process.exit(0)
 }
 
