@@ -1,0 +1,153 @@
+{
+  "schema": "trustready-control-pack-v1",
+  "version": "2026-08-31",
+  "scoreMeaning": "100 means every configured buyer-readiness control is evidence-backed or explicitly human-attested. It is not a legal-compliance guarantee.",
+  "controls": [
+    {
+      "id": "product_identity",
+      "category": "company",
+      "title": "Product identity and intended purpose",
+      "weight": 7,
+      "evidenceKeys": ["product_identity"],
+      "remediation": "Publish a precise product description, intended users, intended purpose and explicit non-goals.",
+      "autoGenerate": "product_card"
+    },
+    {
+      "id": "ai_act_role",
+      "category": "ai_governance",
+      "title": "AI Act role and risk classification",
+      "weight": 8,
+      "evidenceKeys": ["ai_act_role"],
+      "remediation": "Record whether the organisation acts as provider, deployer, importer/distributor or downstream provider and document the current risk-classification rationale.",
+      "autoGenerate": "ai_act_assessment",
+      "humanAttestationRequired": true
+    },
+    {
+      "id": "ai_interaction_disclosure",
+      "category": "ai_governance",
+      "title": "AI interaction disclosure",
+      "weight": 7,
+      "evidenceKeys": ["ai_interaction_disclosure"],
+      "remediation": "Ensure people are clearly informed when they directly interact with AI where Article 50 or buyer policy requires it.",
+      "autoGenerate": "ai_disclosure"
+    },
+    {
+      "id": "human_oversight",
+      "category": "ai_governance",
+      "title": "Human oversight and authority boundary",
+      "weight": 8,
+      "evidenceKeys": ["human_oversight"],
+      "remediation": "Document which actions AI may prepare, which actions require human approval and who has final authority.",
+      "autoGenerate": "human_oversight"
+    },
+    {
+      "id": "model_vendor_inventory",
+      "category": "supply_chain",
+      "title": "Model and AI vendor inventory",
+      "weight": 6,
+      "evidenceKeys": ["model_vendor_inventory"],
+      "remediation": "Maintain an inventory of models, AI providers, purpose, data sent, hosting region where known and fallback/replacement path.",
+      "autoGenerate": "model_inventory"
+    },
+    {
+      "id": "subprocessor_inventory",
+      "category": "privacy",
+      "title": "Subprocessor inventory",
+      "weight": 5,
+      "evidenceKeys": ["subprocessor_inventory"],
+      "remediation": "Publish or maintain a current list of subprocessors and the purpose for which each receives customer data.",
+      "autoGenerate": "subprocessor_inventory"
+    },
+    {
+      "id": "data_flow",
+      "category": "privacy",
+      "title": "Data-flow and data-boundary documentation",
+      "weight": 7,
+      "evidenceKeys": ["data_flow"],
+      "remediation": "Describe inputs, storage, model/provider calls, outputs, logs and deletion paths, including what never leaves the customer boundary.",
+      "autoGenerate": "data_flow"
+    },
+    {
+      "id": "retention_deletion",
+      "category": "privacy",
+      "title": "Retention and deletion controls",
+      "weight": 6,
+      "evidenceKeys": ["retention_deletion"],
+      "remediation": "Define retention periods, deletion triggers, tenant deletion behavior and exceptions such as legally required records.",
+      "autoGenerate": "retention_policy"
+    },
+    {
+      "id": "dpa_tom_package",
+      "category": "privacy",
+      "title": "DPA and technical-organisational measures package",
+      "weight": 7,
+      "evidenceKeys": ["dpa_tom_package"],
+      "remediation": "Prepare buyer-facing DPA/TOM starter material and have company-specific legal terms reviewed before relying on it contractually.",
+      "autoGenerate": "dpa_tom_starter",
+      "humanAttestationRequired": true
+    },
+    {
+      "id": "security_contact",
+      "category": "security",
+      "title": "Security contact and vulnerability intake",
+      "weight": 4,
+      "evidenceKeys": ["security_contact"],
+      "remediation": "Publish a monitored security contact and a simple vulnerability-reporting path.",
+      "autoGenerate": "security_contact"
+    },
+    {
+      "id": "incident_response",
+      "category": "security",
+      "title": "Security and AI incident response",
+      "weight": 6,
+      "evidenceKeys": ["incident_response"],
+      "remediation": "Document incident triage, containment, customer notification decision points, evidence preservation and post-incident review.",
+      "autoGenerate": "incident_response"
+    },
+    {
+      "id": "access_tenant_controls",
+      "category": "security",
+      "title": "Authentication, authorization and tenant isolation",
+      "weight": 7,
+      "evidenceKeys": ["access_tenant_controls"],
+      "remediation": "Show how identities bind to roles/tenants and how cross-tenant or unauthorised access fails closed.",
+      "autoGenerate": null
+    },
+    {
+      "id": "audit_trace",
+      "category": "assurance",
+      "title": "Auditability and consequential-action trace",
+      "weight": 6,
+      "evidenceKeys": ["audit_trace"],
+      "remediation": "Keep a durable trace of evidence, tool calls, approvals and consequential actions without leaking secrets into logs.",
+      "autoGenerate": null
+    },
+    {
+      "id": "evals_limitations",
+      "category": "assurance",
+      "title": "Evaluations, limitations and known failure modes",
+      "weight": 7,
+      "evidenceKeys": ["evals_limitations"],
+      "remediation": "Publish what has been evaluated, sample sizes, important failure modes, unproven areas and release gates.",
+      "autoGenerate": "assurance_summary"
+    },
+    {
+      "id": "trust_center",
+      "category": "procurement",
+      "title": "Buyer-facing trust centre",
+      "weight": 5,
+      "evidenceKeys": ["trust_center"],
+      "remediation": "Create one buyer-facing page that links current security, privacy, AI governance, reliability and contact evidence.",
+      "autoGenerate": "trust_center"
+    },
+    {
+      "id": "questionnaire_library",
+      "category": "procurement",
+      "title": "Reusable security and AI questionnaire answer library",
+      "weight": 4,
+      "evidenceKeys": ["questionnaire_library"],
+      "remediation": "Maintain approved answers with evidence links so repeated buyer questionnaires can be completed without inventing claims.",
+      "autoGenerate": "questionnaire_library"
+    }
+  ]
+}
