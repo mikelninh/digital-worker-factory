@@ -20,6 +20,8 @@ jobs:
         run: node --test packs/hauspilot/runtime/runtime.test.mjs
       - name: Run shared capability gateway contracts
         run: node --test core/agent-gateway.test.mjs core/providers/gitlaw.test.mjs core/factory-gateway.test.mjs
+      - name: Run production Trust Stack contracts
+        run: node --test core/trust-chain.test.mjs core/production-boundary.test.mjs production/platform-v1.test.mjs
       - name: Run RevenueOS economic + approval contracts
         run: node --test core/revenue-os.test.mjs
       - name: Run RevenueOS lifecycle + persistence + operator contracts
@@ -91,15 +93,17 @@ jobs:
           grep -q "Datenschutz ist ein Gate" site/hauspilot-privacy.html
           grep -q "Build capabilities agents can be trusted to use" site/agent-capabilities.html
           grep -q "Blocked before network" site/agent-capabilities.html
-      - name: Verify radically simplified operating interface
+      - name: Verify recruiter-first source-verifiable runtime interface
         run: |
           test -s site/simple-operations.html
           test -s packs/hauspilot/operator/ONE_PAGE.md
-          grep -q "Ein Ablauf" site/simple-operations.html
-          grep -q "20–50 Beispiele" site/simple-operations.html
-          grep -q "STARTEN" site/simple-operations.html
-          grep -q "Richtig" site/simple-operations.html
-          grep -q "ausdrücklich" site/simple-operations.html
+          grep -q "One runtime" site/simple-operations.html
+          grep -q "Synthetic case" site/simple-operations.html
+          grep -q "Allowed tools" site/simple-operations.html
+          grep -q "AI prepares" site/simple-operations.html
+          grep -q "Human decides" site/simple-operations.html
+          grep -q "Show source" site/simple-operations.html
+          grep -q "What stays the same" site/simple-operations.html
           grep -q "Was ist mein nächster Klick" packs/hauspilot/operator/ONE_PAGE.md
       - name: Verify existing role-based pilot command center
         run: |
