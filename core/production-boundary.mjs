@@ -1,3 +1,5 @@
+import { TRUST_LEVELS, validateTrustChain } from './trust-chain.mjs'
+
 const SECRET_KEY = /(authorization|cookie|password|passwd|secret|api[-_]?key|access[-_]?token|refresh[-_]?token|private[-_]?key)/i
 const SECRET_VALUE = /(bearer\s+[a-z0-9._~-]+|sk-[a-z0-9_-]{8,})/i
 
@@ -76,6 +78,7 @@ export function evaluateProductionReadiness(config = {}) {
     retention_and_deletion: Boolean(config.retentionAndDeletion),
     backup_restore_tested: Boolean(config.backupRestoreTested),
     deployment_and_rollback: Boolean(config.deploymentAndRollback),
+    trust_chain_enforced: Boolean(config.trustChainEnforced),
   }
   const missing = Object.entries(gates).filter(([, ok]) => !ok).map(([name]) => name)
   return {
@@ -90,14 +93,17 @@ export class ProductionAgentGateway {
   #gateway
   #idempotency
   #audit
+  #minimumTrust
 
-  constructor({ gateway, idempotencyStore, auditSink } = {}) {
+  constructor({ gateway, idempotencyStore, auditSink, minimumTrust = TRUST_LEVELS.TRACEABLE } = {}) {
     if (!gateway || typeof gateway.invoke !== 'function') throw new TypeError('gateway with invoke() is required')
     if (!idempotencyStore || typeof idempotencyStore.claim !== 'function') throw new TypeError('idempotencyStore is required')
     if (!auditSink || typeof auditSink.append !== 'function') throw new TypeError('auditSink is required')
+    if (!Object.values(TRUST_LEVELS).includes(minimumTrust)) throw new TypeError('invalid minimumTrust')
     this.#gateway = gateway
     this.#idempotency = idempotencyStore
     this.#audit = auditSink
+    this.#minimumTrust = minimumTrust
   }
 
   async invoke({
@@ -111,6 +117,7 @@ export class ProductionAgentGateway {
     mode = 'execute',
     traceId = crypto.randomUUID(),
     idempotencyKey = null,
+    trustChain = null,
   } = {}) {
     let context
     try {
@@ -125,19 +132,32 @@ export class ProductionAgentGateway {
     }
 
     const effectful = mode === 'execute'
+    let trust = { ok: true, level: TRUST_LEVELS.NONE, reasons: [], digest: null }
+    if (effectful && this.#minimumTrust !== TRUST_LEVELS.NONE) {
+      trust = validateTrustChain(trustChain, { minimumLevel: this.#minimumTrust, approvedBy })
+      if (!trust.ok) {
+        await this.#audit.append({
+          at: new Date().toISOString(), requestId, traceId, tenantId: context.tenantId,
+          actorId: context.actor.id, capabilityId, status: 'blocked', code: 'trust_chain_incomplete',
+          trustLevel: trust.level, trustReasons: trust.reasons, trustDigest: trust.digest ?? null,
+        })
+        return { ok: false, status: 'blocked', traceId, error: 'trust_chain_incomplete', trust }
+      }
+    }
+
     const claimKey = effectful ? `${context.tenantId}:${capabilityId}:${idempotencyKey ?? ''}` : null
     if (effectful) {
       if (!idempotencyKey) {
         await this.#audit.append({
           at: new Date().toISOString(), requestId, traceId, tenantId: context.tenantId,
-          actorId: context.actor.id, capabilityId, status: 'blocked', code: 'idempotency_key_required',
+          actorId: context.actor.id, capabilityId, status: 'blocked', code: 'idempotency_key_required', trustDigest: trust.digest,
         })
         return { ok: false, status: 'blocked', traceId, error: 'idempotency_key_required' }
       }
       if (!this.#idempotency.claim(claimKey)) {
         await this.#audit.append({
           at: new Date().toISOString(), requestId, traceId, tenantId: context.tenantId,
-          actorId: context.actor.id, capabilityId, status: 'duplicate_blocked', code: 'duplicate_execution',
+          actorId: context.actor.id, capabilityId, status: 'duplicate_blocked', code: 'duplicate_execution', trustDigest: trust.digest,
         })
         return { ok: false, status: 'duplicate_blocked', traceId, error: 'duplicate_execution' }
       }
@@ -168,15 +188,17 @@ export class ProductionAgentGateway {
         ok: result.ok,
         durationMs: Date.now() - startedAt,
         inputMetadata: redactSensitive({ keys: Object.keys(input || {}) }),
+        trustLevel: trust.level,
+        trustDigest: trust.digest,
       })
-      return result
+      return { ...result, trust: effectful ? trust : undefined }
     } catch (error) {
       if (effectful && claimKey) this.#idempotency.release?.(claimKey)
       const message = error instanceof Error ? error.message : String(error)
       await this.#audit.append({
         at: new Date().toISOString(), requestId, traceId, tenantId: context.tenantId,
         actorId: context.actor.id, capabilityId, status: 'failed', error: redactSensitive(message),
-        durationMs: Date.now() - startedAt,
+        durationMs: Date.now() - startedAt, trustDigest: trust.digest,
       })
       return { ok: false, status: 'failed', traceId, error: 'production_gateway_failure' }
     }
