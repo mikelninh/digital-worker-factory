@@ -1,0 +1,44 @@
+name: trust-stack-conformance
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'architecture/trust-chain-v1.schema.json'
+      - 'architecture/TRUST_STACK_V1.md'
+      - 'core/trust-chain.mjs'
+      - 'core/trust-chain.test.mjs'
+      - 'core/trust-chain-schema.test.mjs'
+      - 'core/production-boundary.mjs'
+      - 'core/production-boundary.test.mjs'
+      - 'production/platform-v1.mjs'
+      - 'production/platform-v1.test.mjs'
+      - '.github/workflows/trust-stack-conformance.yml'
+  pull_request:
+    paths:
+      - 'architecture/trust-chain-v1.schema.json'
+      - 'architecture/TRUST_STACK_V1.md'
+      - 'core/trust-chain.mjs'
+      - 'core/trust-chain.test.mjs'
+      - 'core/trust-chain-schema.test.mjs'
+      - 'core/production-boundary.mjs'
+      - 'core/production-boundary.test.mjs'
+      - 'production/platform-v1.mjs'
+      - 'production/platform-v1.test.mjs'
+      - '.github/workflows/trust-stack-conformance.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  conformance:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Validate common Trust Chain v1 contract
+        run: node --test core/trust-chain.test.mjs core/trust-chain-schema.test.mjs
+      - name: Prove production boundaries still fail closed
+        run: node --test core/production-boundary.test.mjs production/platform-v1.test.mjs
