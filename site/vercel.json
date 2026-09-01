@@ -1,5 +1,7 @@
 {
   "rewrites": [
+    { "source": "/architect", "destination": "/product-architect.html" },
+    { "source": "/control", "destination": "/product-architect.html" },
     { "source": "/agents", "destination": "/agent-capabilities.html" },
     { "source": "/proof/interloom", "destination": "/interloom.html" },
     { "source": "/proof/:slug", "destination": "/index.html" }
