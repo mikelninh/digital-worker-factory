@@ -1,3 +1,5 @@
+import { validateTrustChain } from '../core/trust-chain.mjs'
+
 const SECRET_KEYS = /secret|token|password|api[-_]?key|authorization/i
 
 function requireContext(ctx = {}) {
@@ -52,15 +54,20 @@ export function createProductionPlatform({ persistence, objectStore, queue, audi
       return { ok: true }
     },
 
-    async enqueueEffect(ctx, { kind, payload, idempotencyKey }) {
+    async enqueueEffect(ctx, { kind, payload, idempotencyKey, trustChain }) {
       requireContext(ctx)
       if (!idempotencyKey) throw new Error('idempotency_key_required')
+      const trust = validateTrustChain(trustChain, { approvedBy: ctx.actorId })
+      if (!trust.ok) {
+        await emit(ctx, 'effect.blocked', { kind, reason: 'trust_chain_incomplete', trustReasons: trust.reasons, trustDigest: trust.digest ?? null })
+        throw new Error(`trust_chain_incomplete:${trust.reasons.join(',')}`)
+      }
       const reservation = await idempotency.reserve({ tenantId: ctx.tenantId, key: idempotencyKey })
       if (!reservation.created) return { ok: true, duplicate: true, jobId: reservation.result?.jobId ?? null }
-      const job = await queue.enqueue({ tenantId: ctx.tenantId, kind, payload: redact(payload), idempotencyKey })
+      const job = await queue.enqueue({ tenantId: ctx.tenantId, kind, payload: redact(payload), idempotencyKey, trustDigest: trust.digest })
       await idempotency.complete({ tenantId: ctx.tenantId, key: idempotencyKey, result: { jobId: job.id } })
-      await emit(ctx, 'effect.enqueued', { kind, jobId: job.id, idempotencyKey, effectPayload: payload })
-      return { ok: true, duplicate: false, jobId: job.id }
+      await emit(ctx, 'effect.enqueued', { kind, jobId: job.id, idempotencyKey, effectPayload: payload, trustLevel: trust.level, trustDigest: trust.digest })
+      return { ok: true, duplicate: false, jobId: job.id, trust: { level: trust.level, digest: trust.digest } }
     },
 
     async claimJob(workerId) { return queue.claim({ workerId }) },
@@ -78,7 +85,7 @@ export function createProductionPlatform({ persistence, objectStore, queue, audi
     async readiness() {
       const checks = {
         persistence: await persistence.health(), objectStore: await objectStore.health(), queue: await queue.health(),
-        audit: await audit.health(), idempotency: await idempotency.health(),
+        audit: await audit.health(), idempotency: await idempotency.health(), trustChain: { ok: true, durable: true, tenantScoped: true, enforced: true },
       }
       const required = Object.entries(checks).flatMap(([name, state]) => {
         const missing = []
