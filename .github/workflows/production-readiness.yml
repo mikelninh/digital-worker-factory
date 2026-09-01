@@ -3,16 +3,22 @@ name: production-readiness
 on:
   pull_request:
     paths:
+      - 'core/trust-chain.mjs'
+      - 'core/trust-chain.test.mjs'
       - 'core/production-boundary.mjs'
       - 'core/production-boundary.test.mjs'
       - 'production/**'
+      - 'architecture/TRUST_STACK_V1.md'
       - '.github/workflows/production-readiness.yml'
   push:
     branches: [main]
     paths:
+      - 'core/trust-chain.mjs'
+      - 'core/trust-chain.test.mjs'
       - 'core/production-boundary.mjs'
       - 'core/production-boundary.test.mjs'
       - 'production/**'
+      - 'architecture/TRUST_STACK_V1.md'
       - '.github/workflows/production-readiness.yml'
   workflow_dispatch:
 
@@ -27,12 +33,19 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+      - name: Test canonical Trust Stack
+        run: node --test core/trust-chain.test.mjs
       - name: Test production boundary
         run: node --test core/production-boundary.test.mjs
       - name: Test Production Platform v1 end to end
         run: node --test production/platform-v1.test.mjs
-      - name: Verify truth boundaries
+      - name: Verify truth and fail-closed boundaries
         run: |
+          grep -q 'trust_chain_required' core/trust-chain.mjs
+          grep -q 'evidence_exact_locator_required' core/trust-chain.mjs
+          grep -q 'human_approval_mismatch' core/trust-chain.mjs
+          grep -q 'trust_chain_incomplete' core/production-boundary.mjs
+          grep -q 'trust_chain_incomplete' production/platform-v1.mjs
           grep -q 'tenant_required' core/production-boundary.mjs
           grep -q 'idempotency_key_required' core/production-boundary.mjs
           grep -q 'cross_tenant_actor_blocked' core/production-boundary.mjs
