@@ -1,0 +1,119 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mikelninh.github.io/contracts/trust-chain-v1.schema.json",
+  "title": "Digital Worker Factory Trust Chain v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "subject", "authenticity", "integrity", "provenance", "authority", "evidence", "derivation", "humanDecision", "audit"],
+  "properties": {
+    "version": { "const": "trust-chain/v1" },
+    "subject": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "id"],
+      "properties": {
+        "type": { "type": "string", "minLength": 1 },
+        "id": { "type": "string", "minLength": 1 }
+      }
+    },
+    "authenticity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "method"],
+      "properties": {
+        "status": { "enum": ["unverified", "original_as_received", "verified_issuer"] },
+        "method": { "type": "string", "minLength": 1 }
+      }
+    },
+    "integrity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["verified", "sha256", "version", "capturedAt"],
+      "properties": {
+        "verified": { "const": true },
+        "sha256": { "type": "string", "pattern": "^[a-fA-F0-9]{64}$" },
+        "version": { "type": "string", "minLength": 1 },
+        "capturedAt": { "type": "string", "minLength": 1 }
+      }
+    },
+    "provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sourceSystem", "sourceUri", "acquiredAt"],
+      "properties": {
+        "sourceSystem": { "type": "string", "minLength": 1 },
+        "sourceUri": { "type": "string", "minLength": 1 },
+        "acquiredAt": { "type": "string", "minLength": 1 }
+      }
+    },
+    "authority": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "title", "version", "sourceUrl", "status"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "title": { "type": "string", "minLength": 1 },
+        "version": { "type": "string", "minLength": 1 },
+        "sourceUrl": { "type": "string", "minLength": 1 },
+        "status": { "enum": ["authoritative", "case_specific"] }
+      }
+    },
+    "evidence": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "sourceId", "locator", "excerptHash"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "sourceId": { "type": "string", "minLength": 1 },
+          "locator": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["kind", "value"],
+            "properties": {
+              "kind": { "enum": ["page", "paragraph", "section", "row", "field", "record"] },
+              "value": { "type": "string", "minLength": 1 }
+            }
+          },
+          "excerptHash": { "type": "string", "pattern": "^[a-fA-F0-9]{64}$" }
+        }
+      }
+    },
+    "derivation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["summary", "method", "evidenceIds"],
+      "properties": {
+        "summary": { "type": "string", "minLength": 1 },
+        "method": { "type": "string", "minLength": 1 },
+        "evidenceIds": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "humanDecision": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["required", "status", "actorId", "at"],
+      "properties": {
+        "required": { "const": true },
+        "status": { "enum": ["pending", "approved", "rejected"] },
+        "actorId": { "type": ["string", "null"] },
+        "at": { "type": ["string", "null"] }
+      }
+    },
+    "audit": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["traceId", "createdAt"],
+      "properties": {
+        "traceId": { "type": "string", "minLength": 1 },
+        "createdAt": { "type": "string", "minLength": 1 }
+      }
+    }
+  }
+}
