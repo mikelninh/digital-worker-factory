@@ -4,7 +4,7 @@
 
 Digital Worker Factory is a reusable runtime for AI-assisted operational work. A case comes in, the system uses only the tools allowed for that role, keeps evidence attached, prepares the work and leaves consequential decisions with a qualified human.
 
-**[Try the live synthetic demo →](https://mikelninh.github.io/agents/)** · [Portfolio](https://mikelninh.github.io/product-architect/)
+**[Try the multi-profession synthetic demo →](https://mikelninh.github.io/agents/)** · [Portfolio](https://mikelninh.github.io/product-architect/)
 
 ## The product model
 
@@ -24,17 +24,11 @@ human approval for consequential actions
 audit + eval / replay
 ```
 
-### Public administration
+The public demo makes this concrete with three realistic synthetic cases:
 
-Funding application + invoice + proof of payment → completeness and consistency checks → review memo + targeted follow-up → case officer decides.
-
-### Law firm
-
-Case file + legal sources → grounded research + uncertainty → cited draft → qualified lawyer decides whether anything is sent.
-
-### Healthcare
-
-Clinical documents + medication list + labs → discrepancy-focused summary → physician review. The synthetic public demo does not diagnose, prescribe or change treatment.
+- **Public administration** — a reimbursement claim is checked for missing evidence and a payment mismatch; a case officer decides the follow-up.
+- **Law firm** — a tenancy file is combined with source-grounded legal research; a cited draft is prepared for lawyer review.
+- **Healthcare** — a discharge letter, medication list and lab context are reconciled; a discrepancy summary is prepared for physician review. The demo does not diagnose, prescribe or change treatment.
 
 ## What is actually implemented
 
@@ -63,6 +57,8 @@ A full 100-case run completed with:
 - 0 false execution claims
 - 100% on classification, property resolution, repair urgency and shadow-boundary checks in that synthetic release set
 
+[See the successful 100-case workflow run →](https://github.com/mikelninh/digital-worker-factory/actions/runs/32991903663)
+
 These are **synthetic engineering evals**, not claims of real-world production accuracy.
 
 ## Real domain engines
@@ -78,10 +74,6 @@ A source-grounded legal system. The Factory includes a dedicated GitLaw provider
 ### Healthcare
 
 The public medical example is intentionally a **synthetic domain illustration** of the same runtime pattern. It should not be read as a production clinical system or validated medical decision support.
-
-## Commercial wedge — HausPilot
-
-HausPilot is the first productised operational worker pack: property-management workflows such as repair intake, tenant inbox handling and invoice review. The underlying runtime separates model reasoning from execution authority and keeps external actions behind deterministic policy and human approval.
 
 ## Reliability loop
 
