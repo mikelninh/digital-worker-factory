@@ -44,6 +44,8 @@ The public demo makes this concrete with three realistic synthetic cases:
 
 The model can interpret and propose. **The system authorizes.**
 
+**Build capabilities agents can be trusted to use.**
+
 ## Real-model proof
 
 HausPilot, one worker pack built on the runtime, has a real-model release gate that sends synthetic operational cases through the OpenAI Responses API and validates structured outputs against deterministic safety and policy checks.
