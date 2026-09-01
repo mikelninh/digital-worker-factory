@@ -71,18 +71,18 @@ test('60-second one-pager matches the canonical flow and current live proof', ()
   assert.doesNotMatch(onepager,/Live-Modell-Gate wird separat protokolliert/);
 });
 
-test('interactive demo is unmistakably a demo and uses the same five-step mental model', () => {
-  assert.match(simple, /INTERAKTIVE DEMO/);
-  assert.match(simple, /Beispielwerte/);
-  assert.match(simple, /keine Kundenergebnisse/);
-  for(const label of ['Beauftragen','Hochladen','Testen','Prüfen','Entscheiden']) assert.match(simple,new RegExp(label));
-  for(const action of ['STARTEN','ANFORDERN','WARTEN','STOPP'])assert.match(simple,new RegExp(action));
-  assert.match(simple,/✓ Richtig/);
-  assert.match(simple,/✎ Ändern/);
-  assert.match(simple,/✕ Falsch/);
-  assert.match(simple,/Kunde möchte ausdrücklich weiter/);
-  assert.match(simple,/Kein verstecktes Abo/);
-  assert.match(simple,/Was bleibt beim Founder\?/);
+test('interactive demo is unmistakably synthetic and exposes the shared trust runtime', () => {
+  assert.match(simple, /One runtime/);
+  assert.match(simple, /Synthetic case/);
+  assert.match(simple, /Run synthetic case/);
+  for(const label of ['Input','Allowed tools','Evidence','AI prepares','Human decides']) assert.match(simple,new RegExp(label));
+  assert.match(simple,/Show source/);
+  assert.match(simple,/source-verifiable/i);
+  assert.match(simple,/nothing approved, sent or changed/i);
+  assert.match(simple,/qualified human decides/i);
+  assert.match(simple,/Public administration/);
+  assert.match(simple,/Law firm/);
+  assert.match(simple,/Healthcare/);
   for (const href of legacyLinks) assert.ok(!simple.includes(href), `simple flow must not link legacy surface ${href}`);
 });
 
