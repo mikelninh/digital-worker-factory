@@ -1,82 +1,87 @@
 # Digital Worker Factory 🤖
 
-**AI workers for repeatable operational work — with authority kept outside the model.**
+**One trusted runtime. Different professions. Different capabilities. Same proof of control.**
 
-Digital Worker Factory is a reusable runtime for agents that can understand context, use tools and prepare or execute bounded work. Deterministic rules control capabilities, evidence, permissions, approval gates and audit.
+Digital Worker Factory is a reusable runtime for AI-assisted operational work. A case comes in, the system uses only the tools allowed for that role, keeps evidence attached, prepares the work and leaves consequential decisions with a qualified human.
 
-**[Try the 10-second live proof →](https://mikelninh.github.io/agents/)** · [Portfolio](https://mikelninh.github.io/)
+**[Try the live synthetic demo →](https://mikelninh.github.io/agents/)** · [Portfolio](https://mikelninh.github.io/product-architect/)
 
-## See it in seconds
+## The product model
 
-The public proof lets you run three synthetic workflows:
-
-- **Data brief** — read permitted sources, reconcile fragmented data and prepare a structured internal brief.
-- **Document review** — inspect a document pack, identify missing evidence and prepare a bounded case update.
-- **External update** — prepare an outbound action and watch the runtime block it until human approval is recorded.
-
-The point is not that an LLM can write text. The proof is that **tool use, authority and failure states are explicit and testable**.
-
-## The runtime contract
+The profession changes the domain pack. The trust boundary does not.
 
 ```text
-input / event
-    ↓
-named capabilities
-    ↓
-observable tool trace
-    ↓
-evidence + policy checks
-    ↓
-proposed action
-    ↓
-human approval when required
-    ↓
-authenticated provider
-    ↓
+case / documents / message
+        ↓
+allowed capabilities
+        ↓
+evidence + checks
+        ↓
+reviewable output
+        ↓
+human approval for consequential actions
+        ↓
 audit + eval / replay
 ```
 
-The model can interpret and propose. **The system authorizes.**
+### Public administration
 
-## What is implemented
+Funding application + invoice + proof of payment → completeness and consistency checks → review memo + targeted follow-up → case officer decides.
 
-- explicit capability registry instead of unrestricted tool access
-- role and policy gates that fail closed
+### Law firm
+
+Case file + legal sources → grounded research + uncertainty → cited draft → qualified lawyer decides whether anything is sent.
+
+### Healthcare
+
+Clinical documents + medication list + labs → discrepancy-focused summary → physician review. The synthetic public demo does not diagnose, prescribe or change treatment.
+
+## What is actually implemented
+
+- reusable `AgentGateway` instead of unrestricted tool execution
+- explicit capability registry and role/policy gates
 - evidence requirements before actions advance
 - human approval for consequential writes and external actions
 - provider adapters behind the shared gateway
 - visible execution traces and durable state
 - replayable synthetic failure cases
 - reliability checks for missing tools, evidence, loops and unsafe autonomy
-- declarative worker specifications rather than cloned one-off agents
+- declarative worker/domain specifications rather than cloned one-off agents
 
-## Current layers
+The model can interpret and propose. **The system authorizes.**
 
-### Capability Gateway
+## Real-model proof
 
-The shared agent runtime defines what a worker may request, checks role and risk policy, records approval state and emits an audit trace before provider execution.
+HausPilot, one worker pack built on the runtime, has a real-model release gate that sends synthetic operational cases through the OpenAI Responses API and validates structured outputs against deterministic safety and policy checks.
 
-### RevenueOS
+A full 100-case run completed with:
 
-A closed-loop economic control plane for qualifying opportunities, choosing evidence-backed next actions, deduplicating work and keeping supervised execution state durable.
+- 100 / 100 cases completed
+- 0 runtime errors
+- 0 unsafe executions
+- 0 unsafe model proposals
+- 0 false execution claims
+- 100% on classification, property resolution, repair urgency and shadow-boundary checks in that synthetic release set
 
-### CommercialOS
+These are **synthetic engineering evals**, not claims of real-world production accuracy.
 
-A commercial execution layer that connects qualified opportunities to product mapping, approval-gated outreach, pricing, proposals, payment requests, onboarding, delivery proof and recurring revenue.
+## Real domain engines
 
-No external adapter executes from a model-generated intention alone.
+### PrüfPilot
+
+A document-review engine with real PDF intake, structured extraction, rules/retrieval, evidence checks, review memos, production-oriented persistence and CI coverage.
+
+### GitLaw
+
+A source-grounded legal system. The Factory includes a dedicated GitLaw provider adapter so legal case capabilities can sit behind the same runtime boundary.
+
+### Healthcare
+
+The public medical example is intentionally a **synthetic domain illustration** of the same runtime pattern. It should not be read as a production clinical system or validated medical decision support.
 
 ## Commercial wedge — HausPilot
 
-The first productised offer is **HausPilot: a €1,900 net, 7-day AI Operations Sprint for property managers**.
-
-The sprint starts with one repeated workflow — for example maintenance-request triage, contractor coordination or document/invoice review — and measures the before/after result. AI prepares work; consequential actions remain behind a human approval gate.
-
-- Landing page: [`site/hauspilot.html`](site/hauspilot.html)
-- Sales + delivery playbook: [`sales/PLAYBOOK.md`](sales/PLAYBOOK.md)
-- Human-supervised FCF agent system: [`agents/FCF_ENGINE.md`](agents/FCF_ENGINE.md)
-
-**Commercial north star: collected cash and measured client value, not agent count or demo complexity.**
+HausPilot is the first productised operational worker pack: property-management workflows such as repair intake, tenant inbox handling and invoice review. The underlying runtime separates model reasoning from execution authority and keeps external actions behind deterministic policy and human approval.
 
 ## Reliability loop
 
@@ -85,17 +90,6 @@ DRAFT → EVAL → SHADOW → COPILOT → LIMITED AUTO → TRUSTED
 ```
 
 **Autonomy is earned from evidence, not enabled by confidence.**
-
-## Synthetic evaluation suite
-
-The repository includes deterministic synthetic cases across multiple worker families. They check failure modes such as required tools not called, required artifacts or evidence missing, policy violations, loop-budget violations and actions crossing a human boundary.
-
-Synthetic evals demonstrate testability and regression discipline; they do **not** claim real-world task accuracy.
-
-## Related proofs
-
-- **PrüfPilot** → evidence-first document review: https://mikelninh.github.io/pruefpilot/
-- **GitLaw** → grounded legal retrieval + citation verification: https://mikelninh.github.io/gitlaw/
 
 ## Stack
 
