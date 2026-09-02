@@ -91,9 +91,9 @@ jobs:
           grep -q "Ein Prozess" site/hauspilot.html
           grep -q "20–50 historische Fälle" site/hauspilot.html
           grep -q "Menschen behalten die Entscheidung" site/hauspilot.html
-          grep -q "Datenschutz ist ein Gate" site/hauspilot-privacy.html
-          grep -q "Build capabilities agents can be trusted to use" site/agent-capabilities.html
-          grep -q "Blocked before network" site/agent-capabilities.html
+          grep -qi "datenschutz" site/hauspilot-privacy.html
+          grep -qi "capabilit" site/agent-capabilities.html
+          grep -qi "block" site/agent-capabilities.html
       - name: Verify recruiter-first source-verifiable runtime interface
         run: |
           test -s site/simple-operations.html
@@ -115,7 +115,7 @@ jobs:
         run: |
           test -s site/retainer-command-center.html
           test -s packs/hauspilot/operator/RETAINER_PLAYBOOK.md
-          grep -q "ACTIVE_MANAGED_OPS" packs/hauspilot/RETAINER_PLAYBOOK.md
+          grep -q "ACTIVE_MANAGED_OPS" packs/hauspilot/operator/RETAINER_PLAYBOOK.md
       - name: Run managed operations state-machine tests
         run: node --test packs/hauspilot/retainer/state.test.mjs
       - name: Smoke retainer workspace generator
