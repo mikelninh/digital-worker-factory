@@ -4,7 +4,19 @@
 
 Digital Worker Factory is a reusable runtime for AI-assisted operational work. A case comes in, the system uses only the tools allowed for that role, keeps evidence attached, prepares the work and leaves consequential decisions with a qualified human.
 
-**[Try the multi-profession synthetic demo →](https://mikelninh.github.io/agents/)** · [Portfolio](https://mikelninh.github.io/product-architect/)
+**[Try the focused HausPilot proof →](https://mikelninh.github.io/agents/)** · [Portfolio](https://mikelninh.github.io/)
+
+## Start with the workflow
+
+The public proof follows one realistic synthetic tenant-operations case end to end:
+
+1. inspect the incoming tenant message;
+2. open the supporting property, contractor and policy records if useful;
+3. run the bounded worker;
+4. review the prepared repair case;
+5. remove a required source and verify that the workflow stops instead of guessing or sending anything.
+
+The case is **synthetic by design**. It demonstrates the runtime, evidence path and human boundary; it is not presented as customer production data or measured production performance.
 
 ## The product model
 
@@ -24,12 +36,6 @@ human approval for consequential actions
 audit + eval / replay
 ```
 
-The public demo makes this concrete with three realistic synthetic cases:
-
-- **Public administration** — a reimbursement claim is checked for missing evidence and a payment mismatch; a case officer decides the follow-up.
-- **Law firm** — a tenancy file is combined with source-grounded legal research; a cited draft is prepared for lawyer review.
-- **Healthcare** — a discharge letter, medication list and lab context are reconciled; a discrepancy summary is prepared for physician review. The demo does not diagnose, prescribe or change treatment.
-
 ## What is actually implemented
 
 - reusable `AgentGateway` instead of unrestricted tool execution
@@ -44,26 +50,30 @@ The public demo makes this concrete with three realistic synthetic cases:
 
 The model can interpret and propose. **The system authorizes.**
 
-**Build capabilities agents can be trusted to use.**
+## Engineering evidence
 
-## Real-model proof
+HausPilot has a real-model release gate that sends synthetic operational cases through the OpenAI Responses API and validates structured outputs against deterministic safety and policy checks.
 
-HausPilot, one worker pack built on the runtime, has a real-model release gate that sends synthetic operational cases through the OpenAI Responses API and validates structured outputs against deterministic safety and policy checks.
+A published 100-case synthetic run completed with no runtime errors, unsafe executions or false execution claims in that release set. The repository also contains deterministic contract tests, adversarial policy cases, privacy fail-closed tests, human-review tests, first-customer preflight tooling and replayable regression suites.
 
-A full 100-case run completed with:
+[Inspect the published 100-case run →](https://github.com/mikelninh/digital-worker-factory/actions/runs/32991903663) · [Inspect current CI →](https://github.com/mikelninh/digital-worker-factory/actions)
 
-- 100 / 100 cases completed
-- 0 runtime errors
-- 0 unsafe executions
-- 0 unsafe model proposals
-- 0 false execution claims
-- 100% on classification, property resolution, repair urgency and shadow-boundary checks in that synthetic release set
+These are **synthetic engineering evals**, not claims of real-world production accuracy or customer outcomes.
 
-[See the successful 100-case workflow run →](https://github.com/mikelninh/digital-worker-factory/actions/runs/32991903663)
+## Pilot readiness
 
-These are **synthetic engineering evals**, not claims of real-world production accuracy.
+The intended next validation step is a controlled shadow pilot on historical cases:
 
-## Real domain engines
+- no automatic external writes;
+- human reviewer checks every prepared case;
+- measure handling time, corrections, escalations and false-completion rate;
+- turn every material failure into a regression case before autonomy increases.
+
+That makes the current system a **pilot-ready engineering candidate**, not a production-validated autonomous worker.
+
+See [`PILOT_READINESS.md`](PILOT_READINESS.md) and [`CUSTOMER_PILOT_RUNBOOK.md`](CUSTOMER_PILOT_RUNBOOK.md) for the operational path.
+
+## Domain engines
 
 ### PrüfPilot
 
@@ -75,7 +85,7 @@ A source-grounded legal system. The Factory includes a dedicated GitLaw provider
 
 ### Healthcare
 
-The public medical example is intentionally a **synthetic domain illustration** of the same runtime pattern. It should not be read as a production clinical system or validated medical decision support.
+Healthcare examples remain synthetic domain illustrations of the runtime pattern. They are not presented as production clinical systems or validated medical decision support.
 
 ## Reliability loop
 
