@@ -3,24 +3,20 @@
   "project": "Digital Worker Factory",
   "north_star": "Turn repeated operational work into bounded AI workflows that remove real work while keeping evidence, permissions, human authority and failure inspectable.",
   "achieved": [
-    {"title": "Shared AgentGateway, capability registry and approval boundaries", "evidence": ["README.md", "core/", "agents/"]},
-    {"title": "Replayable traces, policy checks and failure regression harness", "evidence": ["README.md", "evals/", ".github/workflows/evals.yml"]},
-    {"title": "100-case synthetic HausPilot release proof", "evidence": ["README.md", "PILOT_READINESS.md"]}
+    {"title": "Shared AgentGateway, capability registry and approval boundaries", "label": "Agent gateway", "evidence": ["README.md", "core/", "agents/"]},
+    {"title": "Replayable traces, policy checks and failure regression harness", "label": "Replay + policy", "evidence": ["README.md", "evals/", ".github/workflows/evals.yml"]},
+    {"title": "100-case synthetic HausPilot release proof", "label": "HausPilot proof", "evidence": ["README.md", "PILOT_READINESS.md"]}
   ],
-  "current": {
-    "title": "Prove the runtime in a controlled shadow pilot",
-    "status": "active",
-    "outcome": "Move from pilot-ready engineering candidate to measured evidence that the workflow saves time without false completion or unsafe execution."
-  },
+  "current": {"title": "Prove the runtime in a controlled shadow pilot", "label": "Shadow pilot", "status": "active", "outcome": "Move from pilot-ready engineering candidate to measured evidence that the workflow saves time without false completion or unsafe execution."},
   "next": [
-    {"title": "Run representative historical workflows in shadow mode", "why": "The next useful evidence is human-reviewed case performance, not another synthetic feature."},
-    {"title": "Measure time, corrections, escalations and false completion", "why": "Those signals determine whether the worker actually removes work safely."},
-    {"title": "Turn every pilot failure into a regression and earn narrow autonomy", "why": "Authority should widen only for stable low-risk case classes."}
+    {"title": "Run representative historical workflows in shadow mode", "label": "Historical runs", "why": "The next useful evidence is human-reviewed case performance, not another synthetic feature."},
+    {"title": "Measure time, corrections, escalations and false completion", "label": "Measure value", "why": "Those signals determine whether the worker actually removes work safely."},
+    {"title": "Turn every pilot failure into a regression and earn narrow autonomy", "label": "Earn autonomy", "why": "Authority should widen only for stable low-risk case classes."}
   ],
   "later": [
-    "Package repeatable domain workers without cloning one-off agents.",
-    "Connect commercial onboarding, billing and customer-specific capability contracts.",
-    "Earn broader autonomy only from reviewed evidence and rollback-safe operation."
+    {"title": "Package repeatable domain workers without cloning one-off agents.", "label": "Domain workers"},
+    {"title": "Connect commercial onboarding, billing and customer-specific capability contracts.", "label": "Billing + onboarding"},
+    {"title": "Earn broader autonomy only from reviewed evidence and rollback-safe operation.", "label": "Broader autonomy"}
   ],
   "sources": ["README.md", "PILOT_READINESS.md", "CUSTOMER_PILOT_RUNBOOK.md", "core/", "evals/"],
   "updated_at": "2026-09-03"
