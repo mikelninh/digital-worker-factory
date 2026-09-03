@@ -1,16 +1,18 @@
 # Harness handoff
 
 ## Status
-Ready for independent verification.
+Verified and accepted for merge.
 
 ## Current step
-Run `node scripts/harness-check.mjs` through CI and inspect the pull request.
+Merge PR #38. The harness check and the existing Factory eval workflow both passed on the implementation commit.
 
 ## Evidence
+- Harness workflow `33744184065`: success.
+- Factory eval workflow `33744184028`: success.
 - `AGENTS.md` defines the small project map and operating boundaries.
 - `.harness/project.json` defines sources, sensors, action classes and retry policy.
 - `scripts/harness-check.mjs` mechanically enforces the minimum contract.
-- `.github/workflows/harness.yml` makes the check part of CI.
+- Acceptance receipt: `.harness/receipts/harness-v0.1-adoption.json`.
 
 ## Decisions
 - Keep the harness small and repository-native.
@@ -19,10 +21,10 @@ Run `node scripts/harness-check.mjs` through CI and inspect the pull request.
 - Classify autonomy by action reversibility rather than agent identity.
 
 ## Failures / uncertainties
-CI has not yet produced evidence for this branch.
+None observed in the harness or existing Factory CI for this change.
 
 ## Open risks
-The first version validates structure and policy invariants; it does not yet prove runtime behaviour or visual quality.
+Harness v0.1 validates structure and policy invariants; product-specific runtime, security and visual quality still require their own sensors/evals.
 
 ## Next owner
-Verifier — run CI, inspect failures, and convert any failure into a stronger checker/test rather than weakening the gate.
+Operator — merge the verified PR, then create a fresh task contract for the next substantial change.
