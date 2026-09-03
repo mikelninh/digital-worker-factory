@@ -1,6 +1,14 @@
 import { createHash } from 'node:crypto'
-import { existsSync, mkdirSync, rmSync, writeFileSync } from 'node:fs'
-import { appendFile, mkdir, readFile } from 'node:fs/promises'
+import {
+  closeSync,
+  existsSync,
+  fsyncSync,
+  mkdirSync,
+  openSync,
+  rmSync,
+  writeFileSync,
+} from 'node:fs'
+import { mkdir, open, readFile } from 'node:fs/promises'
 import { dirname, join, resolve } from 'node:path'
 
 import { redactSensitive } from './production-boundary.mjs'
@@ -25,17 +33,19 @@ export class FileIdempotencyStore {
 
   claim(key) {
     if (!key) throw new TypeError('idempotency key is required')
-    const path = join(this.#dir, `${digestKey(key)}.claim`)
+    const digest = digestKey(key)
+    const path = join(this.#dir, `${digest}.claim`)
+    let fd
     try {
-      writeFileSync(
-        path,
-        JSON.stringify({ key: String(key), claimedAt: new Date().toISOString() }),
-        { flag: 'wx', mode: 0o600 },
-      )
+      fd = openSync(path, 'wx', 0o600)
+      writeFileSync(fd, JSON.stringify({ digest, claimedAt: new Date().toISOString() }))
+      fsyncSync(fd)
       return true
     } catch (error) {
       if (error?.code === 'EEXIST') return false
       throw error
+    } finally {
+      if (fd !== undefined) closeSync(fd)
     }
   }
 
@@ -52,9 +62,10 @@ export class FileIdempotencyStore {
 }
 
 /**
- * Append-only JSONL audit sink with redaction before persistence.
- * Suitable as a durable reference adapter for one host/shared filesystem.
- * Production deployments can swap the same contract for a database or log bus.
+ * Append-only JSONL audit sink with redaction before persistence and datasync
+ * before acknowledgement. Suitable as a durable reference adapter for one
+ * host/shared filesystem. Production deployments can swap the same contract
+ * for a database or log bus.
  */
 export class JsonlAuditSink {
   durable = true
@@ -68,7 +79,13 @@ export class JsonlAuditSink {
   async append(event) {
     await mkdir(dirname(this.#path), { recursive: true, mode: 0o700 })
     const safe = redactSensitive(event)
-    await appendFile(this.#path, `${JSON.stringify(safe)}\n`, { encoding: 'utf8', mode: 0o600 })
+    const handle = await open(this.#path, 'a', 0o600)
+    try {
+      await handle.writeFile(`${JSON.stringify(safe)}\n`, 'utf8')
+      await handle.datasync()
+    } finally {
+      await handle.close()
+    }
   }
 
   async events() {
