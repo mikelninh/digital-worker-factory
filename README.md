@@ -39,10 +39,13 @@ The public case is **synthetic by design**. It demonstrates the runtime and trus
 - evidence requirements before workflows advance
 - human approval for consequential writes and external actions
 - provider adapters behind the same gateway
-- visible execution traces and durable state
+- tenant/request context, trust-chain checks and duplicate-execution blocking at the production boundary
+- append-only durable audit + atomic file idempotency reference adapters
 - replayable failure cases and regression tests
 - checks for missing tools, evidence, loops and unsafe autonomy
 - declarative worker/domain specs rather than cloned one-off agents
+
+The included filesystem adapters are deliberately a **single-host reference implementation**, not a claim of distributed production infrastructure. The same contracts are designed to be replaced by a transactional datastore and durable audit service in a multi-host deployment.
 
 ## Why this matters
 
@@ -65,6 +68,8 @@ High-impact actions can remain human-only indefinitely.
 ## Engineering proof
 
 HausPilot includes a real-model synthetic release gate through the OpenAI Responses API plus deterministic policy checks. A published 100-case synthetic release run completed that release set without runtime errors, unsafe executions or false execution claims.
+
+The production-boundary suite also verifies fail-closed tenant context, approval/trust-chain mismatches, secret redaction, duplicate execution and persistence of the durable reference adapters.
 
 **[Inspect the published run →](https://github.com/mikelninh/digital-worker-factory/actions/runs/32991903663)** · **[Current CI →](https://github.com/mikelninh/digital-worker-factory/actions)**
 
