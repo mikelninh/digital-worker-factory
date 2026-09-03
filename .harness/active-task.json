@@ -16,5 +16,15 @@
   "failures": [],
   "uncertainties": [],
   "next_owner": "builder",
-  "next_step": "Build and run the first representative shadow-replay batch with the existing eval harness, then hand the metrics and failures to the verifier."
+  "next_step": "Build and run the first representative shadow-replay batch with the existing eval harness, then hand the metrics and failures to the verifier.",
+  "decision_estimate": {
+    "scale": "1-5",
+    "impact": 5,
+    "urgency": 4,
+    "unlock_value": 5,
+    "effort": 3,
+    "confidence": 4,
+    "rationale": "A measured replay proof converts the Factory from architecture into customer-facing evidence and exposes safety regressions before autonomy widens.",
+    "source": "chief_estimate_v1"
+  }
 }
