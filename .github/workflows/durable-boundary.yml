@@ -1,0 +1,29 @@
+name: durable-boundary
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'core/durable-adapters.mjs'
+      - 'core/durable-adapters.test.mjs'
+      - 'core/production-boundary.mjs'
+      - '.github/workflows/durable-boundary.yml'
+  pull_request:
+    paths:
+      - 'core/durable-adapters.mjs'
+      - 'core/durable-adapters.test.mjs'
+      - 'core/production-boundary.mjs'
+      - '.github/workflows/durable-boundary.yml'
+
+jobs:
+  durable-boundary:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Check durable adapter syntax
+        run: node --check core/durable-adapters.mjs
+      - name: Run production and durable adapter contracts
+        run: node --test core/production-boundary.test.mjs core/durable-adapters.test.mjs
