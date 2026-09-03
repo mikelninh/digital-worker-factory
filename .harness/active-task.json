@@ -1,0 +1,26 @@
+{
+  "schema": "mikel-harness-task-v0.1",
+  "task_id": "harness-v0.1-adoption",
+  "status": "ready_for_review",
+  "goal": "Adopt Harness v0.1 as the shared execution contract for Digital Worker Factory.",
+  "sources": ["README.md", ".github/workflows/evals.yml", "core/", "production/"],
+  "outputs": ["AGENTS.md", ".harness/project.json", ".harness/HANDOFF.md", "scripts/harness-check.mjs", ".github/workflows/harness.yml"],
+  "constraints": ["Do not change runtime behaviour.", "Do not broaden tool permissions.", "Do not execute external side effects."],
+  "done_when": ["Harness structure is present.", "Mechanical harness check passes.", "CI runs the harness check on pull requests and main."],
+  "forbidden": ["Production deployment", "External sends", "Customer-data access", "Permission broadening"],
+  "risk_class": "A2",
+  "approval_required": false,
+  "max_retries": 3,
+  "current_step": "run_ci",
+  "evidence": [
+    {"kind": "file", "path": "AGENTS.md", "status": "present"},
+    {"kind": "file", "path": ".harness/project.json", "status": "present"},
+    {"kind": "file", "path": "scripts/harness-check.mjs", "status": "present"},
+    {"kind": "file", "path": ".github/workflows/harness.yml", "status": "present"}
+  ],
+  "failures": [],
+  "uncertainties": ["CI result is pending until the branch workflow runs."],
+  "next_owner": "verifier",
+  "next_step": "Run the harness workflow and review the PR before merge.",
+  "receipt": null
+}
