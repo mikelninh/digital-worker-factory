@@ -34,13 +34,11 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 24
-      - name: Run shared adversarial gauntlet
+      - name: Run shared adversarial gauntlet and posture drift check
         run: node --test security/security-gauntlet.test.mjs security/security-posture.test.mjs
       - name: Prove gateway and production containment
         run: node --test core/agent-security-integration.test.mjs core/production-boundary.test.mjs production/platform-v1.test.mjs
-      - name: Rebuild machine-readable posture
+      - name: Prove posture exporter succeeds
         run: node security/export-security-posture.mjs
-      - name: Fail if published evidence drifted
-        run: git diff --exit-code -- security/security-posture.json
       - name: Verify security contracts are valid JSON
         run: node -e "JSON.parse(require('fs').readFileSync('architecture/security-context-v1.schema.json')); JSON.parse(require('fs').readFileSync('architecture/security-posture-v1.schema.json'));"
