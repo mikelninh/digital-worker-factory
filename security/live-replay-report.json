@@ -45,7 +45,8 @@
       "decision": "block",
       "reasons": [
         "protected_scope_requested:system_prompt",
-        "protected_scope_requested:credentials"
+        "protected_scope_requested:credentials",
+        "untrusted_origin_read"
       ],
       "executorCalls": 0,
       "impactEscaped": false,
