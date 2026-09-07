@@ -3,6 +3,7 @@ import assert from 'node:assert/strict'
 import { createHash } from 'node:crypto'
 import { createProductionPlatform } from './platform-v1.mjs'
 import { memoryAudit, memoryIdempotency, memoryObjectStore, memoryPersistence, memoryQueue } from './memory-adapters.mjs'
+import { makeSecurityContext } from '../core/security-boundary.mjs'
 
 function makePlatform({ durable = false, maxAttempts = 2 } = {}) {
   const persistence = memoryPersistence({ durable })
@@ -30,6 +31,17 @@ function approvedTrust(ctx = a) {
     audit: { traceId: 'trace-1', createdAt: '2026-08-31T09:00:01Z' },
   }
 }
+function approvedSecurity(ctx = a, overrides = {}) {
+  return makeSecurityContext({
+    tenantId: ctx.tenantId,
+    instructionAuthority: 'human',
+    originKind: 'authenticated_request',
+    originTrust: 'trusted_internal',
+    approvalRequired: true,
+    approvalBoundToIntent: true,
+    ...overrides,
+  })
+}
 
 test('tenant data never crosses persistence or object boundaries', async () => {
   const { platform, objectStore } = makePlatform()
@@ -40,15 +52,23 @@ test('tenant data never crosses persistence or object boundaries', async () => {
   assert.equal(await objectStore.get({ tenantId: b.tenantId, key: 'doc.pdf' }), null)
 })
 
+test('effectful work requires security boundary before trust chain', async () => {
+  const { platform, audit, queue } = makePlatform()
+  await assert.rejects(() => platform.enqueueEffect(a, { kind: 'send_notice', payload: {}, idempotencyKey: 'no-security', trustChain: approvedTrust() }), /security_boundary_blocked/)
+  assert.equal(queue.jobs().length, 0)
+  assert.ok(audit.events().some((event) => event.event === 'effect.blocked' && event.payload.reason === 'security_boundary_blocked'))
+})
+
 test('effectful work requires trust chain, is idempotent and redacts secrets', async () => {
   const { platform, audit, queue } = makePlatform()
-  await assert.rejects(() => platform.enqueueEffect(a, { kind: 'send_notice', payload: {}, idempotencyKey: 'no-trust' }), /trust_chain_incomplete/)
+  await assert.rejects(() => platform.enqueueEffect(a, { kind: 'send_notice', payload: {}, idempotencyKey: 'no-trust', securityContext: approvedSecurity() }), /trust_chain_incomplete/)
   assert.equal(queue.jobs().length, 0)
-  const args = { kind: 'send_notice', payload: { message: 'hello', api_key: 'secret-value' }, idempotencyKey: 'idem-1', trustChain: approvedTrust() }
+  const args = { kind: 'send_notice', payload: { message: 'hello', api_key: 'secret-value' }, idempotencyKey: 'idem-1', trustChain: approvedTrust(), securityContext: approvedSecurity() }
   const first = await platform.enqueueEffect(a, args)
   const second = await platform.enqueueEffect(a, args)
   assert.equal(first.duplicate, false)
   assert.equal(first.trust.level, 'traceable')
+  assert.equal(first.security.decision, 'allow')
   assert.equal(second.duplicate, true)
   assert.equal(queue.jobs().length, 1)
   assert.equal(JSON.stringify(audit.events()).includes('secret-value'), false)
@@ -56,9 +76,23 @@ test('effectful work requires trust chain, is idempotent and redacts secrets', a
   assert.ok(audit.events().some((event) => event.event === 'effect.blocked'))
 })
 
+test('malicious document cannot bypass queue boundary even with a valid trust chain', async () => {
+  const { platform, queue } = makePlatform()
+  const securityContext = approvedSecurity(a, {
+    instructionAuthority: 'untrusted_content',
+    originKind: 'uploaded_pdf',
+    originTrust: 'untrusted',
+    approvalBoundToIntent: false,
+  })
+  await assert.rejects(() => platform.enqueueEffect(a, {
+    kind: 'send_notice', payload: {}, idempotencyKey: 'attack-1', trustChain: approvedTrust(), securityContext,
+  }), /security_boundary_blocked/)
+  assert.equal(queue.jobs().length, 0)
+})
+
 test('queue retries and dead-letters after bounded attempts', async () => {
   const { platform } = makePlatform({ maxAttempts: 2 })
-  const created = await platform.enqueueEffect(a, { kind: 'write', payload: {}, idempotencyKey: 'idem-dlq', trustChain: approvedTrust() })
+  const created = await platform.enqueueEffect(a, { kind: 'write', payload: {}, idempotencyKey: 'idem-dlq', trustChain: approvedTrust(), securityContext: approvedSecurity() })
   let job = await platform.claimJob('worker-1')
   assert.equal(job.id, created.jobId)
   let state = await platform.failJob(a, job.id, 'provider unavailable')
@@ -96,10 +130,11 @@ test('readiness is fail-closed until every adapter is durable', async () => {
   assert.equal(green.ready, true)
   assert.equal(green.stage, 'ENGINEERING_PRODUCTION_READY')
   assert.equal(green.checks.trustChain.enforced, true)
+  assert.equal(green.checks.securityBoundary.enforced, true)
 })
 
 test('missing tenant and missing idempotency fail closed', async () => {
   const { platform } = makePlatform()
   await assert.rejects(() => platform.putRecord({ actorId: 'x', role: 'reviewer' }, 'cases', '1', {}), /tenant_required/)
-  await assert.rejects(() => platform.enqueueEffect(a, { kind: 'write', payload: {}, trustChain: approvedTrust() }), /idempotency_key_required/)
+  await assert.rejects(() => platform.enqueueEffect(a, { kind: 'write', payload: {}, trustChain: approvedTrust(), securityContext: approvedSecurity() }), /idempotency_key_required/)
 })
