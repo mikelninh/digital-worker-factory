@@ -1,0 +1,16 @@
+{
+  "agent": { "id": "unsafe-agent", "name": "Unsafe Agent", "environment": "production" },
+  "owner": { "team": "Ops", "securityContact": "security@example.invalid" },
+  "identity": { "authenticatedUsers": true, "workloadIdentity": false, "sso": false },
+  "tenancy": { "mode": "multi_tenant", "strictIsolation": false, "tenantBoundObjects": false },
+  "data": { "sensitive": true, "secretsAccessibleToModel": true, "encryptionAtRest": true, "encryptionInTransit": false, "retentionDays": 0 },
+  "actions": [
+    { "id": "payment.change_bank_account", "risk": "irreversible", "external": true, "humanApproval": false, "approvalBoundToIntent": false }
+  ],
+  "runtime": { "denyByDefault": false, "killSwitch": false, "egressAllowlist": false, "maxToolCalls": 0 },
+  "audit": { "appendOnly": false, "decisionReasons": false, "traceIds": false, "siemExport": false },
+  "adversarial": { "cases": 3, "passed": 2, "criticalEscapes": 1, "liveModel": false },
+  "supplyChain": { "sbom": false, "dependencyScanning": false, "signedRelease": false },
+  "incident": { "owner": "", "runbook": false, "replayable": false },
+  "assurance": { "externalReview": false }
+}
