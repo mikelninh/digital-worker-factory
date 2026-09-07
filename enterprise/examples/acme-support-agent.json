@@ -1,0 +1,18 @@
+{
+  "agent": { "id": "acme-support-copilot", "name": "ACME Support Copilot", "environment": "production" },
+  "owner": { "team": "Customer Operations", "securityContact": "security@acme.example" },
+  "identity": { "authenticatedUsers": true, "workloadIdentity": true, "sso": true },
+  "tenancy": { "mode": "multi_tenant", "strictIsolation": true, "tenantBoundObjects": true },
+  "data": { "sensitive": true, "secretsAccessibleToModel": false, "encryptionAtRest": true, "encryptionInTransit": true, "retentionDays": 30 },
+  "actions": [
+    { "id": "ticket.read", "risk": "read", "external": false, "humanApproval": false, "approvalBoundToIntent": false },
+    { "id": "ticket.update", "risk": "write", "external": false, "humanApproval": true, "approvalBoundToIntent": true },
+    { "id": "customer.email", "risk": "consequential", "external": true, "humanApproval": true, "approvalBoundToIntent": true }
+  ],
+  "runtime": { "denyByDefault": true, "killSwitch": true, "egressAllowlist": true, "maxToolCalls": 8 },
+  "audit": { "appendOnly": true, "decisionReasons": true, "traceIds": true, "siemExport": true },
+  "adversarial": { "cases": 43, "passed": 43, "criticalEscapes": 0, "liveModel": true },
+  "supplyChain": { "sbom": true, "dependencyScanning": true, "signedRelease": true },
+  "incident": { "owner": "Security Operations", "runbook": true, "replayable": true },
+  "assurance": { "externalReview": true }
+}

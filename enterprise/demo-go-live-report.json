@@ -1,0 +1,50 @@
+{
+  "version": "enterprise-go-live-report/v1",
+  "generatedFrom": "enterprise/examples/acme-support-agent.json",
+  "agent": {
+    "id": "acme-support-copilot",
+    "name": "ACME Support Copilot",
+    "environment": "production"
+  },
+  "decision": {
+    "version": "enterprise-go-live/v1",
+    "decision": "GO",
+    "scope": "Engineering release evidence; not a certification, legal opinion, or guarantee of security.",
+    "summary": {
+      "blockers": 0,
+      "conditions": 0,
+      "strengths": 4
+    },
+    "blockers": [],
+    "conditions": [],
+    "strengths": [
+      "Enterprise SSO is configured",
+      "Security events can be exported to SIEM",
+      "Live-model compromised-output evidence is present",
+      "Independent security review evidence is attached"
+    ],
+    "nextActions": []
+  },
+  "frameworkCrosswalk": {
+    "owasp": [
+      "Agentic Top 10 2026",
+      "Agent Control Standard"
+    ],
+    "nist": [
+      "AI RMF",
+      "Generative AI Profile"
+    ],
+    "eu": [
+      "risk management",
+      "logging/traceability",
+      "human oversight",
+      "robustness/cybersecurity"
+    ]
+  },
+  "commercialUse": {
+    "preProduction": "Release decision and remediation plan",
+    "runtime": "Deterministic authorization and effect containment",
+    "postLaunch": "Audit evidence, monitoring integration and incident replay"
+  },
+  "truthBoundary": "This is engineering assurance evidence, not legal compliance certification or a guarantee that the system is secure."
+}

@@ -1,0 +1,28 @@
+name: enterprise-go-live-v1
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'enterprise/**'
+      - '.github/workflows/enterprise-go-live.yml'
+  pull_request:
+    paths:
+      - 'enterprise/**'
+      - '.github/workflows/enterprise-go-live.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  enterprise-go-live:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Validate go-live policy and fail-closed fixtures
+        run: node --test enterprise/go-live-gate.test.mjs enterprise/go-live-report.test.mjs
+      - name: Reproduce buyer-facing go-live report
+        run: node enterprise/export-go-live-report.mjs
