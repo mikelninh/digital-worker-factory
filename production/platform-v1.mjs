@@ -1,4 +1,5 @@
 import { validateTrustChain } from '../core/trust-chain.mjs'
+import { SECURITY_DECISIONS, evaluateSecurityBoundary } from '../core/security-boundary.mjs'
 
 const SECRET_KEYS = /secret|token|password|api[-_]?key|authorization/i
 
@@ -54,20 +55,33 @@ export function createProductionPlatform({ persistence, objectStore, queue, audi
       return { ok: true }
     },
 
-    async enqueueEffect(ctx, { kind, payload, idempotencyKey, trustChain }) {
+    async enqueueEffect(ctx, { kind, payload, idempotencyKey, trustChain, securityContext }) {
       requireContext(ctx)
       if (!idempotencyKey) throw new Error('idempotency_key_required')
+
+      const security = evaluateSecurityBoundary({
+        context: securityContext,
+        actor: { id: ctx.actorId, role: ctx.role, tenantId: ctx.tenantId },
+        capability: { id: kind, risk: 'consequential', external: true },
+        approvedBy: ctx.actorId,
+        mode: 'execute',
+      })
+      if (security.decision !== SECURITY_DECISIONS.ALLOW) {
+        await emit(ctx, 'effect.blocked', { kind, reason: 'security_boundary_blocked', securityDecision: security.decision, securityReasons: security.reasons })
+        throw new Error(`security_boundary_blocked:${security.reasons.join(',')}`)
+      }
+
       const trust = validateTrustChain(trustChain, { approvedBy: ctx.actorId })
       if (!trust.ok) {
-        await emit(ctx, 'effect.blocked', { kind, reason: 'trust_chain_incomplete', trustReasons: trust.reasons, trustDigest: trust.digest ?? null })
+        await emit(ctx, 'effect.blocked', { kind, reason: 'trust_chain_incomplete', trustReasons: trust.reasons, trustDigest: trust.digest ?? null, securityDecision: security.decision })
         throw new Error(`trust_chain_incomplete:${trust.reasons.join(',')}`)
       }
       const reservation = await idempotency.reserve({ tenantId: ctx.tenantId, key: idempotencyKey })
       if (!reservation.created) return { ok: true, duplicate: true, jobId: reservation.result?.jobId ?? null }
-      const job = await queue.enqueue({ tenantId: ctx.tenantId, kind, payload: redact(payload), idempotencyKey, trustDigest: trust.digest })
+      const job = await queue.enqueue({ tenantId: ctx.tenantId, kind, payload: redact(payload), idempotencyKey, trustDigest: trust.digest, securityDecision: security.decision })
       await idempotency.complete({ tenantId: ctx.tenantId, key: idempotencyKey, result: { jobId: job.id } })
-      await emit(ctx, 'effect.enqueued', { kind, jobId: job.id, idempotencyKey, effectPayload: payload, trustLevel: trust.level, trustDigest: trust.digest })
-      return { ok: true, duplicate: false, jobId: job.id, trust: { level: trust.level, digest: trust.digest } }
+      await emit(ctx, 'effect.enqueued', { kind, jobId: job.id, idempotencyKey, effectPayload: payload, trustLevel: trust.level, trustDigest: trust.digest, securityDecision: security.decision })
+      return { ok: true, duplicate: false, jobId: job.id, trust: { level: trust.level, digest: trust.digest }, security }
     },
 
     async claimJob(workerId) { return queue.claim({ workerId }) },
@@ -85,7 +99,9 @@ export function createProductionPlatform({ persistence, objectStore, queue, audi
     async readiness() {
       const checks = {
         persistence: await persistence.health(), objectStore: await objectStore.health(), queue: await queue.health(),
-        audit: await audit.health(), idempotency: await idempotency.health(), trustChain: { ok: true, durable: true, tenantScoped: true, enforced: true },
+        audit: await audit.health(), idempotency: await idempotency.health(),
+        trustChain: { ok: true, durable: true, tenantScoped: true, enforced: true },
+        securityBoundary: { ok: true, durable: true, tenantScoped: true, enforced: true },
       }
       const required = Object.entries(checks).flatMap(([name, state]) => {
         const missing = []
