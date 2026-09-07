@@ -1,0 +1,51 @@
+name: autonomous-security-loop-v1
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'core/agent-gateway.mjs'
+      - 'core/capability-registry.mjs'
+      - 'core/policy-gate.mjs'
+      - 'core/security-boundary.mjs'
+      - 'enterprise/autonomous-security-loop*'
+      - 'enterprise/examples/autonomous-loop-vulnerable-agent.json'
+      - '.github/workflows/autonomous-security-loop.yml'
+  pull_request:
+    paths:
+      - 'core/agent-gateway.mjs'
+      - 'core/capability-registry.mjs'
+      - 'core/policy-gate.mjs'
+      - 'core/security-boundary.mjs'
+      - 'enterprise/autonomous-security-loop*'
+      - 'enterprise/examples/autonomous-loop-vulnerable-agent.json'
+      - '.github/workflows/autonomous-security-loop.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  attack-fix-retest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Prove autonomous discovery attack remediation and fail-closed gate
+        run: node --test enterprise/autonomous-security-loop.test.mjs
+      - name: Reproduce autonomous evidence report
+        run: node enterprise/export-autonomous-security-loop-report.mjs
+      - name: Require reproducible committed evidence
+        run: git diff --exit-code -- enterprise/autonomous-security-loop-report.json
+      - name: Enforce zero post-remediation executor impact
+        run: |
+          node <<'NODE'
+          const report = require('./enterprise/autonomous-security-loop-report.json')
+          if (report.attacks.generated < 1) throw new Error('no generated attack coverage')
+          if (report.before.impactEscapes < 1) throw new Error('demo no longer proves an exploit-before-fix path')
+          if (report.after.impactEscapes !== 0) throw new Error('post-remediation impact escape remains')
+          if (report.after.executorCalls !== 0) throw new Error('post-remediation executor call remains')
+          if (report.release.decision !== 'TECHNICAL_GO') throw new Error(`unexpected release decision: ${report.release.decision}`)
+          console.log(`Autonomous loop: ${report.before.impactEscapes} escapes before -> ${report.after.impactEscapes} after; executor calls after=${report.after.executorCalls}`)
+          NODE
