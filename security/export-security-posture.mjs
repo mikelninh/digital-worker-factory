@@ -1,0 +1,93 @@
+import { writeFileSync } from 'node:fs'
+import { fileURLToPath } from 'node:url'
+import { evaluateSecurityBoundary } from '../core/security-boundary.mjs'
+import { SECURITY_GOLDEN_CASES } from './golden-cases.mjs'
+
+export function buildSecurityPosture() {
+  const results = SECURITY_GOLDEN_CASES.map((scenario) => {
+    const actual = evaluateSecurityBoundary({
+      context: scenario.input.context,
+      actor: scenario.input.actor,
+      capability: scenario.input.capability,
+      approvedBy: scenario.input.approvedBy,
+      mode: scenario.input.mode,
+    }).decision
+    return { ...scenario, actual, passed: actual === scenario.expected }
+  })
+  const criticalEscapes = results.filter((item) => item.severity === 'critical' && item.expected === 'block' && item.actual === 'allow').length
+
+  return {
+    version: 'security-posture/v1',
+    project: { id: 'digital-worker-factory', repository: 'mikelninh/digital-worker-factory', domain: 'cross-domain agent runtime' },
+    thesis: 'The model can interpret and propose; deterministic identity, scope, authority and effect boundaries decide what can happen.',
+    controls: [
+      { id: 'authority_outside_model', status: 'implemented', evidence: [
+        { type: 'code', path: 'core/policy-gate.mjs', claim: 'Capability authority is resolved outside model output.' },
+        { type: 'code', path: 'core/security-boundary.mjs', claim: 'Instruction provenance cannot grant effect authority.' },
+      ] },
+      { id: 'least_privilege', status: 'implemented', evidence: [
+        { type: 'code', path: 'core/capability-registry.mjs', claim: 'Capabilities declare roles, risk and provider.' },
+        { type: 'test', path: 'core/agent-security-integration.test.mjs', claim: 'Protected scopes and malicious effect requests fail closed.' },
+      ] },
+      { id: 'tenant_isolation', status: 'implemented', evidence: [
+        { type: 'code', path: 'core/production-boundary.mjs', claim: 'Production context rejects cross-tenant actors.' },
+        { type: 'test', path: 'production/platform-v1.test.mjs', claim: 'Persistence and object-store reference boundaries are tenant-scoped.' },
+      ] },
+      { id: 'human_approval', status: 'implemented', evidence: [
+        { type: 'code', path: 'core/policy-gate.mjs', claim: 'Write/external capabilities require approval.' },
+        { type: 'code', path: 'core/trust-chain.mjs', claim: 'Recorded approval identity can be bound to trust evidence.' },
+      ] },
+      { id: 'provenance', status: 'implemented', evidence: [
+        { type: 'doc', path: 'architecture/TRUST_STACK_V1.md', claim: 'Source, integrity, authority, exact evidence, derivation and decision form the common trust chain.' },
+        { type: 'test', path: 'core/trust-chain.test.mjs', claim: 'Trust-chain invariants are regression tested.' },
+      ] },
+      { id: 'protected_data', status: 'implemented', evidence: [
+        { type: 'code', path: 'core/security-boundary.mjs', claim: 'Secrets, credentials, system prompt, policy/audit mutation and cross-tenant scopes are protected.' },
+        { type: 'code', path: 'core/production-boundary.mjs', claim: 'Sensitive audit values are redacted.' },
+      ] },
+      { id: 'bounded_execution', status: 'implemented', evidence: [
+        { type: 'code', path: 'core/security-boundary.mjs', claim: 'Tool-call and subagent-depth ceilings fail closed.' },
+        { type: 'test', path: 'security/security-gauntlet.test.mjs', claim: 'Budget exhaustion and recursive-depth attacks are regression cases.' },
+      ] },
+      { id: 'auditability', status: 'implemented', evidence: [
+        { type: 'code', path: 'core/production-boundary.mjs', claim: 'Security and trust decisions are attached to production audit events.' },
+        { type: 'code', path: 'production/platform-v1.mjs', claim: 'Effect queue records security/trust decision evidence.' },
+      ] },
+      { id: 'supply_chain', status: 'partial', evidence: [
+        { type: 'code', path: 'core/security-boundary.mjs', claim: 'Known-bad components are blocked and unverified components are surfaced for review.' },
+        { type: 'test', path: 'security/security-gauntlet.test.mjs', claim: 'Supply-chain attack states are covered in the shared gauntlet.' },
+      ] },
+      { id: 'adversarial_evals', status: 'implemented', evidence: [
+        { type: 'test', path: 'security/security-gauntlet.test.mjs', claim: '40 cross-domain adversarial cases cover OWASP Agentic Top 10 categories.' },
+        { type: 'ci', path: '.github/workflows/security-stack.yml', claim: 'Security gauntlet is a CI release gate.' },
+      ] },
+      { id: 'production_monitoring', status: 'partial', evidence: [
+        { type: 'code', path: 'core/production-boundary.mjs', claim: 'Runtime security denials and trust decisions are auditable.' },
+        { type: 'doc', path: 'architecture/SECURITY_STACK_V1.md', claim: 'Real incident response and production anomaly evidence remain explicit residual work.' },
+      ] },
+    ],
+    adversarial: {
+      taxonomy: 'OWASP Top 10 for Agentic Applications 2026',
+      cases: results.length,
+      passed: results.filter((item) => item.passed).length,
+      criticalEscapes,
+      liveModel: false,
+    },
+    claims: { productionSecure: false, promptInjectionSolved: false, certified: false },
+    residualRisks: [
+      'Shared gauntlet proves deterministic boundary behavior, not live-model injection detection.',
+      'SBOM, signatures and complete dependency provenance are not yet part of this shared contract.',
+      'Production incident/anomaly monitoring needs real deployment evidence.',
+      'Domain adapters must add stricter legal, clinical, administrative or customer-specific release gates.',
+      'External security review is required before production-security claims.',
+    ],
+  }
+}
+
+const isCli = process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]
+if (isCli) {
+  const posture = buildSecurityPosture()
+  writeFileSync(new URL('./security-posture.json', import.meta.url), `${JSON.stringify(posture, null, 2)}\n`)
+  console.log(`Security posture: ${posture.adversarial.passed}/${posture.adversarial.cases}; critical escapes=${posture.adversarial.criticalEscapes}`)
+  if (posture.adversarial.passed !== posture.adversarial.cases || posture.adversarial.criticalEscapes !== 0) process.exitCode = 1
+}
