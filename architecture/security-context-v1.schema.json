@@ -1,0 +1,63 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/mikelninh/digital-worker-factory/main/architecture/security-context-v1.schema.json",
+  "title": "Digital Worker Factory Security Context v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "tenantId", "instructionAuthority", "origin", "requestedScopes", "execution", "egress", "approval", "peer"],
+  "properties": {
+    "version": { "const": "security-context/v1" },
+    "tenantId": { "type": "string", "minLength": 1 },
+    "instructionAuthority": { "enum": ["human", "policy", "untrusted_content", "peer_agent", "model"] },
+    "origin": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "trust", "supplyChainStatus"],
+      "properties": {
+        "kind": { "type": "string", "minLength": 1 },
+        "trust": { "enum": ["trusted_internal", "verified_external", "untrusted"] },
+        "supplyChainStatus": { "enum": ["verified", "allowlisted", "unverified", "known_bad"] }
+      }
+    },
+    "requestedScopes": { "type": "array", "items": { "type": "string", "minLength": 1 }, "uniqueItems": true },
+    "execution": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["toolCalls", "maxToolCalls", "subagentDepth", "maxSubagentDepth"],
+      "properties": {
+        "toolCalls": { "type": "integer", "minimum": 0 },
+        "maxToolCalls": { "type": "integer", "minimum": 1 },
+        "subagentDepth": { "type": "integer", "minimum": 0 },
+        "maxSubagentDepth": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "egress": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["destination", "containsSensitive"],
+      "properties": {
+        "destination": { "enum": ["none", "internal", "approved_external", "approved_model", "unapproved_model", "arbitrary_external"] },
+        "containsSensitive": { "type": "boolean" }
+      }
+    },
+    "approval": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["required", "boundToIntent"],
+      "properties": {
+        "required": { "type": "boolean" },
+        "boundToIntent": { "type": "boolean" }
+      }
+    },
+    "peer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["authenticated", "tenantId", "agentId"],
+      "properties": {
+        "authenticated": { "type": "boolean" },
+        "tenantId": { "type": ["string", "null"] },
+        "agentId": { "type": ["string", "null"] }
+      }
+    }
+  }
+}
