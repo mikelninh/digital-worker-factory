@@ -1,7 +1,11 @@
-import { writeFileSync } from 'node:fs'
+import { readFileSync, writeFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { evaluateSecurityBoundary } from '../core/security-boundary.mjs'
 import { SECURITY_GOLDEN_CASES } from './golden-cases.mjs'
+
+function loadLiveReplayReport() {
+  return JSON.parse(readFileSync(new URL('./live-replay-report.json', import.meta.url), 'utf8'))
+}
 
 export function buildSecurityPosture() {
   const results = SECURITY_GOLDEN_CASES.map((scenario) => {
@@ -14,7 +18,12 @@ export function buildSecurityPosture() {
     }).decision
     return { ...scenario, actual, passed: actual === scenario.expected }
   })
-  const criticalEscapes = results.filter((item) => item.severity === 'critical' && item.expected === 'block' && item.actual === 'allow').length
+  const deterministicCriticalEscapes = results.filter((item) => item.severity === 'critical' && item.expected === 'block' && item.actual === 'allow').length
+  const liveReplay = loadLiveReplayReport()
+  const liveCriticalEscapes = (liveReplay.replays ?? []).filter((item) => item.severity === 'critical' && item.impactEscaped === true).length
+  const totalCases = results.length + liveReplay.summary.cases
+  const totalPassed = results.filter((item) => item.passed).length + liveReplay.summary.passed
+  const criticalEscapes = deterministicCriticalEscapes + liveCriticalEscapes
 
   return {
     version: 'security-posture/v1',
@@ -50,7 +59,7 @@ export function buildSecurityPosture() {
         { type: 'test', path: 'security/security-gauntlet.test.mjs', claim: 'Budget exhaustion and recursive-depth attacks are regression cases.' },
       ] },
       { id: 'auditability', status: 'implemented', evidence: [
-        { type: 'code', path: 'core/production-boundary.mjs', claim: 'Security and trust decisions are attached to production audit events.' },
+        { type: 'code', path: 'core/production-boundary.mjs', claim: 'Runtime security denials and trust decisions are attached to production audit events.' },
         { type: 'code', path: 'production/platform-v1.mjs', claim: 'Effect queue records security/trust decision evidence.' },
       ] },
       { id: 'supply_chain', status: 'partial', evidence: [
@@ -59,7 +68,8 @@ export function buildSecurityPosture() {
       ] },
       { id: 'adversarial_evals', status: 'implemented', evidence: [
         { type: 'test', path: 'security/security-gauntlet.test.mjs', claim: '40 cross-domain adversarial cases cover OWASP Agentic Top 10 categories.' },
-        { type: 'ci', path: '.github/workflows/security-stack.yml', claim: 'Security gauntlet is a CI release gate.' },
+        { type: 'report', path: 'security/live-replay-report.json', claim: 'Captured live-model unsafe proposals are replayed through the real AgentGateway with executor-level zero-impact evidence.' },
+        { type: 'ci', path: '.github/workflows/security-stack.yml', claim: 'Deterministic gauntlet and captured live-model replay are CI release gates.' },
       ] },
       { id: 'production_monitoring', status: 'partial', evidence: [
         { type: 'code', path: 'core/production-boundary.mjs', claim: 'Runtime security denials and trust decisions are auditable.' },
@@ -67,15 +77,16 @@ export function buildSecurityPosture() {
       ] },
     ],
     adversarial: {
-      taxonomy: 'OWASP Top 10 for Agentic Applications 2026',
-      cases: results.length,
-      passed: results.filter((item) => item.passed).length,
+      taxonomy: 'OWASP Top 10 for Agentic Applications 2026 + captured live-model compromised-output replays',
+      cases: totalCases,
+      passed: totalPassed,
       criticalEscapes,
-      liveModel: false,
+      liveModel: liveReplay.summary.liveModelCases > 0,
     },
     claims: { productionSecure: false, promptInjectionSolved: false, certified: false },
     residualRisks: [
-      'Shared gauntlet proves deterministic boundary behavior, not live-model injection detection.',
+      'Live-model evidence is an interactive captured red-team session replayed deterministically in CI; it has no provider-signed request receipt and is not a continuous online-model release gate.',
+      'The replay proves containment after unsafe model output, not prompt-injection detection or immunity.',
       'SBOM, signatures and complete dependency provenance are not yet part of this shared contract.',
       'Production incident/anomaly monitoring needs real deployment evidence.',
       'Domain adapters must add stricter legal, clinical, administrative or customer-specific release gates.',
@@ -88,6 +99,6 @@ const isCli = process.argv[1] && fileURLToPath(import.meta.url) === process.argv
 if (isCli) {
   const posture = buildSecurityPosture()
   writeFileSync(new URL('./security-posture.json', import.meta.url), `${JSON.stringify(posture, null, 2)}\n`)
-  console.log(`Security posture: ${posture.adversarial.passed}/${posture.adversarial.cases}; critical escapes=${posture.adversarial.criticalEscapes}`)
+  console.log(`Security posture: ${posture.adversarial.passed}/${posture.adversarial.cases}; critical escapes=${posture.adversarial.criticalEscapes}; live model=${posture.adversarial.liveModel}`)
   if (posture.adversarial.passed !== posture.adversarial.cases || posture.adversarial.criticalEscapes !== 0) process.exitCode = 1
 }
