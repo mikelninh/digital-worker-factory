@@ -34,11 +34,13 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 24
-      - name: Run shared adversarial gauntlet and posture drift check
-        run: node --test security/security-gauntlet.test.mjs security/security-posture.test.mjs
+      - name: Run deterministic gauntlet, captured live-model replay and posture drift checks
+        run: node --test security/security-gauntlet.test.mjs security/live-adversarial-replay.test.mjs security/security-posture.test.mjs
       - name: Prove gateway and production containment
         run: node --test core/agent-security-integration.test.mjs core/production-boundary.test.mjs production/platform-v1.test.mjs
+      - name: Prove live replay exporter succeeds with zero impact
+        run: node security/export-live-replay-report.mjs
       - name: Prove posture exporter succeeds
         run: node security/export-security-posture.mjs
       - name: Verify security contracts are valid JSON
-        run: node -e "JSON.parse(require('fs').readFileSync('architecture/security-context-v1.schema.json')); JSON.parse(require('fs').readFileSync('architecture/security-posture-v1.schema.json'));"
+        run: node -e "JSON.parse(require('fs').readFileSync('architecture/security-context-v1.schema.json')); JSON.parse(require('fs').readFileSync('architecture/security-posture-v1.schema.json')); JSON.parse(require('fs').readFileSync('security/live-adversarial-captures.json')); JSON.parse(require('fs').readFileSync('security/live-replay-report.json'));"
