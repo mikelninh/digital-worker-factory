@@ -67,7 +67,7 @@
       "id": "auditability",
       "status": "implemented",
       "evidence": [
-        { "type": "code", "path": "core/production-boundary.mjs", "claim": "Security and trust decisions are attached to production audit events." },
+        { "type": "code", "path": "core/production-boundary.mjs", "claim": "Runtime security denials and trust decisions are attached to production audit events." },
         { "type": "code", "path": "production/platform-v1.mjs", "claim": "Effect queue records security/trust decision evidence." }
       ]
     },
@@ -84,7 +84,8 @@
       "status": "implemented",
       "evidence": [
         { "type": "test", "path": "security/security-gauntlet.test.mjs", "claim": "40 cross-domain adversarial cases cover OWASP Agentic Top 10 categories." },
-        { "type": "ci", "path": ".github/workflows/security-stack.yml", "claim": "Security gauntlet is a CI release gate." }
+        { "type": "report", "path": "security/live-replay-report.json", "claim": "Captured live-model unsafe proposals are replayed through the real AgentGateway with executor-level zero-impact evidence." },
+        { "type": "ci", "path": ".github/workflows/security-stack.yml", "claim": "Deterministic gauntlet and captured live-model replay are CI release gates." }
       ]
     },
     {
@@ -97,11 +98,11 @@
     }
   ],
   "adversarial": {
-    "taxonomy": "OWASP Top 10 for Agentic Applications 2026",
-    "cases": 40,
-    "passed": 40,
+    "taxonomy": "OWASP Top 10 for Agentic Applications 2026 + captured live-model compromised-output replays",
+    "cases": 43,
+    "passed": 43,
     "criticalEscapes": 0,
-    "liveModel": false
+    "liveModel": true
   },
   "claims": {
     "productionSecure": false,
@@ -109,7 +110,8 @@
     "certified": false
   },
   "residualRisks": [
-    "Shared gauntlet proves deterministic boundary behavior, not live-model injection detection.",
+    "Live-model evidence is an interactive captured red-team session replayed deterministically in CI; it has no provider-signed request receipt and is not a continuous online-model release gate.",
+    "The replay proves containment after unsafe model output, not prompt-injection detection or immunity.",
     "SBOM, signatures and complete dependency provenance are not yet part of this shared contract.",
     "Production incident/anomaly monitoring needs real deployment evidence.",
     "Domain adapters must add stricter legal, clinical, administrative or customer-specific release gates.",
