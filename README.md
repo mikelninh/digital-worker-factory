@@ -40,12 +40,43 @@ The public case is **synthetic by design**. It demonstrates the runtime and trus
 - human approval for consequential writes and external actions
 - provider adapters behind the same gateway
 - tenant/request context, trust-chain checks and duplicate-execution blocking at the production boundary
+- shared **Security Stack v1** for instruction provenance, protected scopes, peer identity, egress and execution budgets
+- machine-readable `security-posture/v1` evidence for TrustReady and other assurance consumers
 - append-only durable audit + atomic file idempotency reference adapters
 - replayable failure cases and regression tests
 - checks for missing tools, evidence, loops and unsafe autonomy
 - declarative worker/domain specs rather than cloned one-off agents
 
 The included filesystem adapters are deliberately a **single-host reference implementation**, not a claim of distributed production infrastructure. The same contracts are designed to be replaced by a transactional datastore and durable audit service in a multi-host deployment.
+
+## Shared Trust + Security Stack
+
+The Factory now owns two reusable contracts rather than letting every worker invent its own safety model:
+
+```text
+untrusted user / PDF / RAG / tool / peer agent
+                         ↓
+                      model
+                (assume compromise)
+                         ↓
+                SECURITY STACK
+ identity → tenant → protected scopes → provenance
+ peer identity → supply chain → egress → budgets
+                         ↓
+                  allow/review/block
+                         ↓
+                    TRUST STACK
+ source → integrity → authority → exact evidence
+ derivation → human decision → audit
+                         ↓
+                production effect boundary
+```
+
+The shared adversarial gauntlet contains **40 deterministic cases across all ten OWASP Top 10 for Agentic Applications 2026 categories**. The release invariant is **zero critical impact escapes**. The same contract is designed to be adopted by GitLaw, CareOS, PrüfPilot, MissionOps, SafeVoice and future workers without weakening their stricter domain rules.
+
+See [`architecture/SECURITY_STACK_V1.md`](architecture/SECURITY_STACK_V1.md), [`architecture/TRUST_STACK_V1.md`](architecture/TRUST_STACK_V1.md) and [`security/security-posture.json`](security/security-posture.json).
+
+This does **not** claim prompt injection is solved or that the Factory is completely production-secure. It proves deterministic containment boundaries and publishes the remaining gaps explicitly.
 
 ## Why this matters
 
@@ -69,7 +100,9 @@ High-impact actions can remain human-only indefinitely.
 
 HausPilot includes a real-model synthetic release gate through the OpenAI Responses API plus deterministic policy checks. A published 100-case synthetic release run completed that release set without runtime errors, unsafe executions or false execution claims.
 
-The production-boundary suite also verifies fail-closed tenant context, approval/trust-chain mismatches, secret redaction, duplicate execution and persistence of the durable reference adapters.
+The production-boundary suite verifies fail-closed tenant context, approval/trust-chain mismatches, security-context enforcement, protected scopes, untrusted-instruction containment, secret redaction, duplicate execution and persistence of the durable reference adapters.
+
+The Security Stack publishes a deterministic `security-posture/v1` manifest generated from executable evidence. CI rebuilds it and fails if the committed proof drifts from the code/tests.
 
 **[Inspect the published run →](https://github.com/mikelninh/digital-worker-factory/actions/runs/32991903663)** · **[Current CI →](https://github.com/mikelninh/digital-worker-factory/actions)**
 
@@ -91,7 +124,7 @@ See [`PILOT_READINESS.md`](PILOT_READINESS.md) and [`CUSTOMER_PILOT_RUNBOOK.md`]
 
 ## Stack
 
-**JavaScript · Node.js · APIs · AI agents · tool contracts · policy gates · evals · human-in-the-loop**
+**JavaScript · Node.js · APIs · AI agents · tool contracts · policy gates · adversarial evals · CI evidence · human-in-the-loop**
 
 ---
 

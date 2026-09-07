@@ -9,6 +9,7 @@ import {
   redactSensitive,
   validateProductionContext,
 } from './production-boundary.mjs'
+import { makeSecurityContext } from './security-boundary.mjs'
 
 function hash(text) { return createHash('sha256').update(text).digest('hex') }
 
@@ -27,6 +28,8 @@ function trustChain({ approvedBy = null } = {}) {
   }
 }
 
+const secure = (overrides = {}) => makeSecurityContext({ tenantId: 'tenant-a', ...overrides })
+
 test('production context requires tenant actor role and request id', () => {
   assert.throws(() => validateProductionContext({}), /tenant_required/)
   assert.throws(() => validateProductionContext({ tenantId: 't1', actor: { id: 'u1' }, requestId: 'r1' }), /actor_role_required/)
@@ -41,25 +44,38 @@ test('sensitive audit data is redacted', () => {
   assert.equal(redacted.note, 'safe')
 })
 
+test('production execution blocks before trust when security context is absent', async () => {
+  let called = false
+  const gateway = { invoke: async () => { called = true; return { ok: true, status: 'executed' } } }
+  const auditSink = new MemoryAuditSink()
+  const production = new ProductionAgentGateway({ gateway, idempotencyStore: new InMemoryIdempotencyStore(), auditSink })
+  const result = await production.invoke({
+    tenantId: 'tenant-a', actor: { id: 'user-1', role: 'operator' }, requestId: 'req-security', capabilityId: 'case.update', idempotencyKey: 'op-0', trustChain: trustChain(),
+  })
+  assert.equal(result.error, 'security_boundary_blocked')
+  assert.equal(called, false)
+  assert.ok(auditSink.events().some((event) => event.code === 'security_boundary_blocked'))
+})
+
 test('production execution blocks before idempotency or executor when trust chain is absent', async () => {
   let called = false
   const gateway = { invoke: async () => { called = true; return { ok: true, status: 'executed' } } }
   const auditSink = new MemoryAuditSink()
   const production = new ProductionAgentGateway({ gateway, idempotencyStore: new InMemoryIdempotencyStore(), auditSink })
   const result = await production.invoke({
-    tenantId: 'tenant-a', actor: { id: 'user-1', role: 'operator' }, requestId: 'req-trust', capabilityId: 'case.update', idempotencyKey: 'op-1',
+    tenantId: 'tenant-a', actor: { id: 'user-1', role: 'operator' }, requestId: 'req-trust', capabilityId: 'case.update', idempotencyKey: 'op-1', securityContext: secure(),
   })
   assert.equal(result.error, 'trust_chain_incomplete')
   assert.equal(called, false)
   assert.ok(auditSink.events().some((event) => event.code === 'trust_chain_incomplete'))
 })
 
-test('effectful execution requires trust chain plus idempotency and blocks duplicates', async () => {
+test('effectful execution requires security + trust + idempotency and blocks duplicates', async () => {
   let calls = 0
   const gateway = { invoke: async () => ({ ok: true, status: 'executed', output: ++calls }) }
   const auditSink = new MemoryAuditSink()
   const production = new ProductionAgentGateway({ gateway, idempotencyStore: new InMemoryIdempotencyStore(), auditSink })
-  const base = { tenantId: 'tenant-a', actor: { id: 'user-1', role: 'operator' }, requestId: 'req-1', capabilityId: 'case.update', trustChain: trustChain() }
+  const base = { tenantId: 'tenant-a', actor: { id: 'user-1', role: 'operator' }, requestId: 'req-1', capabilityId: 'case.update', trustChain: trustChain(), securityContext: secure() }
 
   const missing = await production.invoke(base)
   assert.equal(missing.error, 'idempotency_key_required')
@@ -68,10 +84,12 @@ test('effectful execution requires trust chain plus idempotency and blocks dupli
   const duplicate = await production.invoke({ ...base, requestId: 'req-2', idempotencyKey: 'same-operation' })
   assert.equal(first.ok, true)
   assert.equal(first.trust.level, 'traceable')
+  assert.equal(first.security.decision, 'allow')
   assert.equal(duplicate.status, 'duplicate_blocked')
   assert.equal(calls, 1)
   assert.ok(auditSink.events().some((event) => event.status === 'duplicate_blocked'))
   assert.ok(auditSink.events().some((event) => event.trustDigest))
+  assert.ok(auditSink.events().some((event) => event.securityDecision === 'allow'))
 })
 
 test('human approval identity must match the approved trust-chain decision', async () => {
@@ -81,9 +99,24 @@ test('human approval identity must match the approved trust-chain decision', asy
   const result = await production.invoke({
     tenantId: 'tenant-a', actor: { id: 'u1', role: 'operator' }, requestId: 'r1', capabilityId: 'case.update',
     approvedBy: 'reviewer-2', idempotencyKey: 'op-2', trustChain: trustChain({ approvedBy: 'reviewer-1' }),
+    securityContext: secure({ approvalRequired: true, approvalBoundToIntent: true }),
   })
   assert.equal(result.error, 'trust_chain_incomplete')
   assert.ok(result.trust.reasons.includes('human_approval_mismatch'))
+  assert.equal(called, false)
+})
+
+test('untrusted content cannot self-authorize a production effect', async () => {
+  let called = false
+  const gateway = { invoke: async () => { called = true; return { ok: true, status: 'executed' } } }
+  const production = new ProductionAgentGateway({ gateway, idempotencyStore: new InMemoryIdempotencyStore(), auditSink: new MemoryAuditSink() })
+  const result = await production.invoke({
+    tenantId: 'tenant-a', actor: { id: 'u1', role: 'operator' }, requestId: 'r-injection', capabilityId: 'case.update',
+    idempotencyKey: 'op-injection', trustChain: trustChain(),
+    securityContext: secure({ instructionAuthority: 'untrusted_content', originKind: 'uploaded_pdf', originTrust: 'untrusted' }),
+  })
+  assert.equal(result.error, 'security_boundary_blocked')
+  assert.ok(result.security.reasons.includes('untrusted_instruction_cannot_authorize_effect'))
   assert.equal(called, false)
 })
 
@@ -93,17 +126,18 @@ test('cross tenant actor is blocked before underlying gateway is called', async 
   const production = new ProductionAgentGateway({ gateway, idempotencyStore: new InMemoryIdempotencyStore(), auditSink: new MemoryAuditSink() })
   const result = await production.invoke({
     tenantId: 'tenant-a', actor: { id: 'u1', role: 'operator', tenantId: 'tenant-b' }, requestId: 'r1',
-    capabilityId: 'case.read', mode: 'shadow',
+    capabilityId: 'case.read', mode: 'shadow', securityContext: secure(),
   })
   assert.equal(result.error, 'cross_tenant_actor_blocked')
   assert.equal(called, false)
 })
 
-test('production readiness is fail closed until every engineering gate including trust chain is explicit', () => {
+test('production readiness is fail closed until trust and security boundaries are explicit', () => {
   const incomplete = evaluateProductionReadiness({ identityAndAccess: true, tenantIsolation: true })
   assert.equal(incomplete.ready, false)
   assert.ok(incomplete.missing.includes('durable_persistence'))
   assert.ok(incomplete.missing.includes('trust_chain_enforced'))
+  assert.ok(incomplete.missing.includes('security_boundary_enforced'))
 
   const ready = evaluateProductionReadiness({
     identityAndAccess: true,
@@ -117,6 +151,7 @@ test('production readiness is fail closed until every engineering gate including
     backupRestoreTested: true,
     deploymentAndRollback: true,
     trustChainEnforced: true,
+    securityBoundaryEnforced: true,
   })
   assert.equal(ready.ready, true)
   assert.deepEqual(ready.missing, [])

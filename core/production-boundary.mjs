@@ -1,4 +1,5 @@
 import { TRUST_LEVELS, validateTrustChain } from './trust-chain.mjs'
+import { SECURITY_DECISIONS, evaluateSecurityBoundary } from './security-boundary.mjs'
 
 const SECRET_KEY = /(authorization|cookie|password|passwd|secret|api[-_]?key|access[-_]?token|refresh[-_]?token|private[-_]?key)/i
 const SECRET_VALUE = /(bearer\s+[a-z0-9._~-]+|sk-[a-z0-9_-]{8,})/i
@@ -79,6 +80,7 @@ export function evaluateProductionReadiness(config = {}) {
     backup_restore_tested: Boolean(config.backupRestoreTested),
     deployment_and_rollback: Boolean(config.deploymentAndRollback),
     trust_chain_enforced: Boolean(config.trustChainEnforced),
+    security_boundary_enforced: Boolean(config.securityBoundaryEnforced),
   }
   const missing = Object.entries(gates).filter(([, ok]) => !ok).map(([name]) => name)
   return {
@@ -94,8 +96,9 @@ export class ProductionAgentGateway {
   #idempotency
   #audit
   #minimumTrust
+  #securityRequired
 
-  constructor({ gateway, idempotencyStore, auditSink, minimumTrust = TRUST_LEVELS.TRACEABLE } = {}) {
+  constructor({ gateway, idempotencyStore, auditSink, minimumTrust = TRUST_LEVELS.TRACEABLE, securityRequired = true } = {}) {
     if (!gateway || typeof gateway.invoke !== 'function') throw new TypeError('gateway with invoke() is required')
     if (!idempotencyStore || typeof idempotencyStore.claim !== 'function') throw new TypeError('idempotencyStore is required')
     if (!auditSink || typeof auditSink.append !== 'function') throw new TypeError('auditSink is required')
@@ -104,6 +107,7 @@ export class ProductionAgentGateway {
     this.#idempotency = idempotencyStore
     this.#audit = auditSink
     this.#minimumTrust = minimumTrust
+    this.#securityRequired = securityRequired === true
   }
 
   async invoke({
@@ -118,6 +122,7 @@ export class ProductionAgentGateway {
     traceId = crypto.randomUUID(),
     idempotencyKey = null,
     trustChain = null,
+    securityContext = null,
   } = {}) {
     let context
     try {
@@ -132,6 +137,26 @@ export class ProductionAgentGateway {
     }
 
     const effectful = mode === 'execute'
+    let security = { decision: SECURITY_DECISIONS.ALLOW, reasons: [], effectful }
+    if (this.#securityRequired) {
+      security = evaluateSecurityBoundary({
+        context: securityContext,
+        actor: context.actor,
+        capability: { id: capabilityId, risk: effectful ? 'consequential' : 'read', external: effectful },
+        approvedBy,
+        mode,
+      })
+      if (security.decision !== SECURITY_DECISIONS.ALLOW) {
+        const code = security.decision === SECURITY_DECISIONS.REVIEW ? 'security_review_required' : 'security_boundary_blocked'
+        await this.#audit.append({
+          at: new Date().toISOString(), requestId, traceId, tenantId: context.tenantId,
+          actorId: context.actor.id, capabilityId, status: security.decision === SECURITY_DECISIONS.REVIEW ? 'review' : 'blocked',
+          code, securityDecision: security.decision, securityReasons: security.reasons,
+        })
+        return { ok: false, status: security.decision === SECURITY_DECISIONS.REVIEW ? 'review' : 'blocked', traceId, error: code, security }
+      }
+    }
+
     let trust = { ok: true, level: TRUST_LEVELS.NONE, reasons: [], digest: null }
     if (effectful && this.#minimumTrust !== TRUST_LEVELS.NONE) {
       trust = validateTrustChain(trustChain, { minimumLevel: this.#minimumTrust, approvedBy })
@@ -140,8 +165,9 @@ export class ProductionAgentGateway {
           at: new Date().toISOString(), requestId, traceId, tenantId: context.tenantId,
           actorId: context.actor.id, capabilityId, status: 'blocked', code: 'trust_chain_incomplete',
           trustLevel: trust.level, trustReasons: trust.reasons, trustDigest: trust.digest ?? null,
+          securityDecision: security.decision,
         })
-        return { ok: false, status: 'blocked', traceId, error: 'trust_chain_incomplete', trust }
+        return { ok: false, status: 'blocked', traceId, error: 'trust_chain_incomplete', trust, security }
       }
     }
 
@@ -151,15 +177,17 @@ export class ProductionAgentGateway {
         await this.#audit.append({
           at: new Date().toISOString(), requestId, traceId, tenantId: context.tenantId,
           actorId: context.actor.id, capabilityId, status: 'blocked', code: 'idempotency_key_required', trustDigest: trust.digest,
+          securityDecision: security.decision,
         })
-        return { ok: false, status: 'blocked', traceId, error: 'idempotency_key_required' }
+        return { ok: false, status: 'blocked', traceId, error: 'idempotency_key_required', security }
       }
       if (!this.#idempotency.claim(claimKey)) {
         await this.#audit.append({
           at: new Date().toISOString(), requestId, traceId, tenantId: context.tenantId,
           actorId: context.actor.id, capabilityId, status: 'duplicate_blocked', code: 'duplicate_execution', trustDigest: trust.digest,
+          securityDecision: security.decision,
         })
-        return { ok: false, status: 'duplicate_blocked', traceId, error: 'duplicate_execution' }
+        return { ok: false, status: 'duplicate_blocked', traceId, error: 'duplicate_execution', security }
       }
     }
 
@@ -172,6 +200,7 @@ export class ProductionAgentGateway {
         approvedBy,
         mode,
         traceId,
+        securityContext,
       })
       await this.#audit.append({
         at: new Date().toISOString(),
@@ -190,17 +219,19 @@ export class ProductionAgentGateway {
         inputMetadata: redactSensitive({ keys: Object.keys(input || {}) }),
         trustLevel: trust.level,
         trustDigest: trust.digest,
+        securityDecision: security.decision,
+        securityReasons: security.reasons,
       })
-      return { ...result, trust: effectful ? trust : undefined }
+      return { ...result, trust: effectful ? trust : undefined, security }
     } catch (error) {
       if (effectful && claimKey) this.#idempotency.release?.(claimKey)
       const message = error instanceof Error ? error.message : String(error)
       await this.#audit.append({
         at: new Date().toISOString(), requestId, traceId, tenantId: context.tenantId,
         actorId: context.actor.id, capabilityId, status: 'failed', error: redactSensitive(message),
-        durationMs: Date.now() - startedAt, trustDigest: trust.digest,
+        durationMs: Date.now() - startedAt, trustDigest: trust.digest, securityDecision: security.decision,
       })
-      return { ok: false, status: 'failed', traceId, error: 'production_gateway_failure' }
+      return { ok: false, status: 'failed', traceId, error: 'production_gateway_failure', security }
     }
   }
 }

@@ -1,0 +1,44 @@
+name: security-stack-v1
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'architecture/security-*.json'
+      - 'architecture/SECURITY_STACK_V1.md'
+      - 'core/security-boundary.mjs'
+      - 'core/agent-gateway.mjs'
+      - 'core/production-boundary.mjs'
+      - 'production/platform-v1.mjs'
+      - 'security/**'
+      - '.github/workflows/security-stack.yml'
+  pull_request:
+    paths:
+      - 'architecture/security-*.json'
+      - 'architecture/SECURITY_STACK_V1.md'
+      - 'core/security-boundary.mjs'
+      - 'core/agent-gateway.mjs'
+      - 'core/production-boundary.mjs'
+      - 'production/platform-v1.mjs'
+      - 'security/**'
+      - '.github/workflows/security-stack.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  security-conformance:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Run shared adversarial gauntlet and posture drift check
+        run: node --test security/security-gauntlet.test.mjs security/security-posture.test.mjs
+      - name: Prove gateway and production containment
+        run: node --test core/agent-security-integration.test.mjs core/production-boundary.test.mjs production/platform-v1.test.mjs
+      - name: Prove posture exporter succeeds
+        run: node security/export-security-posture.mjs
+      - name: Verify security contracts are valid JSON
+        run: node -e "JSON.parse(require('fs').readFileSync('architecture/security-context-v1.schema.json')); JSON.parse(require('fs').readFileSync('architecture/security-posture-v1.schema.json'));"
