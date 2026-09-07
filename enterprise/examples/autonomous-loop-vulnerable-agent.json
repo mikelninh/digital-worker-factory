@@ -1,0 +1,28 @@
+{
+  "agent": { "id": "autonomous-loop-demo", "name": "Autonomous Loop Demo Agent", "environment": "staging" },
+  "tenancy": { "mode": "multi_tenant" },
+  "actions": [
+    {
+      "id": "payment.change_bank_account",
+      "provider": "payments",
+      "risk": "consequential",
+      "external": true,
+      "allowedRoles": ["agent"],
+      "sensitive": true
+    },
+    {
+      "id": "knowledge.search",
+      "provider": "rag",
+      "risk": "read",
+      "external": false,
+      "allowedRoles": ["agent"],
+      "sensitive": true
+    }
+  ],
+  "autonomousSecurity": {
+    "securityBoundaryRequired": false,
+    "modelMaySelfApproveEffects": true,
+    "maxToolCalls": 8
+  },
+  "truthBoundary": "Intentionally vulnerable synthetic staging fixture used to prove the autonomous attack-fix-retest loop."
+}
