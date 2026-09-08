@@ -1,0 +1,59 @@
+name: proofworker-generalization-v1
+
+on:
+  pull_request:
+    paths:
+      - 'enterprise/repository-discovery.mjs'
+      - 'enterprise/repository-reachability.mjs'
+      - 'enterprise/repo-security-orchestrator.mjs'
+      - 'enterprise/multi-entrypoint-security.mjs'
+      - 'enterprise/operator-security.mjs'
+      - 'enterprise/operator-security.test.mjs'
+      - '.github/workflows/proofworker-generalization.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  real-proofworker-baseline:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout TrustReady engine
+        uses: actions/checkout@v4
+        with:
+          path: engine
+      - name: Checkout real ProofWorker repository
+        uses: actions/checkout@v4
+        with:
+          repository: mikelninh/proofworker
+          path: target
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Scan ProofWorker without hints or target mutation
+        working-directory: engine
+        run: node enterprise/repo-security-cli.mjs ../target --out=../proofworker-scan.json || true
+      - name: Print baseline decision
+        run: |
+          node <<'NODE'
+          const fs = require('node:fs')
+          const r = JSON.parse(fs.readFileSync('./proofworker-scan.json', 'utf8'))
+          console.log(JSON.stringify({
+            mode: r.mode,
+            decision: r.release?.decision,
+            reason: r.release?.reason,
+            blockers: r.discovery?.coverage?.blockers,
+            entrypoints: r.discovery?.agentTopology?.entrypoints,
+            tools: r.discovery?.tools?.map(t => ({name:t.name, source:t.source, risk:t.risk, external:t.external})),
+          }, null, 2))
+          NODE
+      - name: Prove scanner did not mutate ProofWorker
+        if: always()
+        run: test -z "$(git -C target status --porcelain)"
+      - name: Upload ProofWorker baseline scan
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: proofworker-generalization-baseline
+          path: proofworker-scan.json
