@@ -3,6 +3,7 @@ import os from 'node:os'
 import path from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { discoverRepository, discoveryToManifest } from './repository-discovery.mjs'
+import { buildRepositoryReachability } from './repository-reachability.mjs'
 import { generateRepositoryAutofix, applyRepositoryAutofix, patchSummary } from './repository-autofix.mjs'
 import { runAutonomousAttackFixLoop } from './autonomous-security-loop.mjs'
 
@@ -80,20 +81,79 @@ export async function exerciseAutofixRuntime(rootDir, relativePath) {
   }
 }
 
-export function repositoryReachabilityBlockers(discovery) {
+function scopedDiscovery(discovery, reachability) {
+  const entrypoint = reachability?.entrypoints?.[0]
+  if (!entrypoint) return { ...discovery, reachability }
+  const sourceSet = new Set(entrypoint.reachableToolSources ?? [])
+  const toolNames = new Set(entrypoint.reachableTools ?? [])
+  const tools = discovery.tools.filter((tool) => sourceSet.has(tool.source) && toolNames.has(tool.name))
+  const unknownRiskTools = tools.filter((tool) => tool.risk === 'unknown').map((tool) => tool.name)
+  return {
+    ...discovery,
+    tools,
+    effectCandidates: tools.filter((tool) => tool.risk !== 'read' || tool.external),
+    controls: {
+      ...discovery.controls,
+      deterministicBoundary: (entrypoint.boundaries?.length ?? 0) > 0,
+    },
+    coverage: {
+      ...discovery.coverage,
+      unknownRiskTools,
+      confidence: unknownRiskTools.length ? 'partial' : discovery.coverage.confidence,
+    },
+    reachability,
+  }
+}
+
+export function repositoryReachabilityBlockers(discovery, reachability = discovery?.reachability) {
   const blockers = []
-  const entrypoints = discovery.agents.filter((agent) => agent.kind === 'entrypoint')
-  const mcpTools = discovery.tools.filter((tool) => tool.provider === 'mcp')
-  const nonMcpTools = discovery.tools.filter((tool) => tool.provider !== 'mcp')
+  const entrypoints = reachability?.entrypoints ?? []
   if (entrypoints.length !== 1) blockers.push('multiple_or_zero_agent_entrypoints_require_reachability_review')
-  if (discovery.mcpServers.length > 0 && mcpTools.length > 0 && nonMcpTools.length > 0) blockers.push('mixed_mcp_and_agent_tool_surfaces_require_reachability_review')
+  if (entrypoints.length === 1 && entrypoints[0].reachableTools.length === 0) blockers.push('entrypoint_has_no_reachable_tool_surface')
+  if (reachability && reachability.resolved !== true) blockers.push('repository_reachability_not_resolved')
+
+  if (entrypoints.length === 1) {
+    const reachableMcp = entrypoints[0].reachableMcpServers ?? []
+    const reachableNonMcp = discovery.tools.filter((tool) => tool.provider !== 'mcp').filter((tool) => entrypoints[0].reachableToolSources.includes(tool.source))
+    if (reachableMcp.length > 0 && reachableNonMcp.length > 0) blockers.push('mixed_mcp_and_agent_tool_surfaces_require_reachability_review')
+  }
   return blockers
 }
 
+function scopedRuntimeRelease({ discovery, reachability, attackLoop }) {
+  const entrypoint = reachability?.entrypoints?.[0]
+  if (!entrypoint) return null
+  const proof = entrypoint.scopedRuntimeProof
+  const boundaryReachable = (entrypoint.boundaries?.length ?? 0) > 0
+  const exploitBeforeFix = proof?.exploitBeforeFix === true
+  const zeroRuntimeEscapes = proof?.proven === true && proof.criticalEscapesAfterBoundary === 0
+  const simulatedContained = attackLoop?.before?.impactEscapes === 0 && attackLoop?.before?.executorCalls === 0
+  const externalEffects = entrypoint.effectPaths?.filter((item) => item.external || item.sinks?.length > 0) ?? []
+
+  if (boundaryReachable && exploitBeforeFix && zeroRuntimeEscapes && simulatedContained) {
+    return {
+      decision: REPO_SECURITY_DECISIONS.GO,
+      reason: 'scoped_runtime_evidence_proves_reachable_effect_boundary',
+      scope: {
+        entrypoint: entrypoint.path,
+        contextInputs: entrypoint.contextInputs,
+        reachableTools: entrypoint.reachableTools,
+        effectPaths: externalEffects,
+        isolatedSurfaces: reachability.isolatedMcpServers ?? [],
+        evidence: proof.path,
+      },
+    }
+  }
+  return null
+}
+
 export async function assessRepository(rootDir) {
-  const discovery = discoverRepository(rootDir)
-  const reachabilityBlockers = repositoryReachabilityBlockers(discovery)
+  const rawDiscovery = discoverRepository(rootDir)
+  const reachability = buildRepositoryReachability(rootDir, rawDiscovery)
+  const discovery = scopedDiscovery(rawDiscovery, reachability)
+  const reachabilityBlockers = repositoryReachabilityBlockers(rawDiscovery, reachability)
   const discoveryBlockers = [...discovery.coverage.blockers, ...reachabilityBlockers]
+
   if (!discovery.coverage.supported || discovery.coverage.unknownRiskTools.length > 0 || reachabilityBlockers.length > 0) {
     return {
       version: REPO_SECURITY_LOOP_VERSION,
@@ -102,10 +162,11 @@ export async function assessRepository(rootDir) {
         ...discovery,
         coverage: { ...discovery.coverage, blockers: discoveryBlockers },
       },
+      reachability,
       attackLoop: null,
       patch: { automatic: false, supported: false, changed: false, reason: discoveryBlockers.join(',') || 'insufficient_discovery_confidence', changes: [] },
       release: { decision: REPO_SECURITY_DECISIONS.NO_GO, reason: 'repository_discovery_requires_manual_review' },
-      truthBoundary: 'Repository discovery is deterministic heuristic analysis. Unknown tools, ambiguous reachability, or unsupported runtime shapes fail closed instead of receiving a security claim.',
+      truthBoundary: 'Repository discovery and reachability are deterministic static analysis. Unknown tools, unresolved dynamic paths or unsupported runtime shapes fail closed instead of receiving a security claim.',
     }
   }
 
@@ -113,18 +174,22 @@ export async function assessRepository(rootDir) {
   const attackLoop = await runAutonomousAttackFixLoop(manifest)
   const patch = generateRepositoryAutofix({ rootDir, discovery })
   const alreadyProtected = discovery.controls.deterministicBoundary && attackLoop.before.impactEscapes === 0
+  const nativeScopedRelease = scopedRuntimeRelease({ discovery, reachability, attackLoop })
 
   return {
     version: REPO_SECURITY_LOOP_VERSION,
-    mode: 'repository_discovery_attack_patch_plan',
+    mode: 'repository_reachability_attack_patch_plan',
     discovery,
+    reachability,
     manifest,
     attackLoop,
     patch: patchSummary(patch),
-    release: alreadyProtected
-      ? { decision: REPO_SECURITY_DECISIONS.GO, reason: 'discovered_runtime_already_contains_generated_attack_set' }
-      : { decision: REPO_SECURITY_DECISIONS.NO_GO, reason: patch.supported ? 'autofix_patch_must_be_applied_and_retested' : 'manual_integration_required' },
-    truthBoundary: 'A repository is not TECHNICAL_GO until the code-level patch is applied and the same attack set is rerun with zero executor impact. A patch plan alone never upgrades release status.',
+    release: nativeScopedRelease ?? (alreadyProtected
+      ? { decision: REPO_SECURITY_DECISIONS.GO, reason: 'discovered_runtime_already_contains_generated_attack_set', evidenceLevel: 'static_plus_generated_simulation' }
+      : { decision: REPO_SECURITY_DECISIONS.NO_GO, reason: patch.supported ? 'autofix_patch_must_be_applied_and_retested' : 'manual_integration_required' }),
+    truthBoundary: nativeScopedRelease
+      ? 'TECHNICAL_GO is scoped to the statically resolved agent entrypoint, its reachable tool/effect paths and the repository-native adversarial evidence named in release.scope. Isolated surfaces are excluded, and dynamic/runtime-only paths can remain undiscovered.'
+      : 'A repository is not TECHNICAL_GO until the code-level patch is applied and the same attack set is rerun with zero executor impact. Static reachability reduces false graph joins but does not prove dynamic completeness.',
   }
 }
 
@@ -165,7 +230,7 @@ export async function runRepositoryAutofixLoop(rootDir) {
 
     return {
       version: REPO_SECURITY_LOOP_VERSION,
-      flow: ['REPO_DISCOVER', 'MAP_AGENT_EFFECTS', 'GENERATE_ATTACKS', 'REPRODUCE_IMPACT', 'GENERATE_CODE_PATCH', 'APPLY_PATCH_IN_WORKTREE', 'RETEST_SAME_ATTACKS', 'PREPARE_PR', 'GATE'],
+      flow: ['REPO_DISCOVER', 'RESOLVE_REACHABILITY', 'MAP_REQUEST_AUTHORITY', 'MAP_AGENT_EFFECTS', 'GENERATE_ATTACKS', 'REPRODUCE_IMPACT', 'GENERATE_CODE_PATCH', 'APPLY_PATCH_IN_WORKTREE', 'RETEST_SAME_ATTACKS', 'PREPARE_PR', 'GATE'],
       before: beforeAssessment,
       patch: patchSummary(fullPatch),
       runtimeBefore,
@@ -180,7 +245,7 @@ export async function runRepositoryAutofixLoop(rootDir) {
         title: 'TrustReady: enforce deterministic agent effect boundary',
         files: fullPatch.changes.map((change) => ({ path: change.path, content: change.after })),
       },
-      truthBoundary: 'TECHNICAL_GO covers only the discovered supported runtime shape and generated attack set. The generated PR is never auto-merged; production deployment remains under repository-owner control.',
+      truthBoundary: 'TECHNICAL_GO covers only the discovered supported runtime shape, statically resolved reachability and generated attack set. The generated PR is never auto-merged; production deployment remains under repository-owner control.',
     }
   } finally {
     fs.rmSync(worktree, { recursive: true, force: true })
