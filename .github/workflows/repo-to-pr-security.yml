@@ -12,8 +12,11 @@ on:
       - 'enterprise/repository-discovery.mjs'
       - 'enterprise/repository-autofix.mjs'
       - 'enterprise/repo-security-*'
+      - 'enterprise/open-repository-autofix-pr.mjs'
       - 'enterprise/examples/repo-autofix-target/**'
+      - 'enterprise/examples/repo-pr-target/**'
       - '.github/workflows/repo-to-pr-security.yml'
+      - '.github/workflows/open-security-autofix-pr.yml'
   pull_request:
     paths:
       - 'core/agent-gateway.mjs'
@@ -24,8 +27,11 @@ on:
       - 'enterprise/repository-discovery.mjs'
       - 'enterprise/repository-autofix.mjs'
       - 'enterprise/repo-security-*'
+      - 'enterprise/open-repository-autofix-pr.mjs'
       - 'enterprise/examples/repo-autofix-target/**'
+      - 'enterprise/examples/repo-pr-target/**'
       - '.github/workflows/repo-to-pr-security.yml'
+      - '.github/workflows/open-security-autofix-pr.yml'
   workflow_dispatch:
 
 permissions:
@@ -39,6 +45,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 24
+      - name: Check GitHub PR adapter syntax
+        run: node --check enterprise/open-repository-autofix-pr.mjs
       - name: Test repository discovery, fail-closed logic and code-level retest
         run: node --test enterprise/repo-security-orchestrator.test.mjs
       - name: Export machine-readable repo-to-PR evidence
@@ -56,6 +64,16 @@ jobs:
           if (r.pr?.ready !== true) throw new Error('generated PR is not ready')
           console.log(`Repo-to-PR: ${r.runtimeBefore.impactEscapes} runtime escapes -> ${r.runtimeAfter.impactEscapes}; executor calls after=${r.runtimeAfter.executorCalls}; ${r.release.decision}`)
           NODE
+      - name: Preflight separate real-PR demo target without mutating it
+        run: |
+          node enterprise/repo-security-cli.mjs enterprise/examples/repo-pr-target --autofix --out=/tmp/repo-pr-target.json
+          node <<'NODE'
+          const r = require('/tmp/repo-pr-target.json')
+          if (r.runtimeBefore?.impactEscapes !== 4 || r.runtimeBefore?.executorCalls !== 4) throw new Error('demo PR target does not reproduce pre-patch impact')
+          if (r.runtimeAfter?.impactEscapes !== 0 || r.runtimeAfter?.executorCalls !== 0) throw new Error('demo PR target patch does not contain impact')
+          if (r.release?.decision !== 'TECHNICAL_GO' || r.pr?.ready !== true) throw new Error('demo PR target is not PR-ready')
+          NODE
+          test -z "$(git status --porcelain)"
       - name: Upload repo-to-PR evidence
         uses: actions/upload-artifact@v4
         with:
@@ -86,15 +104,19 @@ jobs:
           const r = require('./safevoice-repo-discovery.json')
           const d = r.discovery
           if (r.version !== 'repo-security-loop/v1') throw new Error('invalid repo-security version')
-          if (!d || d.agents.length < 1) throw new Error('SafeVoice agent runtime not discovered')
-          if (d.mcpServers.length < 1) throw new Error('SafeVoice MCP server not discovered')
+          if (!d || d.agents.length !== 2) throw new Error(`expected framework + entrypoint, found ${d?.agents?.length}`)
+          if (d.agentTopology?.entrypoints?.length !== 1 || d.agentTopology.entrypoints[0] !== 'backend/app/services/court_prep_agent.py') throw new Error('SafeVoice court-prep entrypoint not resolved cleanly')
+          if (d.agentTopology?.frameworks?.length !== 1 || d.agentTopology.frameworks[0] !== 'backend/app/services/agent_loop.py') throw new Error('SafeVoice shared agent framework not resolved cleanly')
+          if (d.mcpServers.length !== 1) throw new Error(`expected one SafeVoice MCP server, found ${d.mcpServers.length}`)
+          if (d.tools.length !== 14) throw new Error(`expected 14 discovered tools, found ${d.tools.length}`)
           if (d.controls.boundedExecution !== true) throw new Error('SafeVoice execution budget not discovered')
           if (d.controls.auditTrail !== true) throw new Error('SafeVoice audit trail not discovered')
           if (d.controls.directModelToToolExecutor !== true) throw new Error('SafeVoice model-to-tool dispatch not discovered')
+          if (d.controls.explicitApproval !== false) throw new Error('non-runtime approval evidence must not count as executable approval')
           if (r.release?.decision !== 'TECHNICAL_NO_GO') throw new Error('ambiguous real repo must fail closed')
-          if (!d.coverage.blockers.some((x) => x.includes('reachability_review'))) throw new Error('reachability ambiguity blocker missing')
+          if (!d.coverage.blockers.includes('mixed_mcp_and_agent_tool_surfaces_require_reachability_review')) throw new Error('mixed MCP/agent reachability blocker missing')
           if (r.patch?.supported !== false) throw new Error('real repo must not be rewritten without a proven supported shape')
-          console.log(`SafeVoice discovery: agents=${d.agents.length}; MCP=${d.mcpServers.length}; tools=${d.tools.length}; decision=${r.release.decision}; auto-patch=${r.patch.supported}`)
+          console.log(`SafeVoice discovery: entrypoints=${d.agentTopology.entrypoints.length}; frameworks=${d.agentTopology.frameworks.length}; MCP=${d.mcpServers.length}; tools=${d.tools.length}; decision=${r.release.decision}; auto-patch=${r.patch.supported}`)
           NODE
       - name: Prove discovery scan did not modify target repository
         run: test -z "$(git -C target status --porcelain)"
