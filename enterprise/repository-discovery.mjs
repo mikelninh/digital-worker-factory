@@ -4,10 +4,11 @@ import path from 'node:path'
 export const REPOSITORY_DISCOVERY_VERSION = 'repository-agent-discovery/v1'
 
 const CODE_EXTENSIONS = new Set(['.js', '.mjs', '.cjs', '.ts', '.tsx', '.py', '.json', '.toml', '.yml', '.yaml'])
+const EXECUTABLE_EXTENSIONS = new Set(['.js', '.mjs', '.cjs', '.ts', '.tsx', '.py'])
 const IGNORE_DIRS = new Set(['.git', 'node_modules', 'dist', 'build', '.next', '.venv', 'venv', '__pycache__', 'coverage'])
+const NON_RUNTIME_AGENT_PATH = /(^|\/)(tests?|alembic|migrations|scripts|evals)(\/|$)/
 const MAX_FILE_BYTES = 200_000
 
-const uniq = (items) => [...new Set(items)]
 const normalise = (value) => String(value ?? '').replaceAll('\\', '/')
 
 function walk(root, current = root, out = []) {
@@ -139,6 +140,7 @@ export function discoverRepository(rootDir) {
     if (!content) continue
     const relative = normalise(path.relative(root, file))
     const ext = path.extname(file).toLowerCase()
+    const executable = EXECUTABLE_EXTENSIONS.has(ext)
     if (ext === '.py') languages.add('python')
     else if (['.js', '.mjs', '.cjs', '.ts', '.tsx'].includes(ext)) languages.add('javascript/typescript')
 
@@ -155,46 +157,51 @@ export function discoverRepository(rootDir) {
     ]
     const pathLooksAgentic = /(^|\/)(agents?|.*agent.*)\.(py|js|mjs|ts|tsx)$/.test(relative.toLowerCase()) || /agent_loop/.test(relative.toLowerCase())
     const matchedAgentSignals = agentSignals.filter(([needle]) => content.includes(needle))
-    if (pathLooksAgentic && matchedAgentSignals.length > 0) {
+    const strongAgentSignals = matchedAgentSignals.filter(([, kind]) => kind !== 'tool_call_dispatch')
+    if (executable && pathLooksAgentic && !NON_RUNTIME_AGENT_PATH.test(relative) && strongAgentSignals.length > 0) {
+      const framework = /agent[_-]?loop/.test(path.basename(relative).toLowerCase()) && !/system_prompt\s*=|SYSTEM_PROMPT\s*=/.test(content)
       agents.push({
         id: relative.replace(/[^a-zA-Z0-9]+/g, '-').replace(/^-|-$/g, ''),
+        kind: framework ? 'framework' : 'entrypoint',
         path: relative,
         signals: matchedAgentSignals.map(([, kind]) => kind),
       })
       for (const [needle, kind] of matchedAgentSignals) findings.push(evidence(file, root, content, needle, kind))
     }
 
-    if (/FastMCP\s*\(|@mcp\.tool\(/.test(content)) {
+    if (executable && /FastMCP\s*\(|@mcp\.tool\(/.test(content)) {
       mcpServers.push({ path: relative, toolDecorators: [...content.matchAll(/@mcp\.tool\(/g)].length })
       findings.push(evidence(file, root, content, 'FastMCP', 'mcp_server'))
     }
 
-    tools.push(...parsePythonToolDefs(file, root, content))
-    tools.push(...parseMcpTools(file, root, content))
-    tools.push(...parseJsDeclaredTools(file, root, content))
+    if (executable) {
+      tools.push(...parsePythonToolDefs(file, root, content))
+      tools.push(...parseMcpTools(file, root, content))
+      tools.push(...parseJsDeclaredTools(file, root, content))
+    }
 
-    if (/SecurityBoundary|security-boundary|makeSecurityContext|AgentGateway/.test(content)) {
+    if (executable && /SecurityBoundary|security-boundary|makeSecurityContext|AgentGateway/.test(content)) {
       hasDeterministicBoundary = true
       const needle = content.includes('AgentGateway') ? 'AgentGateway' : content.includes('makeSecurityContext') ? 'makeSecurityContext' : 'security-boundary'
       findings.push(evidence(file, root, content, needle, 'deterministic_security_boundary'))
     }
-    if (/approvalRequired|approval_required|approvedBy|approved_by|human[_ -]approval|requires_human_approval/i.test(content)) {
+    if (executable && /approvalRequired|approval_required|approvedBy|approved_by|human[_ -]approval|requires_human_approval/i.test(content)) {
       hasExplicitApproval = true
       findings.push(evidence(file, root, content, content.match(/approvalRequired|approval_required|approvedBy|approved_by|human[_ -]approval|requires_human_approval/i)?.[0] ?? 'approval', 'explicit_approval_signal'))
     }
-    if (/max_iterations|maxToolCalls|max_tool_calls|max_cost_usd|tool budget/i.test(content)) {
+    if (executable && /max_iterations|maxToolCalls|max_tool_calls|max_cost_usd|tool budget/i.test(content)) {
       hasExecutionBudget = true
       const needle = content.match(/max_iterations|maxToolCalls|max_tool_calls|max_cost_usd/i)?.[0] ?? 'budget'
       findings.push(evidence(file, root, content, needle, 'execution_budget'))
     }
-    if (/ToolCallLog|audit|traceId|trace_id|tool_trace/.test(content)) {
+    if (executable && /ToolCallLog|audit|traceId|trace_id|tool_trace/.test(content)) {
       hasAuditTrail = true
       const needle = content.match(/ToolCallLog|traceId|trace_id|tool_trace|audit/)?.[0] ?? 'audit'
       findings.push(evidence(file, root, content, needle, 'audit_trail'))
     }
     if (/multi[_ -]tenant|tenant_id|tenantId|organization_id|org_id/.test(content)) hasMultiTenantSignals = true
 
-    if (/tool_def\.handler\s*\(|tool\.handler\s*\(|handler\s*\(args\)/.test(content) && /tool_calls|chat_with_tools|model/i.test(content)) {
+    if (executable && /tool_def\.handler\s*\(|tool\.handler\s*\(|handler\s*\(args\)/.test(content) && /tool_calls|chat_with_tools|model/i.test(content)) {
       directModelToToolExecutor = true
       const needle = content.match(/tool_def\.handler\s*\(|tool\.handler\s*\(|handler\s*\(args\)/)?.[0] ?? 'handler(args)'
       findings.push(evidence(file, root, content, needle, 'direct_model_to_tool_executor'))
@@ -212,13 +219,16 @@ export function discoverRepository(rootDir) {
 
   const effectCandidates = dedupTools.filter((tool) => tool.risk !== 'read' || tool.external)
   const unknownRiskTools = dedupTools.filter((tool) => tool.risk === 'unknown')
-  const supported = agents.length > 0 && dedupTools.length > 0
+  const entrypoints = agents.filter((agent) => agent.kind === 'entrypoint')
+  const frameworks = agents.filter((agent) => agent.kind === 'framework')
+  const supported = entrypoints.length > 0 && dedupTools.length > 0
   const confidence = !supported ? 'insufficient' : unknownRiskTools.length > 0 ? 'partial' : 'high'
 
   return {
     version: REPOSITORY_DISCOVERY_VERSION,
     repository: { rootName: path.basename(root), filesScanned: files.length, languages: [...languages].sort() },
     agents,
+    agentTopology: { entrypoints: entrypoints.map((agent) => agent.path), frameworks: frameworks.map((agent) => agent.path) },
     mcpServers,
     providers: [...providers].sort(),
     tools: dedupTools,
@@ -236,7 +246,7 @@ export function discoverRepository(rootDir) {
       confidence,
       unknownRiskTools: unknownRiskTools.map((tool) => tool.name),
       blockers: [
-        ...(agents.length === 0 ? ['no_agent_runtime_detected'] : []),
+        ...(entrypoints.length === 0 ? ['no_agent_entrypoint_detected'] : []),
         ...(dedupTools.length === 0 ? ['no_tool_surface_detected'] : []),
         ...(unknownRiskTools.length > 0 ? ['unknown_tool_risk_requires_review'] : []),
       ],
@@ -248,6 +258,7 @@ export function discoverRepository(rootDir) {
 export function discoveryToManifest(discovery, { agentId = null } = {}) {
   if (!discovery?.coverage?.supported) throw new Error('repository_discovery_not_supported')
   if (discovery.coverage.unknownRiskTools?.length) throw new Error('repository_discovery_unknown_tool_risk')
+  const entrypoint = discovery.agents.find((agent) => agent.kind === 'entrypoint') ?? discovery.agents[0]
   const actions = discovery.tools.map((tool) => ({
     id: tool.id.replace(/^mcp:/, 'mcp.'),
     provider: tool.provider,
@@ -257,7 +268,7 @@ export function discoveryToManifest(discovery, { agentId = null } = {}) {
     sensitive: /case|evidence|credential|secret|victim|user/.test(tool.name.toLowerCase()),
   }))
   return {
-    agent: { id: agentId ?? discovery.agents[0].id, name: discovery.agents[0].path },
+    agent: { id: agentId ?? entrypoint.id, name: entrypoint.path },
     tenancy: { mode: discovery.controls.multiTenantSignals ? 'multi_tenant' : 'single_tenant' },
     actions,
     autonomousSecurity: {
