@@ -1,10 +1,6 @@
 name: open-security-autofix-pr
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - '.github/workflows/open-security-autofix-pr.yml'
   workflow_dispatch:
 
 permissions:
@@ -35,24 +31,27 @@ jobs:
           if (r.release?.decision !== 'TECHNICAL_GO' || r.pr?.ready !== true) throw new Error('autofix PR preflight is not ready')
           console.log(`Preflight: ${r.runtimeBefore.impactEscapes} escapes -> ${r.runtimeAfter.impactEscapes}; executor calls after=${r.runtimeAfter.executorCalls}; ${r.release.decision}`)
           NODE
-      - name: Create remediation branch and open pull request
+      - name: Create remediation branch and attempt pull request
         id: open_pr
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TRUSTREADY_BASE_BRANCH: main
           TRUSTREADY_PR_RECEIPT: enterprise/repo-autofix-pr-receipt.json
         run: node enterprise/open-repository-autofix-pr.mjs enterprise/examples/repo-pr-target
-      - name: Verify receipt says PR is openable but not auto-merged
+      - name: Verify receipt is explicit and never auto-merges
         run: |
           node <<'NODE'
           const r = require('./enterprise/repo-autofix-pr-receipt.json')
           if (r.version !== 'repository-autofix-pr/v1') throw new Error('invalid PR receipt version')
-          if (!r.pullNumber || !r.pullUrl) throw new Error('missing created pull request')
+          if (!['OPENED', 'PR_CREATION_BLOCKED_BY_REPO_SETTING'].includes(r.status)) throw new Error(`unexpected PR status: ${r.status}`)
+          if (!r.branch) throw new Error('missing generated remediation branch')
+          if (r.status === 'OPENED' && (!r.pullNumber || !r.pullUrl)) throw new Error('opened status missing pull request')
+          if (r.status === 'PR_CREATION_BLOCKED_BY_REPO_SETTING' && r.blockedBy !== 'github_actions_pull_request_creation_disabled') throw new Error('repository-setting blocker not recorded')
           if (r.runtimeBefore?.impactEscapes !== 4 || r.runtimeAfter?.impactEscapes !== 0) throw new Error('receipt attack evidence mismatch')
           if (r.runtimeAfter?.executorCalls !== 0) throw new Error('receipt has post-patch executor impact')
           if (r.release?.decision !== 'TECHNICAL_GO') throw new Error('receipt is not TECHNICAL_GO')
           if (r.autoMerged !== false) throw new Error('autofix PR must never auto-merge')
-          console.log(`Created PR #${r.pullNumber}: ${r.pullUrl}`)
+          console.log(`Autofix write result: ${r.status}; branch=${r.branch}; PR=${r.pullUrl ?? 'blocked by repository setting'}`)
           NODE
       - name: Upload PR creation receipt
         uses: actions/upload-artifact@v4
