@@ -52,10 +52,52 @@ function inferRisk(toolName, nearby = '') {
       external: /(send|submit|publish|deploy|transfer|payment|refund|archive)/.test(name) || /https?:\/\//.test(text),
     }
   }
-  if (/(read|get|list|check|detect|classify|determine|generate|draft|build|search|lookup|extract|find|match|suggest|analy[sz]e|compute|summari[sz]e|prepare|resolve)/.test(name)) {
+  if (/(read|get|list|walk|check|detect|classify|determine|generate|draft|build|search|lookup|extract|find|match|suggest|analy[sz]e|compute|summari[sz]e|prepare|resolve)/.test(name)) {
     return { risk: 'read', external: false }
   }
   return { risk: 'unknown', external: /requests\.|httpx\.|fetch\(|axios|https?:\/\//.test(text) }
+}
+
+function objectSpans(content) {
+  const spans = []
+  const stack = []
+  let quote = null
+  let escaped = false
+  let lineComment = false
+  let blockComment = false
+
+  for (let i = 0; i < content.length; i += 1) {
+    const ch = content[i]
+    const next = content[i + 1]
+
+    if (lineComment) {
+      if (ch === '\n') lineComment = false
+      continue
+    }
+    if (blockComment) {
+      if (ch === '*' && next === '/') { blockComment = false; i += 1 }
+      continue
+    }
+    if (quote) {
+      if (escaped) { escaped = false; continue }
+      if (ch === '\\') { escaped = true; continue }
+      if (ch === quote) quote = null
+      continue
+    }
+    if (ch === '/' && next === '/') { lineComment = true; i += 1; continue }
+    if (ch === '/' && next === '*') { blockComment = true; i += 1; continue }
+    if (ch === "'" || ch === '"' || ch === '`') { quote = ch; continue }
+    if (ch === '{') stack.push(i)
+    else if (ch === '}' && stack.length) {
+      const start = stack.pop()
+      spans.push({ start, end: i + 1 })
+    }
+  }
+  return spans.sort((a, b) => (a.end - a.start) - (b.end - b.start))
+}
+
+function enclosingObject(spans, index) {
+  return spans.find((span) => span.start <= index && index < span.end) ?? null
 }
 
 function parsePythonToolDefs(file, root, content) {
@@ -67,14 +109,9 @@ function parsePythonToolDefs(file, root, content) {
     const handlerMatch = nearby.match(/handler\s*=\s*([A-Za-z0-9_().]+)/)
     const inferred = inferRisk(match[1], nearby)
     tools.push({
-      id: match[1],
-      name: match[1],
-      provider: 'python_tooldef',
-      risk: inferred.risk,
-      external: inferred.external,
-      source: normalise(path.relative(root, file)),
-      handler: handlerMatch?.[1] ?? null,
-      confidence: inferred.risk === 'unknown' ? 'medium' : 'high',
+      id: match[1], name: match[1], provider: 'python_tooldef', risk: inferred.risk,
+      external: inferred.external, source: normalise(path.relative(root, file)),
+      handler: handlerMatch?.[1] ?? null, confidence: inferred.risk === 'unknown' ? 'medium' : 'high',
     })
   }
   return tools
@@ -86,13 +123,8 @@ function parseMcpTools(file, root, content) {
   for (const match of content.matchAll(regex)) {
     const inferred = inferRisk(match[1], content.slice(match.index ?? 0, (match.index ?? 0) + 900))
     tools.push({
-      id: `mcp:${match[1]}`,
-      name: match[1],
-      provider: 'mcp',
-      risk: inferred.risk,
-      external: inferred.external,
-      source: normalise(path.relative(root, file)),
-      handler: match[1],
+      id: `mcp:${match[1]}`, name: match[1], provider: 'mcp', risk: inferred.risk,
+      external: inferred.external, source: normalise(path.relative(root, file)), handler: match[1],
       confidence: inferred.risk === 'unknown' ? 'medium' : 'high',
     })
   }
@@ -100,52 +132,70 @@ function parseMcpTools(file, root, content) {
 }
 
 function parseJsDeclaredTools(file, root, content) {
+  if (!/\brisk\s*:\s*["'](?:read|write|consequential|irreversible)["']/.test(content)) return []
+  if (!/(?:requiresHumanApproval|defaultExecutionMode|\bconsequential\s*:|\bauthority\s*:)/.test(content)) return []
   const tools = []
-  const regex = /(?:name|id)\s*:\s*["']([^"']+)["'][\s\S]{0,500}?risk\s*:\s*["'](read|write|consequential|irreversible)["']/g
-  for (const match of content.matchAll(regex)) {
-    const nearby = content.slice(match.index ?? 0, (match.index ?? 0) + 800)
-    const externalMatch = nearby.match(/external\s*:\s*(true|false)/)
+  const spans = objectSpans(content)
+  const authority = content.match(/\bauthority\s*:\s*["']([^"']+)["']/)?.[1] ?? null
+  const executionMode = content.match(/\bdefaultExecutionMode\s*:\s*["']([^"']+)["']/)?.[1] ?? null
+  const idRegex = /\b(?:id|name)\s*:\s*["']([^"']+)["']/g
+  const seen = new Set()
+
+  for (const match of content.matchAll(idRegex)) {
+    const span = enclosingObject(spans, match.index ?? 0)
+    if (!span) continue
+    const object = content.slice(span.start, span.end)
+    const risk = object.match(/\brisk\s*:\s*["'](read|write|consequential|irreversible)["']/)?.[1]
+    if (!risk) continue
+    const id = match[1]
+    const key = `${span.start}:${id}`
+    if (seen.has(key)) continue
+    seen.add(key)
+    const external = object.match(/\bexternal\s*:\s*(true|false)/)?.[1] === 'true'
+    const consequential = object.match(/\bconsequential\s*:\s*(true|false)/)?.[1] === 'true'
+    const requiresHumanApproval = object.match(/\brequiresHumanApproval\s*:\s*(true|false)/)?.[1] === 'true'
+    const method = object.match(/\bmethod\s*:\s*["']([^"']+)["']/)?.[1] ?? null
+    const transportPath = object.match(/\bpath\s*:\s*["']([^"']+)["']/)?.[1] ?? null
     tools.push({
-      id: match[1],
-      name: match[1],
-      provider: 'declared_capability',
-      risk: match[2],
-      external: externalMatch?.[1] === 'true',
-      source: normalise(path.relative(root, file)),
-      handler: null,
-      confidence: 'high',
+      id, name: id, provider: 'declared_capability', risk, external,
+      source: normalise(path.relative(root, file)), handler: null, confidence: 'high',
+      declaredOnly: true, consequential, requiresHumanApproval, authority, executionMode,
+      transport: method || transportPath ? { method, path: transportPath } : null,
     })
   }
   return tools
 }
 
 /**
- * TypeScript/JavaScript tool registries often return `ToolDef[]` object
- * literals without repeating risk metadata beside every tool. Discover the
- * actual declared surface and infer risk conservatively from the tool name.
- * Unknown verbs remain `unknown` and therefore fail closed upstream.
+ * Discover TypeScript/JavaScript ToolDef object literals without allowing a
+ * foreign nested `{ name: ... }` object to borrow a later schema/handler from
+ * another object. The smallest enclosing object must itself contain name,
+ * schema and handler.
  */
 function parseTsToolDefs(file, root, content) {
   if (!/(?:ToolDef(?:<[^>]+>)?\s*\[\]|build[A-Za-z0-9_]*Tools\s*\()/.test(content)) return []
   const tools = []
+  const spans = objectSpans(content)
   const regex = /\bname\s*:\s*["']([^"']+)["']/g
-  for (const match of content.matchAll(regex)) {
-    const start = match.index ?? 0
-    const nearby = content.slice(start, Math.min(content.length, start + 2400))
-    const schemaIndex = nearby.search(/\bschema\s*:/)
-    const handlerIndex = nearby.search(/\bhandler\s*:/)
-    if (schemaIndex < 0 || handlerIndex < 0 || handlerIndex < schemaIndex) continue
+  const seen = new Set()
 
-    const directHandler = nearby.match(/handler\s*:\s*([A-Za-z_][A-Za-z0-9_]*)/)
-    const arrowHandler = nearby.match(/handler\s*:\s*\([^)]*\)\s*=>[\s\S]{0,700}?\b([A-Za-z_][A-Za-z0-9_]*)\s*\(/)
-    const inferred = inferRisk(match[1], nearby)
+  for (const match of content.matchAll(regex)) {
+    const span = enclosingObject(spans, match.index ?? 0)
+    if (!span) continue
+    const object = content.slice(span.start, span.end)
+    if (!/\bschema\s*:/.test(object) || !/\bhandler\s*:/.test(object)) continue
+    const localName = object.match(/\bname\s*:\s*["']([^"']+)["']/)?.[1]
+    if (localName !== match[1]) continue
+    const key = `${span.start}:${localName}`
+    if (seen.has(key)) continue
+    seen.add(key)
+
+    const directHandler = object.match(/\bhandler\s*:\s*([A-Za-z_][A-Za-z0-9_]*)/)
+    const arrowHandler = object.match(/\bhandler\s*:\s*\([^)]*\)\s*=>[\s\S]{0,700}?\b([A-Za-z_][A-Za-z0-9_]*)\s*\(/)
+    const inferred = inferRisk(localName, object)
     tools.push({
-      id: match[1],
-      name: match[1],
-      provider: 'typescript_tooldef',
-      risk: inferred.risk,
-      external: inferred.external,
-      source: normalise(path.relative(root, file)),
+      id: localName, name: localName, provider: 'typescript_tooldef', risk: inferred.risk,
+      external: inferred.external, source: normalise(path.relative(root, file)),
       handler: directHandler?.[1] ?? arrowHandler?.[1] ?? null,
       confidence: inferred.risk === 'unknown' ? 'medium' : 'high',
     })
@@ -199,19 +249,14 @@ export function discoverRepository(rootDir) {
     if (/gemini|google\.generativeai/.test(lower)) providers.add('google')
 
     const agentSignals = [
-      ['chat_with_tools', 'llm_tool_calling'],
-      ['run_agent(', 'agent_loop'],
-      ['runAgent(', 'agent_loop'],
-      ['AgentGateway', 'agent_gateway'],
-      ['tool_calls', 'tool_call_dispatch'],
-      ['toolCalls', 'tool_call_dispatch'],
+      ['chat_with_tools', 'llm_tool_calling'], ['run_agent(', 'agent_loop'], ['runAgent(', 'agent_loop'],
+      ['AgentGateway', 'agent_gateway'], ['tool_calls', 'tool_call_dispatch'], ['toolCalls', 'tool_call_dispatch'],
     ]
     const matchedAgentSignals = agentSignals.filter(([needle]) => content.includes(needle))
     const strongAgentSignals = matchedAgentSignals.filter(([, kind]) => kind !== 'tool_call_dispatch')
     const pathLooksAgentic =
       /(^|\/)(agents?|.*agent.*)\.(py|js|mjs|ts|tsx)$/.test(relative.toLowerCase()) ||
-      /agent_loop/.test(relative.toLowerCase()) ||
-      /(^|\/)agents?\//i.test(relative) ||
+      /agent_loop/.test(relative.toLowerCase()) || /(^|\/)agents?\//i.test(relative) ||
       (/\brunAgent\s*\(/.test(content) && /SYSTEM_PROMPT|systemPrompt/.test(content))
 
     if (executable && pathLooksAgentic && !NON_RUNTIME_AGENT_PATH.test(relative) && strongAgentSignals.length > 0) {
@@ -219,8 +264,7 @@ export function discoverRepository(rootDir) {
       const framework = isGenericJsAgentFramework(content) || pythonFramework
       agents.push({
         id: relative.replace(/[^a-zA-Z0-9]+/g, '-').replace(/^-|-$/g, ''),
-        kind: framework ? 'framework' : 'entrypoint',
-        path: relative,
+        kind: framework ? 'framework' : 'entrypoint', path: relative,
         signals: matchedAgentSignals.map(([, kind]) => kind),
       })
       for (const [needle, kind] of matchedAgentSignals) findings.push(evidence(file, root, content, needle, kind))
@@ -240,13 +284,7 @@ export function discoverRepository(rootDir) {
 
     if (executable && /SecurityBoundary|security-boundary|makeSecurityContext|AgentGateway|evaluateAgentIntent/.test(content)) {
       hasDeterministicBoundary = true
-      const needle = content.includes('AgentGateway')
-        ? 'AgentGateway'
-        : content.includes('makeSecurityContext')
-          ? 'makeSecurityContext'
-          : content.includes('evaluateAgentIntent')
-            ? 'evaluateAgentIntent'
-            : 'security-boundary'
+      const needle = content.includes('AgentGateway') ? 'AgentGateway' : content.includes('makeSecurityContext') ? 'makeSecurityContext' : content.includes('evaluateAgentIntent') ? 'evaluateAgentIntent' : 'security-boundary'
       findings.push(evidence(file, root, content, needle, 'deterministic_security_boundary'))
     }
     if (executable && /approvalRequired|approval_required|approvedBy|approved_by|human[_ -]approval|requiresHumanApproval|requires_human_approval/i.test(content)) {
@@ -298,16 +336,12 @@ export function discoverRepository(rootDir) {
     tools: dedupTools,
     effectCandidates,
     controls: {
-      deterministicBoundary: hasDeterministicBoundary,
-      explicitApproval: hasExplicitApproval,
-      boundedExecution: hasExecutionBudget,
-      auditTrail: hasAuditTrail,
-      multiTenantSignals: hasMultiTenantSignals,
-      directModelToToolExecutor,
+      deterministicBoundary: hasDeterministicBoundary, explicitApproval: hasExplicitApproval,
+      boundedExecution: hasExecutionBudget, auditTrail: hasAuditTrail,
+      multiTenantSignals: hasMultiTenantSignals, directModelToToolExecutor,
     },
     coverage: {
-      supported,
-      confidence,
+      supported, confidence,
       unknownRiskTools: unknownRiskTools.map((tool) => tool.name),
       blockers: [
         ...(entrypoints.length === 0 ? ['no_agent_entrypoint_detected'] : []),
@@ -324,11 +358,8 @@ export function discoveryToManifest(discovery, { agentId = null } = {}) {
   if (discovery.coverage.unknownRiskTools?.length) throw new Error('repository_discovery_unknown_tool_risk')
   const entrypoint = discovery.agents.find((agent) => agent.kind === 'entrypoint') ?? discovery.agents[0]
   const actions = discovery.tools.map((tool) => ({
-    id: tool.id.replace(/^mcp:/, 'mcp.'),
-    provider: tool.provider,
-    risk: tool.risk,
-    external: tool.external,
-    allowedRoles: ['agent'],
+    id: tool.id.replace(/^mcp:/, 'mcp.'), provider: tool.provider, risk: tool.risk,
+    external: tool.external, allowedRoles: ['agent'],
     sensitive: /case|evidence|credential|secret|victim|user|mandant|document/.test(tool.name.toLowerCase()),
   }))
   return {
