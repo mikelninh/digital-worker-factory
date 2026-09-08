@@ -4,6 +4,7 @@ import path from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { discoverRepository, discoveryToManifest } from './repository-discovery.mjs'
 import { buildRepositoryReachability } from './repository-reachability.mjs'
+import { evaluateMultiEntrypointSecurity } from './multi-entrypoint-security.mjs'
 import { generateRepositoryAutofix, applyRepositoryAutofix, patchSummary } from './repository-autofix.mjs'
 import { runAutonomousAttackFixLoop } from './autonomous-security-loop.mjs'
 
@@ -105,6 +106,17 @@ function scopedDiscovery(discovery, reachability) {
   }
 }
 
+function normalizeReachabilityForMultiple(reachability) {
+  const entrypoints = reachability?.entrypoints ?? []
+  if (entrypoints.length < 2) return reachability
+  const resolved = entrypoints.every((entrypoint) => (entrypoint.reachableTools?.length ?? 0) > 0)
+  return {
+    ...reachability,
+    resolved,
+    confidence: resolved ? 'high' : 'partial',
+  }
+}
+
 export function repositoryReachabilityBlockers(discovery, reachability = discovery?.reachability) {
   const blockers = []
   const entrypoints = reachability?.entrypoints ?? []
@@ -147,27 +159,72 @@ function scopedRuntimeRelease({ discovery, reachability, attackLoop }) {
   return null
 }
 
+function failClosedAssessment({ discovery, reachability, blockers }) {
+  return {
+    version: REPO_SECURITY_LOOP_VERSION,
+    mode: 'repository_discovery_fail_closed',
+    discovery: {
+      ...discovery,
+      coverage: { ...discovery.coverage, blockers },
+    },
+    reachability,
+    attackLoop: null,
+    patch: { automatic: false, supported: false, changed: false, reason: blockers.join(',') || 'insufficient_discovery_confidence', changes: [] },
+    release: { decision: REPO_SECURITY_DECISIONS.NO_GO, reason: 'repository_discovery_requires_manual_review' },
+    truthBoundary: 'Repository discovery and reachability are deterministic static analysis. Unknown tools, unresolved dynamic paths or unsupported runtime shapes fail closed instead of receiving a security claim.',
+  }
+}
+
 export async function assessRepository(rootDir) {
   const rawDiscovery = discoverRepository(rootDir)
-  const reachability = buildRepositoryReachability(rootDir, rawDiscovery)
+  const rawReachability = buildRepositoryReachability(rootDir, rawDiscovery)
+  const reachability = normalizeReachabilityForMultiple(rawReachability)
+
+  if ((reachability.entrypoints?.length ?? 0) > 1) {
+    const structuralBlockers = [
+      ...(!rawDiscovery.coverage.supported ? ['repository_discovery_not_supported'] : []),
+      ...(reachability.resolved !== true ? ['repository_reachability_not_resolved'] : []),
+    ]
+    if (structuralBlockers.length > 0) return failClosedAssessment({ discovery: rawDiscovery, reachability, blockers: structuralBlockers })
+
+    const entrypointSecurity = await evaluateMultiEntrypointSecurity(rawDiscovery, reachability)
+    return {
+      version: REPO_SECURITY_LOOP_VERSION,
+      mode: 'repository_multi_entrypoint_scoped_assurance',
+      discovery: { ...rawDiscovery, reachability },
+      reachability,
+      entrypointSecurity,
+      attackLoop: null,
+      patch: {
+        automatic: false,
+        supported: false,
+        changed: false,
+        reason: entrypointSecurity.decision === REPO_SECURITY_DECISIONS.GO ? 'no_multi_entrypoint_patch_required' : 'multi_entrypoint_remediation_requires_scoped_integration',
+        changes: [],
+      },
+      release: {
+        decision: entrypointSecurity.decision,
+        reason: entrypointSecurity.reason,
+        scope: {
+          entrypoints: entrypointSecurity.entrypoints.map((item) => ({
+            entrypoint: item.scope.entrypoint,
+            decision: item.decision,
+            reason: item.reason,
+            evidenceLevel: item.evidenceLevel ?? null,
+            reachableTools: item.scope.reachableTools,
+          })),
+        },
+      },
+      truthBoundary: entrypointSecurity.truthBoundary,
+    }
+  }
+
   const discovery = scopedDiscovery(rawDiscovery, reachability)
   const reachabilityBlockers = repositoryReachabilityBlockers(rawDiscovery, reachability)
   const discoveryBlockers = [...discovery.coverage.blockers, ...reachabilityBlockers]
 
   if (!discovery.coverage.supported || discovery.coverage.unknownRiskTools.length > 0 || reachabilityBlockers.length > 0) {
-    return {
-      version: REPO_SECURITY_LOOP_VERSION,
-      mode: 'repository_discovery_fail_closed',
-      discovery: {
-        ...discovery,
-        coverage: { ...discovery.coverage, blockers: discoveryBlockers },
-      },
-      reachability,
-      attackLoop: null,
-      patch: { automatic: false, supported: false, changed: false, reason: discoveryBlockers.join(',') || 'insufficient_discovery_confidence', changes: [] },
-      release: { decision: REPO_SECURITY_DECISIONS.NO_GO, reason: 'repository_discovery_requires_manual_review' },
-      truthBoundary: 'Repository discovery and reachability are deterministic static analysis. Unknown tools, unresolved dynamic paths or unsupported runtime shapes fail closed instead of receiving a security claim.',
-    }
+    return failClosedAssessment({ discovery, reachability, blockers: discoveryBlockers })
   }
 
   const manifest = discoveryToManifest(discovery)
