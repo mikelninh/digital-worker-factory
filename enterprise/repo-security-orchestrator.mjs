@@ -80,17 +80,31 @@ export async function exerciseAutofixRuntime(rootDir, relativePath) {
   }
 }
 
+export function repositoryReachabilityBlockers(discovery) {
+  const blockers = []
+  const mcpTools = discovery.tools.filter((tool) => tool.provider === 'mcp')
+  const nonMcpTools = discovery.tools.filter((tool) => tool.provider !== 'mcp')
+  if (discovery.agents.length !== 1) blockers.push('multiple_or_zero_agent_runtimes_require_reachability_review')
+  if (discovery.mcpServers.length > 0 && mcpTools.length > 0 && nonMcpTools.length > 0) blockers.push('mixed_mcp_and_agent_tool_surfaces_require_reachability_review')
+  return blockers
+}
+
 export async function assessRepository(rootDir) {
   const discovery = discoverRepository(rootDir)
-  if (!discovery.coverage.supported || discovery.coverage.unknownRiskTools.length > 0) {
+  const reachabilityBlockers = repositoryReachabilityBlockers(discovery)
+  const discoveryBlockers = [...discovery.coverage.blockers, ...reachabilityBlockers]
+  if (!discovery.coverage.supported || discovery.coverage.unknownRiskTools.length > 0 || reachabilityBlockers.length > 0) {
     return {
       version: REPO_SECURITY_LOOP_VERSION,
       mode: 'repository_discovery_fail_closed',
-      discovery,
+      discovery: {
+        ...discovery,
+        coverage: { ...discovery.coverage, blockers: discoveryBlockers },
+      },
       attackLoop: null,
-      patch: { automatic: false, supported: false, changed: false, reason: discovery.coverage.blockers.join(',') || 'insufficient_discovery_confidence', changes: [] },
+      patch: { automatic: false, supported: false, changed: false, reason: discoveryBlockers.join(',') || 'insufficient_discovery_confidence', changes: [] },
       release: { decision: REPO_SECURITY_DECISIONS.NO_GO, reason: 'repository_discovery_requires_manual_review' },
-      truthBoundary: 'Repository discovery is deterministic heuristic analysis. Unknown tools or unsupported runtime shapes fail closed instead of receiving a security claim.',
+      truthBoundary: 'Repository discovery is deterministic heuristic analysis. Unknown tools, ambiguous reachability, or unsupported runtime shapes fail closed instead of receiving a security claim.',
     }
   }
 
