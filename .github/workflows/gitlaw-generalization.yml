@@ -43,7 +43,7 @@ jobs:
       - name: Scan GitLaw without hints or target mutation
         working-directory: engine
         run: node enterprise/repo-security-cli.mjs ../target --out=../gitlaw-scan.json
-      - name: Require real TypeScript topology and scoped effect decisions
+      - name: Require real TypeScript topology and resolved authority surfaces
         run: |
           node <<'NODE'
           const r = require('./gitlaw-scan.json')
@@ -52,19 +52,44 @@ jobs:
           if (r.version !== 'repo-security-loop/v1') throw new Error('invalid repo-security report')
           if (!d || !scoped) throw new Error('missing discovery or scoped security decisions')
           if (!d.agentTopology?.frameworks?.includes('api/_agent.ts')) throw new Error('shared TypeScript agent framework not discovered')
-          for (const path of ['api/agent/behoerden.ts','api/agent/document-review.ts','api/agent/lebenslagen.ts']) {
+
+          const requiredEntrypoints = [
+            'api/agent/behoerden.ts',
+            'api/agent/document-review.ts',
+            'api/agent/lebenslagen.ts',
+            'api/cron/mandant-update.ts',
+          ]
+          for (const path of requiredEntrypoints) {
             if (!d.agentTopology?.entrypoints?.includes(path)) throw new Error(`missing agent entrypoint: ${path}`)
           }
+
           if (!d.tools.some((t) => t.source === 'api/_document_review_tools.ts' && t.name === 'get_current_case_docs')) throw new Error('TypeScript ToolDef registry not discovered')
           if (!d.tools.some((t) => t.source === 'api/_behoerden_tools.ts' && t.name === 'find_matching_case')) throw new Error('Behoerden tools not discovered')
           if (!d.tools.some((t) => t.source === 'api/_lebenslagen_tools.ts' && t.name === 'draft_letter')) throw new Error('Lebenslagen tools not discovered')
+
           if (r.mode !== 'repository_multi_entrypoint_scoped_assurance') throw new Error(`unexpected mode: ${r.mode}`)
           if (r.release?.decision !== 'TECHNICAL_GO') throw new Error(`GitLaw effect-scope decision is not GO: ${r.release?.decision}`)
-          if (scoped.summary.entrypoints !== 3 || scoped.summary.go !== 3 || scoped.summary.noGo !== 0) throw new Error(`unexpected scoped summary: ${JSON.stringify(scoped.summary)}`)
+          if (scoped.summary.entrypoints !== d.agentTopology.entrypoints.length) throw new Error(`scoped/discovered entrypoint mismatch: ${JSON.stringify(scoped.summary)}`)
+          if (scoped.summary.go !== scoped.summary.entrypoints || scoped.summary.noGo !== 0) throw new Error(`unexpected scoped summary: ${JSON.stringify(scoped.summary)}`)
           if (scoped.summary.consequentialScopes !== 0) throw new Error('GitLaw scan found a consequential reachable agent scope; inspect before claiming GO')
-          if (scoped.summary.unassignedTools !== 0) throw new Error('GitLaw has an unassigned non-MCP tool surface')
-          if (!scoped.entrypoints.every((item) => item.reason === 'scoped_non_consequential_surface_resolved')) throw new Error('GitLaw scoped GO must be based on resolved non-consequential surfaces')
-          console.log(`GitLaw scoped security: ${scoped.summary.go}/${scoped.summary.entrypoints} entrypoints GO; consequential scopes=${scoped.summary.consequentialScopes}; repo=${r.release.decision}`)
+          if (scoped.summary.unassignedTools !== 0) throw new Error(`GitLaw has unresolved non-MCP surfaces: ${JSON.stringify(scoped.unassignedTools)}`)
+          if (!scoped.entrypoints.every((item) => item.reason === 'scoped_non_consequential_surface_resolved')) throw new Error('GitLaw scoped GO must be based on resolved non-consequential agent surfaces')
+
+          const resolved = scoped.resolvedNonAgentSurfaces ?? []
+          const caseUpdate = resolved.find((item) => item.source === 'api/pro/capabilities-contract.ts' && item.name === 'gitlaw.case.update')
+          if (!caseUpdate) throw new Error('gitlaw.case.update was not explicitly resolved')
+          if (caseUpdate.reason !== 'declarative_effect_capability_kept_outside_model_authority') throw new Error(`gitlaw.case.update resolved for wrong reason: ${caseUpdate.reason}`)
+          if (caseUpdate.guard?.authority !== 'outside_model' || caseUpdate.guard?.executionMode !== 'approval_gated' || caseUpdate.guard?.requiresHumanApproval !== true) {
+            throw new Error(`gitlaw.case.update missing authority/approval evidence: ${JSON.stringify(caseUpdate.guard)}`)
+          }
+          if (!caseUpdate.caveat?.includes('does not prove')) throw new Error('gitlaw.case.update must retain downstream approval caveat')
+
+          const deterministic = resolved.filter((item) => item.reason === 'deterministic_non_agent_runtime_owns_surface')
+          for (const source of ['api/_fristen_tools.ts', 'api/_diff_watcher_tools.ts']) {
+            if (!deterministic.some((item) => item.source === source)) throw new Error(`deterministic tool registry not runtime-owned: ${source}`)
+          }
+
+          console.log(`GitLaw scoped security: ${scoped.summary.go}/${scoped.summary.entrypoints} agent entrypoints GO; resolved non-agent surfaces=${scoped.summary.resolvedNonAgentSurfaces}; unresolved=${scoped.summary.unassignedTools}; repo=${r.release.decision}`)
           NODE
       - name: Prove scanner did not mutate GitLaw
         if: always()
