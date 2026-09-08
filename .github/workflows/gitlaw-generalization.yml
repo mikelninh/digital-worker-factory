@@ -1,0 +1,57 @@
+name: gitlaw-generalization-v1
+
+on:
+  pull_request:
+    paths:
+      - 'enterprise/repository-discovery.mjs'
+      - 'enterprise/repository-reachability.mjs'
+      - 'enterprise/repo-security-orchestrator.mjs'
+      - '.github/workflows/gitlaw-generalization.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  real-gitlaw-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout TrustReady engine
+        uses: actions/checkout@v4
+        with:
+          path: engine
+      - name: Checkout real GitLaw repository
+        uses: actions/checkout@v4
+        with:
+          repository: mikelninh/gitlaw
+          path: target
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Scan GitLaw without hints or target mutation
+        working-directory: engine
+        run: node enterprise/repo-security-cli.mjs ../target --out=../gitlaw-scan.json
+      - name: Require real TypeScript agent topology and fail-closed decision
+        run: |
+          node <<'NODE'
+          const r = require('./gitlaw-scan.json')
+          const d = r.discovery
+          if (r.version !== 'repo-security-loop/v1') throw new Error('invalid repo-security report')
+          if (!d) throw new Error('missing discovery')
+          if (!d.agentTopology?.frameworks?.includes('api/_agent.ts')) throw new Error('shared TypeScript agent framework not discovered')
+          for (const path of ['api/agent/behoerden.ts','api/agent/document-review.ts','api/agent/lebenslagen.ts']) {
+            if (!d.agentTopology?.entrypoints?.includes(path)) throw new Error(`missing agent entrypoint: ${path}`)
+          }
+          if (!d.tools.some((t) => t.source === 'api/_document_review_tools.ts' && t.name === 'get_current_case_docs')) throw new Error('TypeScript ToolDef registry not discovered')
+          if (!d.tools.some((t) => t.source === 'api/_behoerden_tools.ts' && t.name === 'find_matching_case')) throw new Error('Behoerden tools not discovered')
+          if (!d.tools.some((t) => t.source === 'api/_lebenslagen_tools.ts' && t.name === 'draft_letter')) throw new Error('Lebenslagen tools not discovered')
+          if (r.release?.decision !== 'TECHNICAL_NO_GO') throw new Error(`multi-entrypoint repo must fail closed until scoped decisions exist: ${r.release?.decision}`)
+          console.log(`GitLaw discovery: entrypoints=${d.agentTopology.entrypoints.length}; frameworks=${d.agentTopology.frameworks.length}; tools=${d.tools.length}; release=${r.release.decision}`)
+          NODE
+      - name: Prove scanner did not mutate GitLaw
+        run: test -z "$(git -C target status --porcelain)"
+      - name: Upload real GitLaw scan
+        uses: actions/upload-artifact@v4
+        with:
+          name: gitlaw-generalization-scan
+          path: gitlaw-scan.json
