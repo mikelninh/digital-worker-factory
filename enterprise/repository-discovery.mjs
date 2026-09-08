@@ -153,6 +153,18 @@ function parseTsToolDefs(file, root, content) {
   return tools
 }
 
+function ownsConcreteToolRegistry(content) {
+  return /(?:export\s+)?const\s+tools\s*(?::[^=]+)?=\s*\[/.test(content) || /ToolDef\(\s*name\s*=/.test(content)
+}
+
+function isGenericJsAgentFramework(content) {
+  const definesRunAgent = /(?:export\s+)?(?:async\s+)?function\s+runAgent\s*\(/.test(content)
+  const hasToolContract = /\bToolDef\b/.test(content)
+  const hasDispatch = /toolCalls|tool_calls|tool\.handler\s*\(/.test(content)
+  const hasModelLoop = /OpenAI|OPENAI|chat|model|maxIterations|maxCostUsd/.test(content)
+  return definesRunAgent && hasToolContract && hasDispatch && hasModelLoop && !ownsConcreteToolRegistry(content)
+}
+
 export function discoverRepository(rootDir) {
   const root = path.resolve(rootDir)
   if (!fs.existsSync(root) || !fs.statSync(root).isDirectory()) throw new Error('repository_root_required')
@@ -203,9 +215,8 @@ export function discoverRepository(rootDir) {
       (/\brunAgent\s*\(/.test(content) && /SYSTEM_PROMPT|systemPrompt/.test(content))
 
     if (executable && pathLooksAgentic && !NON_RUNTIME_AGENT_PATH.test(relative) && strongAgentSignals.length > 0) {
-      const definesGenericRunAgent = /(?:export\s+)?(?:async\s+)?function\s+runAgent\s*\(/.test(content)
       const pythonFramework = /agent[_-]?loop/.test(path.basename(relative).toLowerCase()) && !/system_prompt\s*=|SYSTEM_PROMPT\s*=/.test(content)
-      const framework = definesGenericRunAgent && !/SYSTEM_PROMPT|systemPrompt\s*:/.test(content) || pythonFramework
+      const framework = isGenericJsAgentFramework(content) || pythonFramework
       agents.push({
         id: relative.replace(/[^a-zA-Z0-9]+/g, '-').replace(/^-|-$/g, ''),
         kind: framework ? 'framework' : 'entrypoint',
