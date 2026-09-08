@@ -1,4 +1,4 @@
-name: repo-to-pr-security-v2
+name: repo-to-pr-security-v3
 
 on:
   push:
@@ -10,6 +10,7 @@ on:
       - 'core/security-boundary.mjs'
       - 'enterprise/autonomous-security-loop.mjs'
       - 'enterprise/repository-discovery.mjs'
+      - 'enterprise/repository-reachability.mjs'
       - 'enterprise/repository-autofix.mjs'
       - 'enterprise/repo-security-*'
       - 'enterprise/open-repository-autofix-pr.mjs'
@@ -25,6 +26,7 @@ on:
       - 'core/security-boundary.mjs'
       - 'enterprise/autonomous-security-loop.mjs'
       - 'enterprise/repository-discovery.mjs'
+      - 'enterprise/repository-reachability.mjs'
       - 'enterprise/repository-autofix.mjs'
       - 'enterprise/repo-security-*'
       - 'enterprise/open-repository-autofix-pr.mjs'
@@ -47,7 +49,7 @@ jobs:
           node-version: 24
       - name: Check GitHub PR adapter syntax
         run: node --check enterprise/open-repository-autofix-pr.mjs
-      - name: Test repository discovery, fail-closed logic and code-level retest
+      - name: Test repository discovery, reachability, fail-closed logic and code-level retest
         run: node --test enterprise/repo-security-orchestrator.test.mjs
       - name: Export machine-readable repo-to-PR evidence
         run: node enterprise/export-repo-security-report.mjs
@@ -74,7 +76,7 @@ jobs:
           name: repo-security-report
           path: enterprise/repo-security-report.json
 
-  real-safevoice-discovery:
+  real-safevoice-reachability:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout TrustReady engine
@@ -89,16 +91,37 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 24
-      - name: Discover real agent and MCP surfaces without modifying target
+      - name: Resolve request to agent to tool to effect paths without modifying target
         working-directory: engine
-        run: node enterprise/repo-security-cli.mjs ../target --out=../safevoice-repo-discovery.json
-      - name: Require evidence-backed discovery and fail closed on ambiguous reachability
+        run: node enterprise/repo-security-cli.mjs ../target --out=../safevoice-reachability.json
+      - name: Require scoped SafeVoice runtime proof and isolate MCP surface
         run: |
-          node -e "const r=require('./safevoice-repo-discovery.json'); const d=r.discovery; if(r.version!=='repo-security-loop/v1') throw new Error('invalid repo-security version'); if(!d||d.agents.length!==2) throw new Error('expected framework + entrypoint'); if(d.agentTopology?.entrypoints?.length!==1||d.agentTopology.entrypoints[0]!=='backend/app/services/court_prep_agent.py') throw new Error('SafeVoice court-prep entrypoint not resolved cleanly'); if(d.agentTopology?.frameworks?.length!==1||d.agentTopology.frameworks[0]!=='backend/app/services/agent_loop.py') throw new Error('SafeVoice shared agent framework not resolved cleanly'); if(d.mcpServers.length!==1) throw new Error('expected one SafeVoice MCP server'); if(d.tools.length!==14) throw new Error('expected 14 discovered tools'); if(d.controls.boundedExecution!==true) throw new Error('SafeVoice execution budget not discovered'); if(d.controls.auditTrail!==true) throw new Error('SafeVoice audit trail not discovered'); if(d.controls.directModelToToolExecutor!==true) throw new Error('SafeVoice model-to-tool dispatch not discovered'); if(d.controls.explicitApproval!==false) throw new Error('non-runtime approval evidence must not count as executable approval'); if(r.release?.decision!=='TECHNICAL_NO_GO') throw new Error('ambiguous real repo must fail closed'); if(!d.coverage.blockers.includes('mixed_mcp_and_agent_tool_surfaces_require_reachability_review')) throw new Error('mixed MCP/agent reachability blocker missing'); if(r.patch?.supported!==false) throw new Error('real repo must not be rewritten without a proven supported shape'); console.log('SafeVoice discovery verified; TECHNICAL_NO_GO; auto-patch=false')"
-      - name: Prove discovery scan did not modify target repository
+          node <<'NODE'
+          const r = require('./safevoice-reachability.json')
+          const d = r.discovery
+          const reach = r.reachability
+          const ep = reach?.entrypoints?.[0]
+          if (r.version !== 'repo-security-loop/v1') throw new Error('invalid repo-security version')
+          if (!reach || reach.version !== 'repository-reachability/v1' || reach.resolved !== true) throw new Error('SafeVoice reachability unresolved')
+          if (!ep || ep.path !== 'backend/app/services/court_prep_agent.py') throw new Error('Court-Prep entrypoint not resolved')
+          if (!ep.frameworks.includes('backend/app/services/agent_loop.py')) throw new Error('shared agent loop not reachable from Court-Prep')
+          if (!ep.contextInputs.includes('case_id') || !ep.contextInputs.includes('user_id')) throw new Error('request authority inputs not discovered')
+          if (ep.reachableTools.length !== 8) throw new Error(`expected 8 Court-Prep tools, found ${ep.reachableTools.length}`)
+          if (ep.reachableMcpServers.length !== 0) throw new Error('MCP surface must not be joined into Court-Prep runtime')
+          if (reach.isolatedMcpServers.length !== 1 || reach.isolatedMcpServers[0] !== 'safevoice_mcp/server.py') throw new Error('SafeVoice MCP surface not isolated correctly')
+          if (!ep.boundaries.some((x) => x.path === 'backend/app/services/court_prep_security.py')) throw new Error('Court-Prep deterministic boundary not reachable')
+          const archive = ep.effectPaths.find((x) => x.tool === 're_archive_urls')
+          if (!archive || !archive.sinks.some((x) => x.kind === 'network_effect' && x.path === 'backend/app/services/evidence.py')) throw new Error('archive.org effect path not resolved')
+          if (ep.scopedRuntimeProof?.proven !== true || ep.scopedRuntimeProof.adversarialCases !== 2 || ep.scopedRuntimeProof.criticalEscapesAfterBoundary !== 0 || ep.scopedRuntimeProof.exploitBeforeFix !== true) throw new Error('SafeVoice native exploit-before-fix evidence not consumed')
+          if (r.release?.decision !== 'TECHNICAL_GO' || r.release?.reason !== 'scoped_runtime_evidence_proves_reachable_effect_boundary') throw new Error(`unexpected SafeVoice scoped release: ${r.release?.decision}/${r.release?.reason}`)
+          if (r.release.scope?.evidence !== 'security/agent-boundary-report.json') throw new Error('SafeVoice release is not bound to native runtime evidence')
+          if (r.patch?.changed !== false) throw new Error('already-protected SafeVoice must not receive a generated rewrite')
+          console.log(`SafeVoice scoped proof: ${ep.path} -> ${ep.reachableTools.length} tools; MCP isolated; archive network sink mapped; 2/2 native regressions; 0 escapes; ${r.release.decision}`)
+          NODE
+      - name: Prove reachability scan did not modify target repository
         run: test -z "$(git -C target status --porcelain)"
-      - name: Upload real-repo discovery evidence
+      - name: Upload real-repo reachability evidence
         uses: actions/upload-artifact@v4
         with:
-          name: safevoice-repository-discovery
-          path: safevoice-repo-discovery.json
+          name: safevoice-repository-reachability
+          path: safevoice-reachability.json
