@@ -82,9 +82,10 @@ export async function exerciseAutofixRuntime(rootDir, relativePath) {
 
 export function repositoryReachabilityBlockers(discovery) {
   const blockers = []
+  const entrypoints = discovery.agents.filter((agent) => agent.kind === 'entrypoint')
   const mcpTools = discovery.tools.filter((tool) => tool.provider === 'mcp')
   const nonMcpTools = discovery.tools.filter((tool) => tool.provider !== 'mcp')
-  if (discovery.agents.length !== 1) blockers.push('multiple_or_zero_agent_runtimes_require_reachability_review')
+  if (entrypoints.length !== 1) blockers.push('multiple_or_zero_agent_entrypoints_require_reachability_review')
   if (discovery.mcpServers.length > 0 && mcpTools.length > 0 && nonMcpTools.length > 0) blockers.push('mixed_mcp_and_agent_tool_surfaces_require_reachability_review')
   return blockers
 }
