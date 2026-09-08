@@ -70,6 +70,7 @@ function jsImports(relative, content, files) {
   const dir = path.posix.dirname(relative)
   const regexes = [/(?:import|export)[\s\S]*?from\s*["']([^"']+)["']/g, /import\s*["']([^"']+)["']/g, /require\(\s*["']([^"']+)["']\s*\)/g]
   for (const regex of regexes) for (const match of content.matchAll(regex)) {
+    if (/^import\s+type\b/.test(match[0])) continue
     const spec = match[1]
     if (!spec?.startsWith('.')) continue
     const raw = norm(path.posix.normalize(path.posix.join(dir, spec)))
@@ -118,6 +119,18 @@ function closure(start, adjacency) {
   return [...seen]
 }
 
+function runtimeRootSignal(relative, source) {
+  if (/\bexport\s+default\s+(?:async\s+)?function\s+[A-Za-z0-9_]*\s*\(/.test(source)) return 'default_export_handler'
+  if (/\bexport\s+default\s+(?:async\s*)?\([^)]*\)\s*=>/.test(source)) return 'default_export_handler'
+  if (/\bmodule\.exports\s*=\s*(?:async\s+)?function/.test(source)) return 'module_export_handler'
+  if (relative.endsWith('.py') && /@(?:app|router)\.(?:get|post|put|patch|delete)\s*\(/.test(source)) return 'http_route_handler'
+  return null
+}
+
+function modelDirectedToolExecutionSignal(source) {
+  return /\brunAgent\s*\(|\brun_agent\s*\(|chat_with_tools|tool_calls|toolCalls|AgentGateway|tool\.handler\s*\(|tool_def\.handler\s*\(/i.test(source)
+}
+
 function nativeEvidence(root, entrypoints) {
   const security = path.join(root, 'security')
   if (!fs.existsSync(security)) return []
@@ -164,8 +177,10 @@ export function buildRepositoryReachability(rootDir, { agents = [], tools = [], 
     const b = boundarySignal(content.get(file) ?? ''); if (b) boundaries.push({path:file,signal:b})
     sinks(content.get(file) ?? '').forEach((sink) => effectSinks.push({path:file,...sink}))
   }
+
   const entrypoints = agents.filter((a) => a.kind === 'entrypoint')
   const frameworks = agents.filter((a) => a.kind === 'framework')
+  const agentPaths = new Set(agents.map((a) => a.path))
   const evidence = nativeEvidence(root,entrypoints)
   const results = entrypoints.map((entrypoint) => {
     const modules = closure(entrypoint.path,adjacency); const moduleSet = new Set(modules)
@@ -185,19 +200,41 @@ export function buildRepositoryReachability(rootDir, { agents = [], tools = [], 
     const proof = matchedEvidence.find((e) => e.adversarialCases > 0 && e.passed === e.adversarialCases && e.criticalEscapesAfterBoundary === 0)
     return {
       path:entrypoint.path,
-      contextInputs:authorityInputs(content.get(entrypoint.path) ?? ''),
-      modules,
+      contextInputs:authorityInputs(content.get(entrypoint.path) ?? ''), modules,
       frameworks:frameworks.filter((f) => moduleSet.has(f.path)).map((f) => f.path),
-      reachableTools:reachableTools.map((t) => t.name),
-      reachableToolSources:uniq(reachableTools.map((t) => t.source)),
+      reachableTools:reachableTools.map((t) => t.name), reachableToolSources:uniq(reachableTools.map((t) => t.source)),
       reachableMcpServers:mcpServers.filter((m) => moduleSet.has(m.path)).map((m) => m.path),
-      boundaries:reachableBoundaries,
-      sinks:reachableSinks,
-      effectPaths:paths,
-      nativeEvidence:matchedEvidence,
+      boundaries:reachableBoundaries, sinks:reachableSinks, effectPaths:paths, nativeEvidence:matchedEvidence,
       scopedRuntimeProof:proof?{proven:true,path:proof.path,adversarialCases:proof.adversarialCases,passed:proof.passed,criticalEscapesAfterBoundary:proof.criticalEscapesAfterBoundary,exploitBeforeFix:proof.exploitBeforeFix}:{proven:false},
     }
   })
+
+  // Externally invokable non-agent handlers are deterministic runtime roots.
+  // Their imported tool registries remain visible in assurance, but are not
+  // falsely attributed to an LLM agent merely because they use ToolDef-shaped
+  // helper objects.
+  const deterministicRuntimes = files
+    .filter((file) => !agentPaths.has(file))
+    .map((file) => ({ path:file, signal:runtimeRootSignal(file, content.get(file) ?? '') }))
+    .filter((item) => item.signal)
+    .map((runtime) => {
+      const modules = closure(runtime.path, adjacency)
+      const reachableTools = tools.filter((tool) => modules.includes(tool.source))
+      const modelDirectedToolExecution = modules.some((module) => modelDirectedToolExecutionSignal(content.get(module) ?? ''))
+      return {
+        ...runtime, modules, modelDirectedToolExecution,
+        reachableTools: reachableTools.map((tool) => ({ name:tool.name, source:tool.source, risk:tool.risk, provider:tool.provider })),
+      }
+    })
+
+  const toolOwnership = tools.map((tool) => ({
+    name: tool.name,
+    source: tool.source,
+    provider: tool.provider,
+    agentEntrypoints: results.filter((result) => result.modules.includes(tool.source) && result.reachableTools.includes(tool.name)).map((result) => result.path),
+    deterministicRuntimes: deterministicRuntimes.filter((runtime) => runtime.modules.includes(tool.source)).map((runtime) => runtime.path),
+  }))
+
   const reachableMcp = new Set(results.flatMap((r) => r.reachableMcpServers))
   const isolatedMcpServers = mcpServers.filter((m) => !reachableMcp.has(m.path)).map((m) => m.path)
   const graphEdges = [...moduleEdges]
@@ -206,15 +243,27 @@ export function buildRepositoryReachability(rootDir, { agents = [], tools = [], 
     for (const tool of tools.filter((t) => result.modules.includes(t.source) && result.reachableTools.includes(t.name))) graphEdges.push({from:`module:${tool.source}`,to:`tool:${tool.source}:${tool.name}`,relation:'declares_reachable_tool'})
     for (const effect of result.effectPaths) for (const sink of effect.sinks) graphEdges.push({from:`tool:${effect.source}:${effect.tool}`,to:`sink:${sink.path}:${sink.kind}`,relation:'may_reach_effect_sink'})
   }
+  for (const runtime of deterministicRuntimes) {
+    for (const tool of runtime.reachableTools) graphEdges.push({from:`runtime:${runtime.path}`,to:`tool:${tool.source}:${tool.name}`,relation:'deterministic_runtime_owns_surface'})
+  }
+
   const resolved = results.length === 1 && results[0].reachableTools.length > 0
   return {
     version:REPOSITORY_REACHABILITY_VERSION,
     resolved,
     confidence:resolved?'high':'partial',
     entrypoints:results,
+    deterministicRuntimes,
+    toolOwnership,
     isolatedMcpServers,
     nativeEvidence:evidence,
-    graph:{nodes:[...files.map((f)=>({id:`module:${f}`,kind:'module',path:f})),...entrypoints.map((e)=>({id:`entrypoint:${e.path}`,kind:'agent_entrypoint',path:e.path})),...tools.map((t)=>({id:`tool:${t.source}:${t.name}`,kind:'tool',name:t.name,path:t.source,risk:t.risk,external:t.external})),...effectSinks.map((s)=>({id:`sink:${s.path}:${s.kind}`,kind:s.kind,path:s.path,signal:s.signal}))],edges:graphEdges},
-    truthBoundary:'Reachability is deterministic static analysis over local imports, agent entrypoints, declared tool surfaces and effect sinks. Dynamic imports, reflection, runtime plugin registration and external configuration can create paths that are not visible statically.',
+    graph:{nodes:[
+      ...files.map((f)=>({id:`module:${f}`,kind:'module',path:f})),
+      ...entrypoints.map((e)=>({id:`entrypoint:${e.path}`,kind:'agent_entrypoint',path:e.path})),
+      ...deterministicRuntimes.map((r)=>({id:`runtime:${r.path}`,kind:'deterministic_runtime',path:r.path,modelDirectedToolExecution:r.modelDirectedToolExecution})),
+      ...tools.map((t)=>({id:`tool:${t.source}:${t.name}`,kind:'tool',name:t.name,path:t.source,risk:t.risk,external:t.external})),
+      ...effectSinks.map((s)=>({id:`sink:${s.path}:${s.kind}`,kind:s.kind,path:s.path,signal:s.signal})),
+    ],edges:graphEdges},
+    truthBoundary:'Reachability is deterministic static analysis over local imports, agent entrypoints, non-agent runtime roots, declared tool surfaces and effect sinks. Dynamic imports, reflection, runtime plugin registration and external configuration can create paths that are not visible statically. Deterministic-runtime ownership proves only that a non-model-directed runtime statically owns a surface; it does not certify the business correctness of that runtime or the content produced by fixed LLM drafting calls.',
   }
 }
