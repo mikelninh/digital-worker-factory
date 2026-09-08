@@ -1,0 +1,124 @@
+name: trustready-benchmark-v1
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'benchmark/**'
+      - 'enterprise/repository-discovery.mjs'
+      - 'enterprise/repository-reachability.mjs'
+      - 'enterprise/repo-security-orchestrator.mjs'
+      - 'enterprise/repo-security-cli.mjs'
+      - 'enterprise/multi-entrypoint-security.mjs'
+      - 'enterprise/operator-security.mjs'
+      - '.github/workflows/trustready-benchmark.yml'
+  pull_request:
+    paths:
+      - 'benchmark/**'
+      - 'enterprise/repository-discovery.mjs'
+      - 'enterprise/repository-reachability.mjs'
+      - 'enterprise/repo-security-orchestrator.mjs'
+      - 'enterprise/repo-security-cli.mjs'
+      - 'enterprise/multi-entrypoint-security.mjs'
+      - 'enterprise/operator-security.mjs'
+      - '.github/workflows/trustready-benchmark.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  benchmark:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout TrustReady engine
+        uses: actions/checkout@v4
+        with:
+          path: engine
+
+      - name: Checkout SafeVoice
+        uses: actions/checkout@v4
+        with:
+          repository: mikelninh/safevoice
+          ref: main
+          path: target-safevoice
+
+      - name: Checkout GitLaw
+        uses: actions/checkout@v4
+        with:
+          repository: mikelninh/gitlaw
+          ref: main
+          path: target-gitlaw
+
+      - name: Checkout ProofWorker
+        uses: actions/checkout@v4
+        with:
+          repository: mikelninh/proofworker
+          ref: main
+          path: target-proofworker
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Capture exact benchmark commits
+        run: |
+          mkdir -p benchmark-work
+          cat > benchmark-work/metadata.json <<EOF
+          {
+            "engine": {"sha": "$(git -C engine rev-parse HEAD)"},
+            "targets": {
+              "safevoice": {"sha": "$(git -C target-safevoice rev-parse HEAD)"},
+              "gitlaw": {"sha": "$(git -C target-gitlaw rev-parse HEAD)"},
+              "proofworker": {"sha": "$(git -C target-proofworker rev-parse HEAD)"}
+            }
+          }
+          EOF
+          cat benchmark-work/metadata.json
+
+      - name: Scan all real targets with the same TrustReady engine
+        run: |
+          node engine/enterprise/repo-security-cli.mjs target-safevoice --out=benchmark-work/safevoice.json
+          node engine/enterprise/repo-security-cli.mjs target-gitlaw --out=benchmark-work/gitlaw.json
+          node engine/enterprise/repo-security-cli.mjs target-proofworker --out=benchmark-work/proofworker.json
+
+      - name: Run architecture-level negative and regression controls
+        working-directory: engine
+        run: |
+          node --test enterprise/repo-security-orchestrator.test.mjs
+          node --test enterprise/multi-entrypoint-security.test.mjs
+          node --test enterprise/operator-security.test.mjs
+          cat > ../benchmark-work/controls.json <<'EOF'
+          {
+            "singleAgentAndAutofix": "pass",
+            "multiEntrypoint": "pass",
+            "boundedOperator": "pass"
+          }
+          EOF
+
+      - name: Build and assert TrustReady Benchmark v1
+        run: |
+          node engine/benchmark/build.mjs \
+            --safevoice=benchmark-work/safevoice.json \
+            --gitlaw=benchmark-work/gitlaw.json \
+            --proofworker=benchmark-work/proofworker.json \
+            --metadata=benchmark-work/metadata.json \
+            --controls=benchmark-work/controls.json \
+            --out=benchmark-site
+          node -e "const b=require('./benchmark-site/benchmark.json'); if(b.version!=='trustready-benchmark-result/v1') throw new Error('benchmark schema drift'); if(b.summary.verdict!=='PASS'||b.summary.repositories!==3||b.summary.architectureFamilies!==3||b.summary.assuranceModes!==3||b.summary.technicalGo!==3||b.summary.technicalNoGo!==0||b.summary.controlSuites!==3) throw new Error('benchmark summary invariant failed: '+JSON.stringify(b.summary)); console.log('TrustReady Benchmark v1:', JSON.stringify(b.summary))"
+          cat benchmark-site/summary.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Prove benchmark scanning did not mutate targets
+        if: always()
+        run: |
+          test -z "$(git -C target-safevoice status --porcelain)"
+          test -z "$(git -C target-gitlaw status --porcelain)"
+          test -z "$(git -C target-proofworker status --porcelain)"
+
+      - name: Upload benchmark site and raw evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: trustready-benchmark-v1
+          path: benchmark-site
+          if-no-files-found: warn
