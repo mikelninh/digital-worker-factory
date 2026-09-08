@@ -30,7 +30,9 @@ def trustready_authorize_tool_call(tool_name: str, context: dict | None = None) 
         reasons.append("cross_tenant")
     if any(scope in protected for scope in (context.get("requested_scopes") or context.get("requestedScopes") or [])):
         reasons.append("protected_scope")
-    if context.get("contains_sensitive") is True and context.get("egress_destination") == "unapproved_model":
+    contains_sensitive = context.get("contains_sensitive") if "contains_sensitive" in context else context.get("containsSensitive")
+    egress_destination = context.get("egress_destination") or context.get("egressDestination")
+    if contains_sensitive is True and egress_destination == "unapproved_model":
         reasons.append("sensitive_egress")
     high_consequence = any(token in tool_name.lower() for token in (
         "send", "submit", "publish", "deploy", "transfer", "payment", "refund",
