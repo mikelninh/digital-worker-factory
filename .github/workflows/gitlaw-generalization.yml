@@ -6,6 +6,8 @@ on:
       - 'enterprise/repository-discovery.mjs'
       - 'enterprise/repository-reachability.mjs'
       - 'enterprise/repo-security-orchestrator.mjs'
+      - 'enterprise/multi-entrypoint-security.mjs'
+      - 'enterprise/multi-entrypoint-security.test.mjs'
       - '.github/workflows/gitlaw-generalization.yml'
   workflow_dispatch:
 
@@ -13,6 +15,16 @@ permissions:
   contents: read
 
 jobs:
+  scoped-policy-golden-cases:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Prove generic multi-entrypoint aggregation
+        run: node --test enterprise/multi-entrypoint-security.test.mjs
+
   real-gitlaw-scan:
     runs-on: ubuntu-latest
     steps:
@@ -31,13 +43,14 @@ jobs:
       - name: Scan GitLaw without hints or target mutation
         working-directory: engine
         run: node enterprise/repo-security-cli.mjs ../target --out=../gitlaw-scan.json
-      - name: Require real TypeScript agent topology and fail-closed decision
+      - name: Require real TypeScript topology and scoped effect decisions
         run: |
           node <<'NODE'
           const r = require('./gitlaw-scan.json')
           const d = r.discovery
+          const scoped = r.entrypointSecurity
           if (r.version !== 'repo-security-loop/v1') throw new Error('invalid repo-security report')
-          if (!d) throw new Error('missing discovery')
+          if (!d || !scoped) throw new Error('missing discovery or scoped security decisions')
           if (!d.agentTopology?.frameworks?.includes('api/_agent.ts')) throw new Error('shared TypeScript agent framework not discovered')
           for (const path of ['api/agent/behoerden.ts','api/agent/document-review.ts','api/agent/lebenslagen.ts']) {
             if (!d.agentTopology?.entrypoints?.includes(path)) throw new Error(`missing agent entrypoint: ${path}`)
@@ -45,8 +58,13 @@ jobs:
           if (!d.tools.some((t) => t.source === 'api/_document_review_tools.ts' && t.name === 'get_current_case_docs')) throw new Error('TypeScript ToolDef registry not discovered')
           if (!d.tools.some((t) => t.source === 'api/_behoerden_tools.ts' && t.name === 'find_matching_case')) throw new Error('Behoerden tools not discovered')
           if (!d.tools.some((t) => t.source === 'api/_lebenslagen_tools.ts' && t.name === 'draft_letter')) throw new Error('Lebenslagen tools not discovered')
-          if (r.release?.decision !== 'TECHNICAL_NO_GO') throw new Error(`multi-entrypoint repo must fail closed until scoped decisions exist: ${r.release?.decision}`)
-          console.log(`GitLaw discovery: entrypoints=${d.agentTopology.entrypoints.length}; frameworks=${d.agentTopology.frameworks.length}; tools=${d.tools.length}; release=${r.release.decision}`)
+          if (r.mode !== 'repository_multi_entrypoint_scoped_assurance') throw new Error(`unexpected mode: ${r.mode}`)
+          if (r.release?.decision !== 'TECHNICAL_GO') throw new Error(`GitLaw effect-scope decision is not GO: ${r.release?.decision}`)
+          if (scoped.summary.entrypoints !== 3 || scoped.summary.go !== 3 || scoped.summary.noGo !== 0) throw new Error(`unexpected scoped summary: ${JSON.stringify(scoped.summary)}`)
+          if (scoped.summary.consequentialScopes !== 0) throw new Error('GitLaw scan found a consequential reachable agent scope; inspect before claiming GO')
+          if (scoped.summary.unassignedTools !== 0) throw new Error('GitLaw has an unassigned non-MCP tool surface')
+          if (!scoped.entrypoints.every((item) => item.reason === 'scoped_non_consequential_surface_resolved')) throw new Error('GitLaw scoped GO must be based on resolved non-consequential surfaces')
+          console.log(`GitLaw scoped security: ${scoped.summary.go}/${scoped.summary.entrypoints} entrypoints GO; consequential scopes=${scoped.summary.consequentialScopes}; repo=${r.release.decision}`)
           NODE
       - name: Prove scanner did not mutate GitLaw
         run: test -z "$(git -C target status --porcelain)"
