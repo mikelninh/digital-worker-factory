@@ -1,0 +1,93 @@
+name: proofworker-generalization-v1
+
+on:
+  pull_request:
+    paths:
+      - 'enterprise/repository-discovery.mjs'
+      - 'enterprise/repository-reachability.mjs'
+      - 'enterprise/repo-security-orchestrator.mjs'
+      - 'enterprise/multi-entrypoint-security.mjs'
+      - 'enterprise/repo-security-cli.mjs'
+      - 'enterprise/operator-security.mjs'
+      - 'enterprise/operator-security.test.mjs'
+      - '.github/workflows/proofworker-generalization.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  bounded-operator-golden-cases:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Prove generic operator authority semantics
+        run: node --test enterprise/operator-security.test.mjs
+
+  real-proofworker-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout TrustReady engine
+        uses: actions/checkout@v4
+        with:
+          path: engine
+      - name: Checkout real ProofWorker repository
+        uses: actions/checkout@v4
+        with:
+          repository: mikelninh/proofworker
+          path: target
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Scan ProofWorker without hints or target mutation
+        working-directory: engine
+        run: node enterprise/repo-security-cli.mjs ../target --out=../proofworker-scan.json
+      - name: Require bounded operator authority evidence
+        run: |
+          node <<'NODE'
+          const r = require('./proofworker-scan.json')
+          const op = r.operatorSecurity
+          if (r.mode !== 'repository_bounded_operator_assurance') throw new Error(`unexpected mode: ${r.mode}`)
+          if (!op) throw new Error('missing operator security report')
+          if (r.release?.decision !== 'TECHNICAL_GO') throw new Error(`ProofWorker bounded operator decision is not GO: ${r.release?.decision}`)
+          if (op.summary.noGo !== 0) throw new Error(`bounded operator NO_GO actions remain: ${JSON.stringify(op.actions.filter(a => a.decision !== 'TECHNICAL_GO'))}`)
+
+          const requireAction = (source, flag) => {
+            const action = op.actions.find(a => a.source === source && a.flag === flag)
+            if (!action) throw new Error(`missing bounded action ${source} ${flag}`)
+            if (action.decision !== 'TECHNICAL_GO') throw new Error(`bounded action is not GO: ${source} ${flag} ${action.reason}`)
+            return action
+          }
+
+          const bid = requireAction('scripts/revenue_operator.py', '--execute')
+          const bidEffect = bid.effects.find(e => e.kind === 'network_write' && e.method === 'POST' && e.dynamicTarget === true)
+          if (!bidEffect) throw new Error('revenue operator dynamic POST effect not discovered')
+          if (bid.gate?.hardFailClosed !== true) throw new Error('revenue operator --execute is not fail-closed before execution region')
+          if (bidEffect.humanConfirmation?.proven !== true || bidEffect.guarded !== true) throw new Error('dynamic bid POST lacks proven per-job human confirmation')
+
+          const exec = requireAction('proofworker/cli.py', '--allow-exec')
+          const processEffect = exec.effects.find(e => e.kind === 'process_execution')
+          if (!processEffect) throw new Error('ProofWorker command execution effect not discovered')
+          if (exec.gate?.propagated !== true || processEffect.propagatedFailClosed !== true || processEffect.guarded !== true) {
+            throw new Error('command execution is not proven deny-by-default behind --allow-exec')
+          }
+
+          const publish = requireAction('scripts/dealwork_connect.py', '--publish-listing')
+          const publishEffect = publish.effects.find(e => e.kind === 'network_write' && e.method === 'POST' && e.dynamicTarget === false)
+          if (!publishEffect) throw new Error('fixed listing publication POST not discovered')
+          if (publish.gate?.positiveBranch !== true || publishEffect.guarded !== true) throw new Error('listing publication is not proven behind explicit --publish-listing opt-in')
+
+          console.log(`ProofWorker bounded operator security: ${op.summary.go}/${op.summary.boundedActions} actions GO; consequential effects=${op.summary.consequentialEffects}; repo-scope=${r.release.decision}`)
+          NODE
+      - name: Prove scanner did not mutate ProofWorker
+        if: always()
+        run: test -z "$(git -C target status --porcelain)"
+      - name: Upload final ProofWorker scan
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: proofworker-generalization-scan
+          path: proofworker-scan.json

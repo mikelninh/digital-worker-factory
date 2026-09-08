@@ -2,6 +2,7 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import { assessRepository, runRepositoryAutofixLoop } from './repo-security-orchestrator.mjs'
+import { assessBoundedOperators } from './operator-security.mjs'
 
 function compactForEvidence(result) {
   const clone = JSON.parse(JSON.stringify(result))
@@ -9,6 +10,12 @@ function compactForEvidence(result) {
     clone.pr.files = clone.pr.files.map(({ path, ...rest }) => ({ path, ...rest, content: undefined }))
   }
   return clone
+}
+
+function shouldTryBoundedOperatorFallback(result) {
+  if (result?.mode !== 'repository_discovery_fail_closed') return false
+  const blockers = result?.discovery?.coverage?.blockers ?? []
+  return blockers.includes('no_agent_entrypoint_detected')
 }
 
 const args = process.argv.slice(2)
@@ -23,7 +30,17 @@ const autofix = args.includes('--autofix')
 const outArg = args.find((arg) => arg.startsWith('--out='))
 const outPath = outArg ? path.resolve(outArg.slice('--out='.length)) : null
 
-const result = autofix ? await runRepositoryAutofixLoop(root) : await assessRepository(root)
+let result
+if (autofix) {
+  result = await runRepositoryAutofixLoop(root)
+} else {
+  result = await assessRepository(root)
+  if (shouldTryBoundedOperatorFallback(result)) {
+    const operatorResult = assessBoundedOperators(root)
+    if (operatorResult.applicable) result = operatorResult
+  }
+}
+
 const evidence = compactForEvidence(result)
 const json = `${JSON.stringify(evidence, null, 2)}\n`
 

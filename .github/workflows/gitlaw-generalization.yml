@@ -6,8 +6,10 @@ on:
       - 'enterprise/repository-discovery.mjs'
       - 'enterprise/repository-reachability.mjs'
       - 'enterprise/repo-security-orchestrator.mjs'
+      - 'enterprise/repo-security-cli.mjs'
       - 'enterprise/multi-entrypoint-security.mjs'
       - 'enterprise/multi-entrypoint-security.test.mjs'
+      - 'enterprise/operator-security.mjs'
       - '.github/workflows/gitlaw-generalization.yml'
   workflow_dispatch:
 
