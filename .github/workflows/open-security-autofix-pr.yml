@@ -1,0 +1,61 @@
+name: open-security-autofix-pr
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/open-security-autofix-pr.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: trustready-security-autofix-demo
+  cancel-in-progress: false
+
+jobs:
+  create-autofix-pr:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Use Node 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Reproduce exploit, generate code patch and retest in isolation
+        run: |
+          node enterprise/repo-security-cli.mjs enterprise/examples/repo-pr-target --autofix --out=/tmp/repo-pr-preflight.json
+          node <<'NODE'
+          const r = require('/tmp/repo-pr-preflight.json')
+          if (r.runtimeBefore?.impactEscapes !== 4 || r.runtimeBefore?.executorCalls !== 4) throw new Error('pre-patch runtime exploit was not reproduced')
+          if (r.runtimeAfter?.impactEscapes !== 0 || r.runtimeAfter?.executorCalls !== 0) throw new Error('post-patch runtime impact remains')
+          if (r.release?.decision !== 'TECHNICAL_GO' || r.pr?.ready !== true) throw new Error('autofix PR preflight is not ready')
+          console.log(`Preflight: ${r.runtimeBefore.impactEscapes} escapes -> ${r.runtimeAfter.impactEscapes}; executor calls after=${r.runtimeAfter.executorCalls}; ${r.release.decision}`)
+          NODE
+      - name: Create remediation branch and open pull request
+        id: open_pr
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TRUSTREADY_BASE_BRANCH: main
+          TRUSTREADY_PR_RECEIPT: enterprise/repo-autofix-pr-receipt.json
+        run: node enterprise/open-repository-autofix-pr.mjs enterprise/examples/repo-pr-target
+      - name: Verify receipt says PR is openable but not auto-merged
+        run: |
+          node <<'NODE'
+          const r = require('./enterprise/repo-autofix-pr-receipt.json')
+          if (r.version !== 'repository-autofix-pr/v1') throw new Error('invalid PR receipt version')
+          if (!r.pullNumber || !r.pullUrl) throw new Error('missing created pull request')
+          if (r.runtimeBefore?.impactEscapes !== 4 || r.runtimeAfter?.impactEscapes !== 0) throw new Error('receipt attack evidence mismatch')
+          if (r.runtimeAfter?.executorCalls !== 0) throw new Error('receipt has post-patch executor impact')
+          if (r.release?.decision !== 'TECHNICAL_GO') throw new Error('receipt is not TECHNICAL_GO')
+          if (r.autoMerged !== false) throw new Error('autofix PR must never auto-merge')
+          console.log(`Created PR #${r.pullNumber}: ${r.pullUrl}`)
+          NODE
+      - name: Upload PR creation receipt
+        uses: actions/upload-artifact@v4
+        with:
+          name: repo-autofix-pr-receipt
+          path: enterprise/repo-autofix-pr-receipt.json
