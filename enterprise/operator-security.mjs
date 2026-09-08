@@ -9,7 +9,6 @@ const IGNORE_DIRS = new Set(['.git', 'node_modules', 'dist', 'build', '.next', '
 const SENSITIVE_FLAG = /^(?:execute|allow[-_]exec(?:ution)?|apply|publish(?:[-_].*)?|submit(?:[-_].*)?|write|commit|deploy|release|send|claim|spend)$/i
 const HTTP_WRITE = new Set(['POST', 'PUT', 'PATCH', 'DELETE'])
 const norm = (value) => String(value ?? '').replaceAll('\\', '/')
-const uniq = (items) => [...new Set(items)]
 
 function walk(root, current = root, out = []) {
   for (const entry of fs.readdirSync(current, { withFileTypes: true })) {
@@ -62,7 +61,10 @@ function cliSignal(source) {
 function parseSensitiveFlags(relative, source) {
   if (!mainGuard(source) || !cliSignal(source)) return []
   const out = []
-  const regex = /add_argument\(\s*["']--([^"']+)["'][\s\S]{0,260}?action\s*=\s*["']store_true["']/g
+  // Do not let one add_argument() match borrow action='store_true' from a
+  // later argument declaration. This is deliberately object/call scoped in
+  // the same spirit as the TypeScript ToolDef parser.
+  const regex = /add_argument\(\s*["']--([^"']+)["'](?:(?!\badd_argument\s*\()[\s\S]){0,500}?\baction\s*=\s*["']store_true["']/g
   for (const match of source.matchAll(regex)) {
     const flag = match[1]
     if (!SENSITIVE_FLAG.test(flag)) continue
@@ -148,7 +150,10 @@ function actionStartFunctions(mainBody, flag, functionIndex) {
   }
 
   // Propagated boolean authority, e.g. verify(... allow_exec=args.allow_exec).
-  const propRegex = new RegExp(`\\b([A-Za-z_][A-Za-z0-9_]*)\\s*\\(([\\s\\S]{0,900}?args\\.${attr}[\\s\\S]{0,300}?)\\)`, 'g')
+  // The call matcher cannot span a prior function header or a previous call's
+  // closing parenthesis; otherwise duplicate `main` functions can erase the
+  // real authority path from the unique-function index.
+  const propRegex = new RegExp(`\\b([A-Za-z_][A-Za-z0-9_]*)\\s*\\(([^)]*?args\\.${attr}[^)]*)\\)`, 'g')
   for (const match of mainBody.matchAll(propRegex)) if (functionIndex.has(match[1])) starts.add(match[1])
 
   return [...starts]
