@@ -152,6 +152,7 @@ export function discoverRepository(rootDir) {
     const agentSignals = [
       ['chat_with_tools', 'llm_tool_calling'],
       ['run_agent(', 'agent_loop'],
+      ['runAgent(', 'agent_loop'],
       ['AgentGateway', 'agent_gateway'],
       ['tool_calls', 'tool_call_dispatch'],
     ]
