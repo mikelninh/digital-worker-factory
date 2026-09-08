@@ -6,7 +6,7 @@ export const REPOSITORY_DISCOVERY_VERSION = 'repository-agent-discovery/v1'
 const CODE_EXTENSIONS = new Set(['.js', '.mjs', '.cjs', '.ts', '.tsx', '.py', '.json', '.toml', '.yml', '.yaml'])
 const EXECUTABLE_EXTENSIONS = new Set(['.js', '.mjs', '.cjs', '.ts', '.tsx', '.py'])
 const IGNORE_DIRS = new Set(['.git', 'node_modules', 'dist', 'build', '.next', '.venv', 'venv', '__pycache__', 'coverage'])
-const NON_RUNTIME_AGENT_PATH = /(^|\/)(tests?|alembic|migrations|scripts|evals)(\/|$)/
+const NON_RUNTIME_AGENT_PATH = /(^|\/)(tests?|alembic|migrations|scripts|evals)(\/|$)|(^|\/)[^/]*(?:_smoke|\.smoke)\.(?:py|js|mjs|ts|tsx)$/i
 const MAX_FILE_BYTES = 200_000
 
 const normalise = (value) => String(value ?? '').replaceAll('\\', '/')
@@ -46,10 +46,13 @@ function evidence(file, root, content, needle, kind, confidence = 'high') {
 function inferRisk(toolName, nearby = '') {
   const name = String(toolName ?? '').toLowerCase()
   const text = String(nearby ?? '').toLowerCase()
-  if (/(delete|destroy|transfer|payment|refund|submit|send|publish|deploy|execute|write|update|create|archive)/.test(name)) {
-    return { risk: 'consequential', external: /(send|submit|publish|deploy|transfer|payment|refund|archive)/.test(name) || /https?:\/\//.test(text) }
+  if (/(delete|destroy|transfer|payment|refund|submit|send|publish|deploy|execute|write|update|create|archive|commit|persist)/.test(name)) {
+    return {
+      risk: 'consequential',
+      external: /(send|submit|publish|deploy|transfer|payment|refund|archive)/.test(name) || /https?:\/\//.test(text),
+    }
   }
-  if (/(read|get|list|check|detect|classify|determine|generate|draft|build|search|lookup)/.test(name)) {
+  if (/(read|get|list|check|detect|classify|determine|generate|draft|build|search|lookup|extract|find|match|suggest|analy[sz]e|compute|summari[sz]e|prepare|resolve)/.test(name)) {
     return { risk: 'read', external: false }
   }
   return { risk: 'unknown', external: /requests\.|httpx\.|fetch\(|axios|https?:\/\//.test(text) }
@@ -116,6 +119,40 @@ function parseJsDeclaredTools(file, root, content) {
   return tools
 }
 
+/**
+ * TypeScript/JavaScript tool registries often return `ToolDef[]` object
+ * literals without repeating risk metadata beside every tool. Discover the
+ * actual declared surface and infer risk conservatively from the tool name.
+ * Unknown verbs remain `unknown` and therefore fail closed upstream.
+ */
+function parseTsToolDefs(file, root, content) {
+  if (!/(?:ToolDef(?:<[^>]+>)?\s*\[\]|build[A-Za-z0-9_]*Tools\s*\()/.test(content)) return []
+  const tools = []
+  const regex = /\bname\s*:\s*["']([^"']+)["']/g
+  for (const match of content.matchAll(regex)) {
+    const start = match.index ?? 0
+    const nearby = content.slice(start, Math.min(content.length, start + 2400))
+    const schemaIndex = nearby.search(/\bschema\s*:/)
+    const handlerIndex = nearby.search(/\bhandler\s*:/)
+    if (schemaIndex < 0 || handlerIndex < 0 || handlerIndex < schemaIndex) continue
+
+    const directHandler = nearby.match(/handler\s*:\s*([A-Za-z_][A-Za-z0-9_]*)/)
+    const arrowHandler = nearby.match(/handler\s*:\s*\([^)]*\)\s*=>[\s\S]{0,700}?\b([A-Za-z_][A-Za-z0-9_]*)\s*\(/)
+    const inferred = inferRisk(match[1], nearby)
+    tools.push({
+      id: match[1],
+      name: match[1],
+      provider: 'typescript_tooldef',
+      risk: inferred.risk,
+      external: inferred.external,
+      source: normalise(path.relative(root, file)),
+      handler: directHandler?.[1] ?? arrowHandler?.[1] ?? null,
+      confidence: inferred.risk === 'unknown' ? 'medium' : 'high',
+    })
+  }
+  return tools
+}
+
 export function discoverRepository(rootDir) {
   const root = path.resolve(rootDir)
   if (!fs.existsSync(root) || !fs.statSync(root).isDirectory()) throw new Error('repository_root_required')
@@ -155,12 +192,20 @@ export function discoverRepository(rootDir) {
       ['runAgent(', 'agent_loop'],
       ['AgentGateway', 'agent_gateway'],
       ['tool_calls', 'tool_call_dispatch'],
+      ['toolCalls', 'tool_call_dispatch'],
     ]
-    const pathLooksAgentic = /(^|\/)(agents?|.*agent.*)\.(py|js|mjs|ts|tsx)$/.test(relative.toLowerCase()) || /agent_loop/.test(relative.toLowerCase())
     const matchedAgentSignals = agentSignals.filter(([needle]) => content.includes(needle))
     const strongAgentSignals = matchedAgentSignals.filter(([, kind]) => kind !== 'tool_call_dispatch')
+    const pathLooksAgentic =
+      /(^|\/)(agents?|.*agent.*)\.(py|js|mjs|ts|tsx)$/.test(relative.toLowerCase()) ||
+      /agent_loop/.test(relative.toLowerCase()) ||
+      /(^|\/)agents?\//i.test(relative) ||
+      (/\brunAgent\s*\(/.test(content) && /SYSTEM_PROMPT|systemPrompt/.test(content))
+
     if (executable && pathLooksAgentic && !NON_RUNTIME_AGENT_PATH.test(relative) && strongAgentSignals.length > 0) {
-      const framework = /agent[_-]?loop/.test(path.basename(relative).toLowerCase()) && !/system_prompt\s*=|SYSTEM_PROMPT\s*=/.test(content)
+      const definesGenericRunAgent = /(?:export\s+)?(?:async\s+)?function\s+runAgent\s*\(/.test(content)
+      const pythonFramework = /agent[_-]?loop/.test(path.basename(relative).toLowerCase()) && !/system_prompt\s*=|SYSTEM_PROMPT\s*=/.test(content)
+      const framework = definesGenericRunAgent && !/SYSTEM_PROMPT|systemPrompt\s*:/.test(content) || pythonFramework
       agents.push({
         id: relative.replace(/[^a-zA-Z0-9]+/g, '-').replace(/^-|-$/g, ''),
         kind: framework ? 'framework' : 'entrypoint',
@@ -179,32 +224,39 @@ export function discoverRepository(rootDir) {
       tools.push(...parsePythonToolDefs(file, root, content))
       tools.push(...parseMcpTools(file, root, content))
       tools.push(...parseJsDeclaredTools(file, root, content))
+      if (['.ts', '.tsx', '.js', '.mjs', '.cjs'].includes(ext)) tools.push(...parseTsToolDefs(file, root, content))
     }
 
-    if (executable && /SecurityBoundary|security-boundary|makeSecurityContext|AgentGateway/.test(content)) {
+    if (executable && /SecurityBoundary|security-boundary|makeSecurityContext|AgentGateway|evaluateAgentIntent/.test(content)) {
       hasDeterministicBoundary = true
-      const needle = content.includes('AgentGateway') ? 'AgentGateway' : content.includes('makeSecurityContext') ? 'makeSecurityContext' : 'security-boundary'
+      const needle = content.includes('AgentGateway')
+        ? 'AgentGateway'
+        : content.includes('makeSecurityContext')
+          ? 'makeSecurityContext'
+          : content.includes('evaluateAgentIntent')
+            ? 'evaluateAgentIntent'
+            : 'security-boundary'
       findings.push(evidence(file, root, content, needle, 'deterministic_security_boundary'))
     }
-    if (executable && /approvalRequired|approval_required|approvedBy|approved_by|human[_ -]approval|requires_human_approval/i.test(content)) {
+    if (executable && /approvalRequired|approval_required|approvedBy|approved_by|human[_ -]approval|requiresHumanApproval|requires_human_approval/i.test(content)) {
       hasExplicitApproval = true
-      findings.push(evidence(file, root, content, content.match(/approvalRequired|approval_required|approvedBy|approved_by|human[_ -]approval|requires_human_approval/i)?.[0] ?? 'approval', 'explicit_approval_signal'))
+      findings.push(evidence(file, root, content, content.match(/approvalRequired|approval_required|approvedBy|approved_by|human[_ -]approval|requiresHumanApproval|requires_human_approval/i)?.[0] ?? 'approval', 'explicit_approval_signal'))
     }
-    if (executable && /max_iterations|maxToolCalls|max_tool_calls|max_cost_usd|tool budget/i.test(content)) {
+    if (executable && /max_iterations|maxIterations|maxToolCalls|max_tool_calls|max_cost_usd|maxCostUsd|tool budget/i.test(content)) {
       hasExecutionBudget = true
-      const needle = content.match(/max_iterations|maxToolCalls|max_tool_calls|max_cost_usd/i)?.[0] ?? 'budget'
+      const needle = content.match(/max_iterations|maxIterations|maxToolCalls|max_tool_calls|max_cost_usd|maxCostUsd/i)?.[0] ?? 'budget'
       findings.push(evidence(file, root, content, needle, 'execution_budget'))
     }
-    if (executable && /ToolCallLog|audit|traceId|trace_id|tool_trace/.test(content)) {
+    if (executable && /ToolCallLog|tool_calls|audit|traceId|trace_id|toolTrace|tool_trace/.test(content)) {
       hasAuditTrail = true
-      const needle = content.match(/ToolCallLog|traceId|trace_id|tool_trace|audit/)?.[0] ?? 'audit'
+      const needle = content.match(/ToolCallLog|tool_calls|traceId|trace_id|toolTrace|tool_trace|audit/)?.[0] ?? 'audit'
       findings.push(evidence(file, root, content, needle, 'audit_trail'))
     }
     if (/multi[_ -]tenant|tenant_id|tenantId|organization_id|org_id/.test(content)) hasMultiTenantSignals = true
 
-    if (executable && /tool_def\.handler\s*\(|tool\.handler\s*\(|handler\s*\(args\)/.test(content) && /tool_calls|chat_with_tools|model/i.test(content)) {
+    if (executable && /tool_def\.handler\s*\(|tool\.handler\s*\(|handler\s*\(args\)|tool\.handler\s*\(args/.test(content) && /tool_calls|toolCalls|chat_with_tools|model/i.test(content)) {
       directModelToToolExecutor = true
-      const needle = content.match(/tool_def\.handler\s*\(|tool\.handler\s*\(|handler\s*\(args\)/)?.[0] ?? 'handler(args)'
+      const needle = content.match(/tool_def\.handler\s*\(|tool\.handler\s*\(|handler\s*\(args\)/)?.[0] ?? 'tool.handler('
       findings.push(evidence(file, root, content, needle, 'direct_model_to_tool_executor'))
     }
   }
@@ -266,7 +318,7 @@ export function discoveryToManifest(discovery, { agentId = null } = {}) {
     risk: tool.risk,
     external: tool.external,
     allowedRoles: ['agent'],
-    sensitive: /case|evidence|credential|secret|victim|user/.test(tool.name.toLowerCase()),
+    sensitive: /case|evidence|credential|secret|victim|user|mandant|document/.test(tool.name.toLowerCase()),
   }))
   return {
     agent: { id: agentId ?? entrypoint.id, name: entrypoint.path },
