@@ -13,6 +13,7 @@ on:
       - 'enterprise/repository-reachability.mjs'
       - 'enterprise/repository-autofix.mjs'
       - 'enterprise/repo-security-*'
+      - 'enterprise/safevoice-reachability-proof.json'
       - 'enterprise/open-repository-autofix-pr.mjs'
       - 'enterprise/examples/repo-autofix-target/**'
       - 'enterprise/examples/repo-pr-target/**'
@@ -29,6 +30,7 @@ on:
       - 'enterprise/repository-reachability.mjs'
       - 'enterprise/repository-autofix.mjs'
       - 'enterprise/repo-security-*'
+      - 'enterprise/safevoice-reachability-proof.json'
       - 'enterprise/open-repository-autofix-pr.mjs'
       - 'enterprise/examples/repo-autofix-target/**'
       - 'enterprise/examples/repo-pr-target/**'
@@ -98,7 +100,6 @@ jobs:
         run: |
           node <<'NODE'
           const r = require('./safevoice-reachability.json')
-          const d = r.discovery
           const reach = r.reachability
           const ep = reach?.entrypoints?.[0]
           if (r.version !== 'repo-security-loop/v1') throw new Error('invalid repo-security version')
@@ -117,6 +118,27 @@ jobs:
           if (r.release.scope?.evidence !== 'security/agent-boundary-report.json') throw new Error('SafeVoice release is not bound to native runtime evidence')
           if (r.patch?.changed !== false) throw new Error('already-protected SafeVoice must not receive a generated rewrite')
           console.log(`SafeVoice scoped proof: ${ep.path} -> ${ep.reachableTools.length} tools; MCP isolated; archive network sink mapped; 2/2 native regressions; 0 escapes; ${r.release.decision}`)
+          NODE
+      - name: Verify published SafeVoice reachability proof matches live scan
+        run: |
+          node <<'NODE'
+          const actual = require('./safevoice-reachability.json')
+          const published = require('./engine/enterprise/safevoice-reachability-proof.json')
+          const ep = actual.reachability.entrypoints[0]
+          const archive = ep.effectPaths.find((x) => x.tool === 're_archive_urls')
+          if (published.version !== 'repository-reachability-proof/v1') throw new Error('invalid published reachability proof version')
+          if (published.target.repository !== 'mikelninh/safevoice') throw new Error('published target mismatch')
+          if (published.chain.entrypoint !== ep.path) throw new Error('published entrypoint drift')
+          if (JSON.stringify([...published.chain.contextInputs].sort()) !== JSON.stringify([...ep.contextInputs].sort())) throw new Error('published context inputs drift')
+          if (JSON.stringify([...published.chain.frameworks].sort()) !== JSON.stringify([...ep.frameworks].sort())) throw new Error('published framework drift')
+          if (JSON.stringify([...published.chain.reachableTools].sort()) !== JSON.stringify([...ep.reachableTools].sort())) throw new Error('published tool surface drift')
+          if (!ep.boundaries.some((x) => published.chain.deterministicBoundaries.includes(x.path))) throw new Error('published boundary drift')
+          if (!archive?.sinks.some((x) => published.chain.effectPaths.some((p) => p.tool === 're_archive_urls' && p.sink.kind === x.kind && p.sink.path === x.path))) throw new Error('published effect path drift')
+          if (JSON.stringify([...published.chain.isolatedSurfaces].sort()) !== JSON.stringify([...actual.reachability.isolatedMcpServers].sort())) throw new Error('published isolated surface drift')
+          if (published.nativeRuntimeEvidence.path !== ep.scopedRuntimeProof.path) throw new Error('published native evidence path drift')
+          if (published.nativeRuntimeEvidence.adversarialCases !== ep.scopedRuntimeProof.adversarialCases || published.nativeRuntimeEvidence.passed !== ep.scopedRuntimeProof.passed || published.nativeRuntimeEvidence.criticalEscapesAfterBoundary !== ep.scopedRuntimeProof.criticalEscapesAfterBoundary || published.nativeRuntimeEvidence.exploitBeforeFix !== ep.scopedRuntimeProof.exploitBeforeFix) throw new Error('published runtime evidence drift')
+          if (published.release.decision !== actual.release.decision || published.release.reason !== actual.release.reason) throw new Error('published release decision drift')
+          console.log('Published SafeVoice reachability proof matches live repo scan and native runtime evidence')
           NODE
       - name: Prove reachability scan did not modify target repository
         run: test -z "$(git -C target status --porcelain)"

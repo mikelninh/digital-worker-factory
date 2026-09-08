@@ -1,0 +1,65 @@
+{
+  "version": "repository-reachability-proof/v1",
+  "target": {
+    "repository": "mikelninh/safevoice",
+    "ref": "main",
+    "evidenceCommit": "68f9227c88e06f451424fd2cd4a9d69552e98e12"
+  },
+  "scope": "SafeVoice Court-Prep agent reachable tool surface",
+  "chain": {
+    "contextInputs": ["case_id", "user_id"],
+    "entrypoint": "backend/app/services/court_prep_agent.py",
+    "frameworks": ["backend/app/services/agent_loop.py"],
+    "reachableTools": [
+      "read_case",
+      "determine_jurisdiction",
+      "check_strafantrag_frist",
+      "detect_anonymisierung_needed",
+      "re_archive_urls",
+      "draft_netzdg_email",
+      "generate_strafanzeige_pdf",
+      "build_onlinewache_text"
+    ],
+    "deterministicBoundaries": ["backend/app/services/court_prep_security.py"],
+    "effectPaths": [
+      {
+        "tool": "re_archive_urls",
+        "source": "backend/app/services/court_prep_tools.py",
+        "sink": {
+          "kind": "network_effect",
+          "path": "backend/app/services/evidence.py",
+          "mechanism": "httpx"
+        }
+      }
+    ],
+    "isolatedSurfaces": ["safevoice_mcp/server.py"]
+  },
+  "nativeRuntimeEvidence": {
+    "path": "security/agent-boundary-report.json",
+    "adversarialCases": 2,
+    "passed": 2,
+    "criticalEscapesAfterBoundary": 0,
+    "exploitBeforeFix": true,
+    "cases": [
+      {
+        "id": "cross-case-model-pivot",
+        "before": "foreign case reachable through raw unbound handler",
+        "after": "blocked before underlying handler",
+        "handlerCallsAfter": 0
+      },
+      {
+        "id": "model-invented-archive-target",
+        "networkCallsBefore": 1,
+        "networkCallsAfter": 0,
+        "impactEscapedAfter": false
+      }
+    ]
+  },
+  "release": {
+    "decision": "TECHNICAL_GO",
+    "reason": "scoped_runtime_evidence_proves_reachable_effect_boundary",
+    "scopeType": "entrypoint_scoped",
+    "autoPatchRequired": false
+  },
+  "truthBoundary": "This proof is CI-drift-checked against the current SafeVoice main branch. TECHNICAL_GO is scoped to the resolved Court-Prep entrypoint, its reachable tool/effect paths and repository-native adversarial evidence. The isolated MCP surface is explicitly excluded. Static analysis can miss dynamic imports, reflection, runtime plugin registration and external configuration, so this is not certification or a claim that all vulnerabilities were found."
+}
