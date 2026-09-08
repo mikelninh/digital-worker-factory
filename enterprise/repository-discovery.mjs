@@ -133,9 +133,9 @@ function parseMcpTools(file, root, content) {
 
 function parseJsDeclaredTools(file, root, content) {
   if (!/\brisk\s*:\s*["'](?:read|write|consequential|irreversible)["']/.test(content)) return []
-  if (!/(?:requiresHumanApproval|defaultExecutionMode|\bconsequential\s*:|\bauthority\s*:)/.test(content)) return []
   const tools = []
   const spans = objectSpans(content)
+  const capabilityContract = /(?:requiresHumanApproval|defaultExecutionMode|\bconsequential\s*:|\bauthority\s*:)/.test(content)
   const authority = content.match(/\bauthority\s*:\s*["']([^"']+)["']/)?.[1] ?? null
   const executionMode = content.match(/\bdefaultExecutionMode\s*:\s*["']([^"']+)["']/)?.[1] ?? null
   const idRegex = /\b(?:id|name)\s*:\s*["']([^"']+)["']/g
@@ -159,7 +159,7 @@ function parseJsDeclaredTools(file, root, content) {
     tools.push({
       id, name: id, provider: 'declared_capability', risk, external,
       source: normalise(path.relative(root, file)), handler: null, confidence: 'high',
-      declaredOnly: true, consequential, requiresHumanApproval, authority, executionMode,
+      declaredOnly: capabilityContract, consequential, requiresHumanApproval, authority, executionMode,
       transport: method || transportPath ? { method, path: transportPath } : null,
     })
   }
