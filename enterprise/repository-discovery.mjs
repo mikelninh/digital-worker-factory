@@ -6,7 +6,7 @@ export const REPOSITORY_DISCOVERY_VERSION = 'repository-agent-discovery/v1'
 const CODE_EXTENSIONS = new Set(['.js', '.mjs', '.cjs', '.ts', '.tsx', '.py', '.json', '.toml', '.yml', '.yaml'])
 const EXECUTABLE_EXTENSIONS = new Set(['.js', '.mjs', '.cjs', '.ts', '.tsx', '.py'])
 const IGNORE_DIRS = new Set(['.git', 'node_modules', 'dist', 'build', '.next', '.venv', 'venv', '__pycache__', 'coverage'])
-const NON_RUNTIME_AGENT_PATH = /(^|\/)(tests?|alembic|migrations|scripts|evals)(\/|$)/
+const NON_RUNTIME_AGENT_PATH = /(^|\/)(tests?|alembic|migrations|scripts|evals)(\/|$)|(^|\/)[^/]*(?:_smoke|\.smoke)\.(?:py|js|mjs|ts|tsx)$/i
 const MAX_FILE_BYTES = 200_000
 
 const normalise = (value) => String(value ?? '').replaceAll('\\', '/')
@@ -46,13 +46,58 @@ function evidence(file, root, content, needle, kind, confidence = 'high') {
 function inferRisk(toolName, nearby = '') {
   const name = String(toolName ?? '').toLowerCase()
   const text = String(nearby ?? '').toLowerCase()
-  if (/(delete|destroy|transfer|payment|refund|submit|send|publish|deploy|execute|write|update|create|archive)/.test(name)) {
-    return { risk: 'consequential', external: /(send|submit|publish|deploy|transfer|payment|refund|archive)/.test(name) || /https?:\/\//.test(text) }
+  if (/(delete|destroy|transfer|payment|refund|submit|send|publish|deploy|execute|write|update|create|archive|commit|persist)/.test(name)) {
+    return {
+      risk: 'consequential',
+      external: /(send|submit|publish|deploy|transfer|payment|refund|archive)/.test(name) || /https?:\/\//.test(text),
+    }
   }
-  if (/(read|get|list|check|detect|classify|determine|generate|draft|build|search|lookup)/.test(name)) {
+  if (/(read|get|list|walk|check|detect|classify|determine|generate|draft|build|search|lookup|extract|find|match|suggest|analy[sz]e|compute|summari[sz]e|prepare|resolve)/.test(name)) {
     return { risk: 'read', external: false }
   }
   return { risk: 'unknown', external: /requests\.|httpx\.|fetch\(|axios|https?:\/\//.test(text) }
+}
+
+function objectSpans(content) {
+  const spans = []
+  const stack = []
+  let quote = null
+  let escaped = false
+  let lineComment = false
+  let blockComment = false
+
+  for (let i = 0; i < content.length; i += 1) {
+    const ch = content[i]
+    const next = content[i + 1]
+
+    if (lineComment) {
+      if (ch === '\n') lineComment = false
+      continue
+    }
+    if (blockComment) {
+      if (ch === '*' && next === '/') { blockComment = false; i += 1 }
+      continue
+    }
+    if (quote) {
+      if (escaped) { escaped = false; continue }
+      if (ch === '\\') { escaped = true; continue }
+      if (ch === quote) quote = null
+      continue
+    }
+    if (ch === '/' && next === '/') { lineComment = true; i += 1; continue }
+    if (ch === '/' && next === '*') { blockComment = true; i += 1; continue }
+    if (ch === "'" || ch === '"' || ch === '`') { quote = ch; continue }
+    if (ch === '{') stack.push(i)
+    else if (ch === '}' && stack.length) {
+      const start = stack.pop()
+      spans.push({ start, end: i + 1 })
+    }
+  }
+  return spans.sort((a, b) => (a.end - a.start) - (b.end - b.start))
+}
+
+function enclosingObject(spans, index) {
+  return spans.find((span) => span.start <= index && index < span.end) ?? null
 }
 
 function parsePythonToolDefs(file, root, content) {
@@ -64,14 +109,9 @@ function parsePythonToolDefs(file, root, content) {
     const handlerMatch = nearby.match(/handler\s*=\s*([A-Za-z0-9_().]+)/)
     const inferred = inferRisk(match[1], nearby)
     tools.push({
-      id: match[1],
-      name: match[1],
-      provider: 'python_tooldef',
-      risk: inferred.risk,
-      external: inferred.external,
-      source: normalise(path.relative(root, file)),
-      handler: handlerMatch?.[1] ?? null,
-      confidence: inferred.risk === 'unknown' ? 'medium' : 'high',
+      id: match[1], name: match[1], provider: 'python_tooldef', risk: inferred.risk,
+      external: inferred.external, source: normalise(path.relative(root, file)),
+      handler: handlerMatch?.[1] ?? null, confidence: inferred.risk === 'unknown' ? 'medium' : 'high',
     })
   }
   return tools
@@ -83,13 +123,8 @@ function parseMcpTools(file, root, content) {
   for (const match of content.matchAll(regex)) {
     const inferred = inferRisk(match[1], content.slice(match.index ?? 0, (match.index ?? 0) + 900))
     tools.push({
-      id: `mcp:${match[1]}`,
-      name: match[1],
-      provider: 'mcp',
-      risk: inferred.risk,
-      external: inferred.external,
-      source: normalise(path.relative(root, file)),
-      handler: match[1],
+      id: `mcp:${match[1]}`, name: match[1], provider: 'mcp', risk: inferred.risk,
+      external: inferred.external, source: normalise(path.relative(root, file)), handler: match[1],
       confidence: inferred.risk === 'unknown' ? 'medium' : 'high',
     })
   }
@@ -97,23 +132,87 @@ function parseMcpTools(file, root, content) {
 }
 
 function parseJsDeclaredTools(file, root, content) {
+  if (!/\brisk\s*:\s*["'](?:read|write|consequential|irreversible)["']/.test(content)) return []
   const tools = []
-  const regex = /(?:name|id)\s*:\s*["']([^"']+)["'][\s\S]{0,500}?risk\s*:\s*["'](read|write|consequential|irreversible)["']/g
-  for (const match of content.matchAll(regex)) {
-    const nearby = content.slice(match.index ?? 0, (match.index ?? 0) + 800)
-    const externalMatch = nearby.match(/external\s*:\s*(true|false)/)
+  const spans = objectSpans(content)
+  const capabilityContract = /(?:requiresHumanApproval|defaultExecutionMode|\bconsequential\s*:|\bauthority\s*:)/.test(content)
+  const authority = content.match(/\bauthority\s*:\s*["']([^"']+)["']/)?.[1] ?? null
+  const executionMode = content.match(/\bdefaultExecutionMode\s*:\s*["']([^"']+)["']/)?.[1] ?? null
+  const idRegex = /\b(?:id|name)\s*:\s*["']([^"']+)["']/g
+  const seen = new Set()
+
+  for (const match of content.matchAll(idRegex)) {
+    const span = enclosingObject(spans, match.index ?? 0)
+    if (!span) continue
+    const object = content.slice(span.start, span.end)
+    const risk = object.match(/\brisk\s*:\s*["'](read|write|consequential|irreversible)["']/)?.[1]
+    if (!risk) continue
+    const id = match[1]
+    const key = `${span.start}:${id}`
+    if (seen.has(key)) continue
+    seen.add(key)
+    const external = object.match(/\bexternal\s*:\s*(true|false)/)?.[1] === 'true'
+    const consequential = object.match(/\bconsequential\s*:\s*(true|false)/)?.[1] === 'true'
+    const requiresHumanApproval = object.match(/\brequiresHumanApproval\s*:\s*(true|false)/)?.[1] === 'true'
+    const method = object.match(/\bmethod\s*:\s*["']([^"']+)["']/)?.[1] ?? null
+    const transportPath = object.match(/\bpath\s*:\s*["']([^"']+)["']/)?.[1] ?? null
     tools.push({
-      id: match[1],
-      name: match[1],
-      provider: 'declared_capability',
-      risk: match[2],
-      external: externalMatch?.[1] === 'true',
-      source: normalise(path.relative(root, file)),
-      handler: null,
-      confidence: 'high',
+      id, name: id, provider: 'declared_capability', risk, external,
+      source: normalise(path.relative(root, file)), handler: null, confidence: 'high',
+      declaredOnly: capabilityContract, consequential, requiresHumanApproval, authority, executionMode,
+      transport: method || transportPath ? { method, path: transportPath } : null,
     })
   }
   return tools
+}
+
+/**
+ * Discover TypeScript/JavaScript ToolDef object literals without allowing a
+ * foreign nested `{ name: ... }` object to borrow a later schema/handler from
+ * another object. The smallest enclosing object must itself contain name,
+ * schema and handler.
+ */
+function parseTsToolDefs(file, root, content) {
+  if (!/(?:ToolDef(?:<[^>]+>)?\s*\[\]|build[A-Za-z0-9_]*Tools\s*\()/.test(content)) return []
+  const tools = []
+  const spans = objectSpans(content)
+  const regex = /\bname\s*:\s*["']([^"']+)["']/g
+  const seen = new Set()
+
+  for (const match of content.matchAll(regex)) {
+    const span = enclosingObject(spans, match.index ?? 0)
+    if (!span) continue
+    const object = content.slice(span.start, span.end)
+    if (!/\bschema\s*:/.test(object) || !/\bhandler\s*:/.test(object)) continue
+    const localName = object.match(/\bname\s*:\s*["']([^"']+)["']/)?.[1]
+    if (localName !== match[1]) continue
+    const key = `${span.start}:${localName}`
+    if (seen.has(key)) continue
+    seen.add(key)
+
+    const directHandler = object.match(/\bhandler\s*:\s*([A-Za-z_][A-Za-z0-9_]*)/)
+    const arrowHandler = object.match(/\bhandler\s*:\s*\([^)]*\)\s*=>[\s\S]{0,700}?\b([A-Za-z_][A-Za-z0-9_]*)\s*\(/)
+    const inferred = inferRisk(localName, object)
+    tools.push({
+      id: localName, name: localName, provider: 'typescript_tooldef', risk: inferred.risk,
+      external: inferred.external, source: normalise(path.relative(root, file)),
+      handler: directHandler?.[1] ?? arrowHandler?.[1] ?? null,
+      confidence: inferred.risk === 'unknown' ? 'medium' : 'high',
+    })
+  }
+  return tools
+}
+
+function ownsConcreteToolRegistry(content) {
+  return /(?:export\s+)?const\s+tools\s*(?::[^=]+)?=\s*\[/.test(content) || /ToolDef\(\s*name\s*=/.test(content)
+}
+
+function isGenericJsAgentFramework(content) {
+  const definesRunAgent = /(?:export\s+)?(?:async\s+)?function\s+runAgent\s*\(/.test(content)
+  const hasToolContract = /\bToolDef\b/.test(content)
+  const hasDispatch = /toolCalls|tool_calls|tool\.handler\s*\(/.test(content)
+  const hasModelLoop = /OpenAI|OPENAI|chat|model|maxIterations|maxCostUsd/.test(content)
+  return definesRunAgent && hasToolContract && hasDispatch && hasModelLoop && !ownsConcreteToolRegistry(content)
 }
 
 export function discoverRepository(rootDir) {
@@ -150,21 +249,22 @@ export function discoverRepository(rootDir) {
     if (/gemini|google\.generativeai/.test(lower)) providers.add('google')
 
     const agentSignals = [
-      ['chat_with_tools', 'llm_tool_calling'],
-      ['run_agent(', 'agent_loop'],
-      ['runAgent(', 'agent_loop'],
-      ['AgentGateway', 'agent_gateway'],
-      ['tool_calls', 'tool_call_dispatch'],
+      ['chat_with_tools', 'llm_tool_calling'], ['run_agent(', 'agent_loop'], ['runAgent(', 'agent_loop'],
+      ['AgentGateway', 'agent_gateway'], ['tool_calls', 'tool_call_dispatch'], ['toolCalls', 'tool_call_dispatch'],
     ]
-    const pathLooksAgentic = /(^|\/)(agents?|.*agent.*)\.(py|js|mjs|ts|tsx)$/.test(relative.toLowerCase()) || /agent_loop/.test(relative.toLowerCase())
     const matchedAgentSignals = agentSignals.filter(([needle]) => content.includes(needle))
     const strongAgentSignals = matchedAgentSignals.filter(([, kind]) => kind !== 'tool_call_dispatch')
+    const pathLooksAgentic =
+      /(^|\/)(agents?|.*agent.*)\.(py|js|mjs|ts|tsx)$/.test(relative.toLowerCase()) ||
+      /agent_loop/.test(relative.toLowerCase()) || /(^|\/)agents?\//i.test(relative) ||
+      (/\brunAgent\s*\(/.test(content) && /SYSTEM_PROMPT|systemPrompt/.test(content))
+
     if (executable && pathLooksAgentic && !NON_RUNTIME_AGENT_PATH.test(relative) && strongAgentSignals.length > 0) {
-      const framework = /agent[_-]?loop/.test(path.basename(relative).toLowerCase()) && !/system_prompt\s*=|SYSTEM_PROMPT\s*=/.test(content)
+      const pythonFramework = /agent[_-]?loop/.test(path.basename(relative).toLowerCase()) && !/system_prompt\s*=|SYSTEM_PROMPT\s*=/.test(content)
+      const framework = isGenericJsAgentFramework(content) || pythonFramework
       agents.push({
         id: relative.replace(/[^a-zA-Z0-9]+/g, '-').replace(/^-|-$/g, ''),
-        kind: framework ? 'framework' : 'entrypoint',
-        path: relative,
+        kind: framework ? 'framework' : 'entrypoint', path: relative,
         signals: matchedAgentSignals.map(([, kind]) => kind),
       })
       for (const [needle, kind] of matchedAgentSignals) findings.push(evidence(file, root, content, needle, kind))
@@ -179,32 +279,33 @@ export function discoverRepository(rootDir) {
       tools.push(...parsePythonToolDefs(file, root, content))
       tools.push(...parseMcpTools(file, root, content))
       tools.push(...parseJsDeclaredTools(file, root, content))
+      if (['.ts', '.tsx', '.js', '.mjs', '.cjs'].includes(ext)) tools.push(...parseTsToolDefs(file, root, content))
     }
 
-    if (executable && /SecurityBoundary|security-boundary|makeSecurityContext|AgentGateway/.test(content)) {
+    if (executable && /SecurityBoundary|security-boundary|makeSecurityContext|AgentGateway|evaluateAgentIntent/.test(content)) {
       hasDeterministicBoundary = true
-      const needle = content.includes('AgentGateway') ? 'AgentGateway' : content.includes('makeSecurityContext') ? 'makeSecurityContext' : 'security-boundary'
+      const needle = content.includes('AgentGateway') ? 'AgentGateway' : content.includes('makeSecurityContext') ? 'makeSecurityContext' : content.includes('evaluateAgentIntent') ? 'evaluateAgentIntent' : 'security-boundary'
       findings.push(evidence(file, root, content, needle, 'deterministic_security_boundary'))
     }
-    if (executable && /approvalRequired|approval_required|approvedBy|approved_by|human[_ -]approval|requires_human_approval/i.test(content)) {
+    if (executable && /approvalRequired|approval_required|approvedBy|approved_by|human[_ -]approval|requiresHumanApproval|requires_human_approval/i.test(content)) {
       hasExplicitApproval = true
-      findings.push(evidence(file, root, content, content.match(/approvalRequired|approval_required|approvedBy|approved_by|human[_ -]approval|requires_human_approval/i)?.[0] ?? 'approval', 'explicit_approval_signal'))
+      findings.push(evidence(file, root, content, content.match(/approvalRequired|approval_required|approvedBy|approved_by|human[_ -]approval|requiresHumanApproval|requires_human_approval/i)?.[0] ?? 'approval', 'explicit_approval_signal'))
     }
-    if (executable && /max_iterations|maxToolCalls|max_tool_calls|max_cost_usd|tool budget/i.test(content)) {
+    if (executable && /max_iterations|maxIterations|maxToolCalls|max_tool_calls|max_cost_usd|maxCostUsd|tool budget/i.test(content)) {
       hasExecutionBudget = true
-      const needle = content.match(/max_iterations|maxToolCalls|max_tool_calls|max_cost_usd/i)?.[0] ?? 'budget'
+      const needle = content.match(/max_iterations|maxIterations|maxToolCalls|max_tool_calls|max_cost_usd|maxCostUsd/i)?.[0] ?? 'budget'
       findings.push(evidence(file, root, content, needle, 'execution_budget'))
     }
-    if (executable && /ToolCallLog|audit|traceId|trace_id|tool_trace/.test(content)) {
+    if (executable && /ToolCallLog|tool_calls|audit|traceId|trace_id|toolTrace|tool_trace/.test(content)) {
       hasAuditTrail = true
-      const needle = content.match(/ToolCallLog|traceId|trace_id|tool_trace|audit/)?.[0] ?? 'audit'
+      const needle = content.match(/ToolCallLog|tool_calls|traceId|trace_id|toolTrace|tool_trace|audit/)?.[0] ?? 'audit'
       findings.push(evidence(file, root, content, needle, 'audit_trail'))
     }
     if (/multi[_ -]tenant|tenant_id|tenantId|organization_id|org_id/.test(content)) hasMultiTenantSignals = true
 
-    if (executable && /tool_def\.handler\s*\(|tool\.handler\s*\(|handler\s*\(args\)/.test(content) && /tool_calls|chat_with_tools|model/i.test(content)) {
+    if (executable && /tool_def\.handler\s*\(|tool\.handler\s*\(|handler\s*\(args\)|tool\.handler\s*\(args/.test(content) && /tool_calls|toolCalls|chat_with_tools|model/i.test(content)) {
       directModelToToolExecutor = true
-      const needle = content.match(/tool_def\.handler\s*\(|tool\.handler\s*\(|handler\s*\(args\)/)?.[0] ?? 'handler(args)'
+      const needle = content.match(/tool_def\.handler\s*\(|tool\.handler\s*\(|handler\s*\(args\)/)?.[0] ?? 'tool.handler('
       findings.push(evidence(file, root, content, needle, 'direct_model_to_tool_executor'))
     }
   }
@@ -235,16 +336,12 @@ export function discoverRepository(rootDir) {
     tools: dedupTools,
     effectCandidates,
     controls: {
-      deterministicBoundary: hasDeterministicBoundary,
-      explicitApproval: hasExplicitApproval,
-      boundedExecution: hasExecutionBudget,
-      auditTrail: hasAuditTrail,
-      multiTenantSignals: hasMultiTenantSignals,
-      directModelToToolExecutor,
+      deterministicBoundary: hasDeterministicBoundary, explicitApproval: hasExplicitApproval,
+      boundedExecution: hasExecutionBudget, auditTrail: hasAuditTrail,
+      multiTenantSignals: hasMultiTenantSignals, directModelToToolExecutor,
     },
     coverage: {
-      supported,
-      confidence,
+      supported, confidence,
       unknownRiskTools: unknownRiskTools.map((tool) => tool.name),
       blockers: [
         ...(entrypoints.length === 0 ? ['no_agent_entrypoint_detected'] : []),
@@ -261,12 +358,9 @@ export function discoveryToManifest(discovery, { agentId = null } = {}) {
   if (discovery.coverage.unknownRiskTools?.length) throw new Error('repository_discovery_unknown_tool_risk')
   const entrypoint = discovery.agents.find((agent) => agent.kind === 'entrypoint') ?? discovery.agents[0]
   const actions = discovery.tools.map((tool) => ({
-    id: tool.id.replace(/^mcp:/, 'mcp.'),
-    provider: tool.provider,
-    risk: tool.risk,
-    external: tool.external,
-    allowedRoles: ['agent'],
-    sensitive: /case|evidence|credential|secret|victim|user/.test(tool.name.toLowerCase()),
+    id: tool.id.replace(/^mcp:/, 'mcp.'), provider: tool.provider, risk: tool.risk,
+    external: tool.external, allowedRoles: ['agent'],
+    sensitive: /case|evidence|credential|secret|victim|user|mandant|document/.test(tool.name.toLowerCase()),
   }))
   return {
     agent: { id: agentId ?? entrypoint.id, name: entrypoint.path },
