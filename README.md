@@ -8,6 +8,22 @@ Digital Worker Factory is a reusable runtime for AI-assisted operations. A case 
 
 > **Core principle:** the model can interpret and propose. **The system authorizes.**
 
+## TrustReady Benchmark v1
+
+TrustReady now has a reproducible real-repository compatibility benchmark across **three structurally different architectures**:
+
+| Target | Architecture | Assurance shape |
+| --- | --- | --- |
+| SafeVoice | Python single scoped LLM agent | request authority → agent → tools → deterministic boundary → effect sink → native adversarial evidence |
+| GitLaw | TypeScript multi-entrypoint agent system | scoped tool ownership → deterministic non-agent surfaces → declarative authority contracts |
+| ProofWorker | Python bounded CLI/operator | CLI opt-in → guarded action → process/network effect → human release gate |
+
+Every benchmark run checks out the live target refs, records exact commits, scans all three with the **same TrustReady engine**, runs architecture-level negative/regression controls, fails on evidence drift, proves target worktrees remain untouched, and exports one machine-readable result plus raw evidence and a human-facing benchmark page.
+
+**[Benchmark methodology →](benchmark/README.md)** · **[Benchmark target contract →](benchmark/targets.json)** · **[Benchmark CI →](https://github.com/mikelninh/digital-worker-factory/actions/workflows/trustready-benchmark.yml)**
+
+The benchmark does not hardcode repository names into the assessor and does not claim whole-repository security certification. `TECHNICAL_GO` remains scoped to the authority/effect surfaces actually resolved at the recorded commit.
+
 ## The 60-second proof
 
 The public HausPilot case is deliberately simple and inspectable:
