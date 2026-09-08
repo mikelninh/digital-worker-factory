@@ -45,6 +45,9 @@ async function gh(method, endpoint, body = undefined) {
   try { payload = text ? JSON.parse(text) : null } catch { payload = { raw: text } }
   if (!response.ok) {
     const error = new Error(`github_api_${response.status}:${method}:${endpoint}`)
+    error.status = response.status
+    error.method = method
+    error.endpoint = endpoint
     error.payload = payload
     throw error
   }
@@ -84,26 +87,42 @@ const body = [
   `- Patch reason: \`${report.patch.reason}\``,
   '',
   '### Safety boundary',
-  '- This PR was created only after the same runtime attack set produced zero post-patch executor impact.',
+  '- This PR is attempted only after the same runtime attack set produced zero post-patch executor impact.',
   '- It is intentionally **not auto-merged**. Repository owners retain review, merge and deployment authority.',
   '- TECHNICAL_GO covers the supported discovered runtime shape and generated attack set; it is not certification or a guarantee that all vulnerabilities were found.',
 ].join('\n')
 
-const pull = await gh('POST', '/pulls', {
-  title: report.pr.title,
-  head: branch,
-  base: baseBranch,
-  body,
-  maintainer_can_modify: true,
-})
+let pull = null
+let status = 'OPENED'
+let blockedBy = null
+try {
+  pull = await gh('POST', '/pulls', {
+    title: report.pr.title,
+    head: branch,
+    base: baseBranch,
+    body,
+    maintainer_can_modify: true,
+  })
+} catch (error) {
+  const policyBlocked = error?.status === 403
+    && error?.method === 'POST'
+    && error?.endpoint === '/pulls'
+    && /not permitted to create or approve pull requests/i.test(error?.payload?.message ?? '')
+  if (!policyBlocked) throw error
+  status = 'PR_CREATION_BLOCKED_BY_REPO_SETTING'
+  blockedBy = 'github_actions_pull_request_creation_disabled'
+  console.warn('Generated remediation branch is ready, but this repository disables PR creation by GitHub Actions.')
+}
 
 const output = {
   version: 'repository-autofix-pr/v1',
+  status,
   repository,
   baseBranch,
   branch,
-  pullNumber: pull.number,
-  pullUrl: pull.html_url,
+  pullNumber: pull?.number ?? null,
+  pullUrl: pull?.html_url ?? null,
+  blockedBy,
   files: report.pr.files.map((file) => file.path),
   runtimeBefore: { impactEscapes: beforeEscapes, executorCalls: beforeCalls },
   runtimeAfter: { impactEscapes: afterEscapes, executorCalls: afterCalls },
@@ -114,6 +133,6 @@ const output = {
 const outputPath = process.env.TRUSTREADY_PR_RECEIPT || path.join(process.cwd(), 'enterprise', 'repo-autofix-pr-receipt.json')
 fs.writeFileSync(outputPath, `${JSON.stringify(output, null, 2)}\n`)
 if (process.env.GITHUB_OUTPUT) {
-  fs.appendFileSync(process.env.GITHUB_OUTPUT, `pull_url=${pull.html_url}\npull_number=${pull.number}\nbranch=${branch}\n`)
+  fs.appendFileSync(process.env.GITHUB_OUTPUT, `pull_url=${pull?.html_url ?? ''}\npull_number=${pull?.number ?? ''}\nbranch=${branch}\nstatus=${status}\n`)
 }
 console.log(`TRUSTREADY_AUTOFIX_PR=${JSON.stringify(output)}`)
