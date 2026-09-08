@@ -1,0 +1,35 @@
+{
+  "version": "trustready-benchmark-spec/v1",
+  "name": "TrustReady Benchmark v1",
+  "thesis": "Can TrustReady resolve who has authority, what can execute, what effect can happen, and what evidence supports the release decision across structurally different real repositories?",
+  "targets": [
+    {
+      "id": "safevoice",
+      "repository": "mikelninh/safevoice",
+      "trackingRef": "main",
+      "language": "Python",
+      "architecture": "Single scoped LLM agent runtime",
+      "expectedMode": "repository_reachability_attack_patch_plan",
+      "proofShape": "request authority → agent → tools → deterministic boundary → effect sink → native adversarial evidence"
+    },
+    {
+      "id": "gitlaw",
+      "repository": "mikelninh/gitlaw",
+      "trackingRef": "main",
+      "language": "TypeScript",
+      "architecture": "Multi-entrypoint agent system",
+      "expectedMode": "repository_multi_entrypoint_scoped_assurance",
+      "proofShape": "multiple agent entrypoints → scoped tool ownership → deterministic non-agent surfaces → declarative authority contracts"
+    },
+    {
+      "id": "proofworker",
+      "repository": "mikelninh/proofworker",
+      "trackingRef": "main",
+      "language": "Python",
+      "architecture": "Bounded CLI/operator runtime",
+      "expectedMode": "repository_bounded_operator_assurance",
+      "proofShape": "CLI authority → guarded action → process/network effect → human release gate"
+    }
+  ],
+  "truthBoundary": "Benchmark GO means the named target and scoped surfaces satisfy the benchmark assertions at the scanned commit. It is not a repository-wide security certification, does not prove dynamic completeness, and does not certify business correctness or remote-service enforcement."
+}
