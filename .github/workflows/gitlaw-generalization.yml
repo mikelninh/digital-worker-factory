@@ -67,8 +67,10 @@ jobs:
           console.log(`GitLaw scoped security: ${scoped.summary.go}/${scoped.summary.entrypoints} entrypoints GO; consequential scopes=${scoped.summary.consequentialScopes}; repo=${r.release.decision}`)
           NODE
       - name: Prove scanner did not mutate GitLaw
+        if: always()
         run: test -z "$(git -C target status --porcelain)"
       - name: Upload real GitLaw scan
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: gitlaw-generalization-scan
