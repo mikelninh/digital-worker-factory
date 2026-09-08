@@ -31,6 +31,7 @@ def submit(item):
 
 def main():
     p = argparse.ArgumentParser()
+    p.add_argument('--base-url', default='https://example.test')
     p.add_argument('--execute', action='store_true')
     args = p.parse_args()
     items = [{'id': 'a'}]
@@ -127,7 +128,7 @@ if __name__ == '__main__':
   }
 })
 
-test('process execution remains deny-by-default behind a propagated allow-exec flag', () => {
+test('process execution remains deny-by-default behind a propagated allow-exec flag even with duplicate main functions elsewhere', () => {
   const root = fixture({
     'cli.py': `
 import argparse
@@ -151,12 +152,25 @@ def main():
 if __name__ == '__main__':
     main()
 `,
+    'other.py': `
+import argparse
+
+def main():
+    p = argparse.ArgumentParser()
+    p.add_argument('--json', action='store_true')
+    p.parse_args()
+
+if __name__ == '__main__':
+    main()
+`,
   })
   try {
     const result = assessBoundedOperators(root)
     assert.equal(result.release.decision, 'TECHNICAL_GO')
-    const action = result.operatorSecurity.actions[0]
+    const action = result.operatorSecurity.actions.find((item) => item.flag === '--allow-exec')
+    assert.ok(action)
     assert.equal(action.gate.propagated, true)
+    assert.deepEqual(action.startFunctions, ['verify'])
     assert.equal(action.effects[0].kind, 'process_execution')
     assert.equal(action.effects[0].propagatedFailClosed, true)
     assert.equal(action.effects[0].guarded, true)
