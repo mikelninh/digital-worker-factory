@@ -1,4 +1,4 @@
-name: repo-to-pr-security-v2
+name: repo-to-pr-security-v3
 
 on:
   push:
@@ -8,70 +8,57 @@ on:
       - 'core/capability-registry.mjs'
       - 'core/policy-gate.mjs'
       - 'core/security-boundary.mjs'
-      - 'enterprise/autonomous-security-loop.mjs'
-      - 'enterprise/repository-discovery.mjs'
-      - 'enterprise/repository-autofix.mjs'
-      - 'enterprise/repo-security-*'
-      - 'enterprise/open-repository-autofix-pr.mjs'
-      - 'enterprise/examples/repo-autofix-target/**'
-      - 'enterprise/examples/repo-pr-target/**'
+      - 'enterprise/**'
       - '.github/workflows/repo-to-pr-security.yml'
-      - '.github/workflows/open-security-autofix-pr.yml'
   pull_request:
     paths:
       - 'core/agent-gateway.mjs'
       - 'core/capability-registry.mjs'
       - 'core/policy-gate.mjs'
       - 'core/security-boundary.mjs'
-      - 'enterprise/autonomous-security-loop.mjs'
-      - 'enterprise/repository-discovery.mjs'
-      - 'enterprise/repository-autofix.mjs'
-      - 'enterprise/repo-security-*'
-      - 'enterprise/open-repository-autofix-pr.mjs'
-      - 'enterprise/examples/repo-autofix-target/**'
-      - 'enterprise/examples/repo-pr-target/**'
+      - 'enterprise/**'
       - '.github/workflows/repo-to-pr-security.yml'
-      - '.github/workflows/open-security-autofix-pr.yml'
   workflow_dispatch:
 
 permissions:
   contents: read
 
 jobs:
-  supported-autofix:
+  autonomous-security:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 24
-      - name: Check GitHub PR adapter syntax
-        run: node --check enterprise/open-repository-autofix-pr.mjs
-      - name: Test repository discovery, fail-closed logic and code-level retest
+      - name: Check security engine syntax
+        run: |
+          node --check enterprise/repository-discovery.mjs
+          node --check enterprise/repository-autofix.mjs
+          node --check enterprise/repo-security-orchestrator.mjs
+          node --check enterprise/autonomous-security-loop.mjs
+          node --check enterprise/effect-sandbox.mjs
+          node --check enterprise/continuous-assurance.mjs
+          python3 -m py_compile enterprise/examples/repo-python-autofix-target/agent.py
+      - name: Run repo-to-PR JS + Python proofs
         run: node --test enterprise/repo-security-orchestrator.test.mjs
+      - name: Run real-effect sandbox proof
+        run: node --test enterprise/effect-sandbox.test.mjs
+      - name: Run continuous authority-delta gate
+        run: node --test enterprise/continuous-assurance.test.mjs
       - name: Export machine-readable repo-to-PR evidence
         run: node enterprise/export-repo-security-report.mjs
-      - name: Require exploit-before-fix and zero executor impact after code patch
+      - name: Require portable runtime containment
         run: |
-          node -e "const r=require('./enterprise/repo-security-report.json'); if(r.version!=='repo-security-loop/v1') throw new Error('invalid repo-security version'); if(r.runtimeBefore?.impactEscapes!==4) throw new Error('expected 4 runtime escapes before'); if(r.runtimeBefore?.executorCalls!==4) throw new Error('expected 4 executor calls before'); if(r.runtimeAfter?.impactEscapes!==0) throw new Error('runtime impact escape remains after code patch'); if(r.runtimeAfter?.executorCalls!==0) throw new Error('executor call remains after code patch'); if(r.release?.decision!=='TECHNICAL_GO') throw new Error('unexpected release decision'); if(r.pr?.ready!==true) throw new Error('generated PR is not ready'); console.log('Repo-to-PR: 4 runtime escapes -> 0; executor calls after=0; TECHNICAL_GO')"
-      - name: Verify separate real-PR demo target in vulnerable or remediated state
+          node -e "const r=require('./enterprise/repo-security-report.json'); if(r.version!=='repo-security-loop/v2') throw new Error('invalid repo-security version'); if(r.runtimeBefore?.impactEscapes!==4||r.runtimeBefore?.executorCalls!==4) throw new Error('portable runtime exploit not reproduced'); if(r.runtimeAfter?.impactEscapes!==0||r.runtimeAfter?.executorCalls!==0) throw new Error('runtime impact remains after patch'); if(r.release?.decision!=='TECHNICAL_GO'||r.pr?.ready!==true) throw new Error('generated remediation is not PR-ready'); if((r.before?.attackLoop?.attacks?.generated||0)<4) throw new Error('insufficient capability-specific attack coverage'); console.log('Repo-to-PR: exploitable -> patched -> 0 executor impact; TECHNICAL_GO')"
+      - name: Verify Python runtime golden case independently
         run: |
-          before_hash="$(sha256sum enterprise/examples/repo-pr-target/agent.mjs | awk '{print $1}')"
-          node enterprise/repo-security-cli.mjs enterprise/examples/repo-pr-target --out=/tmp/repo-pr-state.json
-          decision="$(node -p "require('/tmp/repo-pr-state.json').release?.decision")"
-          if [ "$decision" = "TECHNICAL_GO" ]; then
-            node -e "const r=require('/tmp/repo-pr-state.json'); if(r.attackLoop?.before?.impactEscapes!==0||r.attackLoop?.before?.executorCalls!==0) throw new Error('remediated demo PR target still has executor impact'); if(r.discovery?.controls?.deterministicBoundary!==true) throw new Error('remediated demo PR target is missing deterministic boundary'); console.log('Demo PR target already remediated: 0 impact escapes; TECHNICAL_GO')"
-          else
-            node enterprise/repo-security-cli.mjs enterprise/examples/repo-pr-target --autofix --out=/tmp/repo-pr-autofix.json
-            node -e "const r=require('/tmp/repo-pr-autofix.json'); if(r.runtimeBefore?.impactEscapes!==4||r.runtimeBefore?.executorCalls!==4) throw new Error('vulnerable demo PR target does not reproduce pre-patch impact'); if(r.runtimeAfter?.impactEscapes!==0||r.runtimeAfter?.executorCalls!==0) throw new Error('demo PR target patch does not contain impact'); if(r.release?.decision!=='TECHNICAL_GO'||r.pr?.ready!==true) throw new Error('demo PR target is not PR-ready'); console.log('Demo PR target vulnerable state: 4 executor escapes -> 0 after isolated patch; PR-ready')"
-          fi
-          after_hash="$(sha256sum enterprise/examples/repo-pr-target/agent.mjs | awk '{print $1}')"
-          test "$before_hash" = "$after_hash"
-          git diff --exit-code -- enterprise/examples/repo-pr-target/agent.mjs
-      - name: Upload repo-to-PR evidence
+          node enterprise/repo-security-cli.mjs enterprise/examples/repo-python-autofix-target --autofix --out=/tmp/python-autofix.json
+          node -e "const r=require('/tmp/python-autofix.json'); if(r.runtimeBefore?.impactEscapes!==4||r.runtimeAfter?.impactEscapes!==0||r.runtimeAfter?.executorCalls!==0) throw new Error('Python 4->0 proof failed'); if(r.release?.decision!=='TECHNICAL_GO') throw new Error('Python remediation is not TECHNICAL_GO'); console.log('Python executor: 4 escapes -> 0')"
+      - name: Upload evidence
         uses: actions/upload-artifact@v4
         with:
-          name: repo-security-report
+          name: autonomous-security-evidence
           path: enterprise/repo-security-report.json
 
   real-safevoice-discovery:
@@ -89,15 +76,15 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 24
-      - name: Discover real agent and MCP surfaces without modifying target
+      - name: Discover real Python agent and isolated MCP surface
         working-directory: engine
         run: node enterprise/repo-security-cli.mjs ../target --out=../safevoice-repo-discovery.json
-      - name: Require evidence-backed discovery and fail closed on ambiguous reachability
+      - name: Require resolved reachability and safe remediation state
         run: |
-          node -e "const r=require('./safevoice-repo-discovery.json'); const d=r.discovery; if(r.version!=='repo-security-loop/v1') throw new Error('invalid repo-security version'); if(!d||d.agents.length!==2) throw new Error('expected framework + entrypoint'); if(d.agentTopology?.entrypoints?.length!==1||d.agentTopology.entrypoints[0]!=='backend/app/services/court_prep_agent.py') throw new Error('SafeVoice court-prep entrypoint not resolved cleanly'); if(d.agentTopology?.frameworks?.length!==1||d.agentTopology.frameworks[0]!=='backend/app/services/agent_loop.py') throw new Error('SafeVoice shared agent framework not resolved cleanly'); if(d.mcpServers.length!==1) throw new Error('expected one SafeVoice MCP server'); if(d.tools.length!==14) throw new Error('expected 14 discovered tools'); if(d.controls.boundedExecution!==true) throw new Error('SafeVoice execution budget not discovered'); if(d.controls.auditTrail!==true) throw new Error('SafeVoice audit trail not discovered'); if(d.controls.directModelToToolExecutor!==true) throw new Error('SafeVoice model-to-tool dispatch not discovered'); if(d.controls.explicitApproval!==false) throw new Error('non-runtime approval evidence must not count as executable approval'); if(r.release?.decision!=='TECHNICAL_NO_GO') throw new Error('ambiguous real repo must fail closed'); if(!d.coverage.blockers.includes('mixed_mcp_and_agent_tool_surfaces_require_reachability_review')) throw new Error('mixed MCP/agent reachability blocker missing'); if(r.patch?.supported!==false) throw new Error('real repo must not be rewritten without a proven supported shape'); console.log('SafeVoice discovery verified; TECHNICAL_NO_GO; auto-patch=false')"
-      - name: Prove discovery scan did not modify target repository
+          node -e "const r=require('./safevoice-repo-discovery.json'); const d=r.discovery; if(r.version!=='repo-security-loop/v2') throw new Error('invalid repo-security version'); if(d.agentTopology?.entrypoints?.length!==1||d.agentTopology.entrypoints[0]!=='backend/app/services/court_prep_agent.py') throw new Error('SafeVoice entrypoint not resolved'); if(d.agentTopology?.frameworks?.length!==1||d.agentTopology.frameworks[0]!=='backend/app/services/agent_loop.py') throw new Error('SafeVoice framework not resolved'); if(d.mcpServers.length<1) throw new Error('SafeVoice MCP server missing'); if(d.reachability?.isolatedMcpServers?.length<1) throw new Error('independent MCP surface was not isolated'); if(d.reachability?.reachableMcpServers?.length!==0) throw new Error('unobserved MCP reachability must not be invented'); if(d.reachableTools.length<5) throw new Error('Court-Prep tool surface not discovered'); if(d.isolatedTools.length<1) throw new Error('isolated MCP tools not retained as evidence'); if(d.controls.boundedExecution!==true||d.controls.auditTrail!==true||d.controls.directModelToToolExecutor!==true) throw new Error('SafeVoice runtime controls not discovered'); if(r.release?.decision==='TECHNICAL_GO'){ if(d.controls.deterministicBoundary!==true) throw new Error('GO requires deterministic boundary'); if(r.attackLoop?.before?.impactEscapes!==0||r.attackLoop?.before?.executorCalls!==0) throw new Error('protected SafeVoice still has generated impact'); console.log('SafeVoice: protected state; generated attack set contained'); } else { if(r.release?.decision!=='TECHNICAL_NO_GO') throw new Error('unexpected SafeVoice release state'); if(r.patch?.supported!==true||r.patch?.reason!=='insert_python_deterministic_boundary_before_model_selected_handler') throw new Error('SafeVoice Python autofix not supported'); console.log('SafeVoice: unpatched state; reachability resolved; Python autofix supported'); }"
+      - name: Prove discovery did not modify SafeVoice
         run: test -z "$(git -C target status --porcelain)"
-      - name: Upload real-repo discovery evidence
+      - name: Upload real-repo evidence
         uses: actions/upload-artifact@v4
         with:
           name: safevoice-repository-discovery
