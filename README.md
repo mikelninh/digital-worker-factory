@@ -20,7 +20,7 @@ TrustReady now has a reproducible real-repository compatibility benchmark across
 
 Every benchmark run checks out the live target refs, records exact commits, scans all three with the **same TrustReady engine**, runs architecture-level negative/regression controls, fails on evidence drift, proves target worktrees remain untouched, and exports one machine-readable result plus raw evidence and a human-facing benchmark page.
 
-**[Benchmark methodology →](benchmark/README.md)** · **[Benchmark target contract →](benchmark/targets.json)** · **[Benchmark CI →](https://github.com/mikelninh/digital-worker-factory/actions/workflows/trustready-benchmark.yml)**
+**[View the public benchmark →](https://mikelninh.github.io/trustready/benchmark/)** · **[Methodology →](benchmark/README.md)** · **[Target contract →](benchmark/targets.json)** · **[CI evidence →](https://github.com/mikelninh/digital-worker-factory/actions/workflows/trustready-benchmark.yml)**
 
 The benchmark does not hardcode repository names into the assessor and does not claim whole-repository security certification. `TECHNICAL_GO` remains scoped to the authority/effect surfaces actually resolved at the recorded commit.
 
