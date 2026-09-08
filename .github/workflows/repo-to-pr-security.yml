@@ -64,16 +64,28 @@ jobs:
           if (r.pr?.ready !== true) throw new Error('generated PR is not ready')
           console.log(`Repo-to-PR: ${r.runtimeBefore.impactEscapes} runtime escapes -> ${r.runtimeAfter.impactEscapes}; executor calls after=${r.runtimeAfter.executorCalls}; ${r.release.decision}`)
           NODE
-      - name: Preflight separate real-PR demo target without mutating it
+      - name: Verify separate real-PR demo target in vulnerable or remediated state
         run: |
           before_hash="$(sha256sum enterprise/examples/repo-pr-target/agent.mjs | awk '{print $1}')"
-          node enterprise/repo-security-cli.mjs enterprise/examples/repo-pr-target --autofix --out=/tmp/repo-pr-target.json
-          node <<'NODE'
-          const r = require('/tmp/repo-pr-target.json')
-          if (r.runtimeBefore?.impactEscapes !== 4 || r.runtimeBefore?.executorCalls !== 4) throw new Error('demo PR target does not reproduce pre-patch impact')
-          if (r.runtimeAfter?.impactEscapes !== 0 || r.runtimeAfter?.executorCalls !== 0) throw new Error('demo PR target patch does not contain impact')
-          if (r.release?.decision !== 'TECHNICAL_GO' || r.pr?.ready !== true) throw new Error('demo PR target is not PR-ready')
-          NODE
+          node enterprise/repo-security-cli.mjs enterprise/examples/repo-pr-target --out=/tmp/repo-pr-state.json
+          decision="$(node -p "require('/tmp/repo-pr-state.json').release?.decision")"
+          if [ "$decision" = "TECHNICAL_GO" ]; then
+            node <<'NODE'
+            const r = require('/tmp/repo-pr-state.json')
+            if (r.attackLoop?.before?.impactEscapes !== 0 || r.attackLoop?.before?.executorCalls !== 0) throw new Error('remediated demo PR target still has executor impact')
+            if (r.discovery?.controls?.deterministicBoundary !== true) throw new Error('remediated demo PR target is missing deterministic boundary')
+            console.log('Demo PR target already remediated: 0 impact escapes; TECHNICAL_GO')
+            NODE
+          else
+            node enterprise/repo-security-cli.mjs enterprise/examples/repo-pr-target --autofix --out=/tmp/repo-pr-autofix.json
+            node <<'NODE'
+            const r = require('/tmp/repo-pr-autofix.json')
+            if (r.runtimeBefore?.impactEscapes !== 4 || r.runtimeBefore?.executorCalls !== 4) throw new Error('vulnerable demo PR target does not reproduce pre-patch impact')
+            if (r.runtimeAfter?.impactEscapes !== 0 || r.runtimeAfter?.executorCalls !== 0) throw new Error('demo PR target patch does not contain impact')
+            if (r.release?.decision !== 'TECHNICAL_GO' || r.pr?.ready !== true) throw new Error('demo PR target is not PR-ready')
+            console.log('Demo PR target vulnerable state: 4 executor escapes -> 0 after isolated patch; PR-ready')
+            NODE
+          fi
           after_hash="$(sha256sum enterprise/examples/repo-pr-target/agent.mjs | awk '{print $1}')"
           test "$before_hash" = "$after_hash"
           git diff --exit-code -- enterprise/examples/repo-pr-target/agent.mjs
