@@ -129,24 +129,42 @@ export async function evaluateMultiEntrypointSecurity(discovery, reachability) {
   const entrypoints = reachability?.entrypoints ?? []
   if (entrypoints.length < 2) throw new Error('multi_entrypoint_security_requires_multiple_entrypoints')
 
+  const assigned = new Set()
+  for (const entrypoint of entrypoints) {
+    const sources = new Set(entrypoint.reachableToolSources ?? [])
+    const names = new Set(entrypoint.reachableTools ?? [])
+    for (const tool of discovery.tools) if (sources.has(tool.source) && names.has(tool.name)) assigned.add(`${tool.source}:${tool.name}`)
+  }
+  const unassignedTools = discovery.tools
+    .filter((tool) => tool.provider !== 'mcp')
+    .filter((tool) => !assigned.has(`${tool.source}:${tool.name}`))
+    .map((tool) => ({ name: tool.name, source: tool.source, risk: tool.risk, external: tool.external === true }))
+
   const decisions = []
   for (const entrypoint of entrypoints) decisions.push(await evaluateEntrypoint(discovery, entrypoint))
 
   const noGo = decisions.filter((item) => item.decision === SCOPED_DECISIONS.NO_GO)
   const go = decisions.filter((item) => item.decision === SCOPED_DECISIONS.GO)
-  const decision = noGo.length > 0 ? SCOPED_DECISIONS.NO_GO : SCOPED_DECISIONS.GO
+  const hasUnassigned = unassignedTools.length > 0
+  const decision = noGo.length > 0 || hasUnassigned ? SCOPED_DECISIONS.NO_GO : SCOPED_DECISIONS.GO
 
   return {
     version: MULTI_ENTRYPOINT_SECURITY_VERSION,
     decision,
-    reason: noGo.length > 0 ? 'one_or_more_entrypoint_scopes_not_proven' : 'all_entrypoint_effect_scopes_resolved',
+    reason: hasUnassigned
+      ? 'unassigned_tool_surface_requires_reachability_review'
+      : noGo.length > 0
+        ? 'one_or_more_entrypoint_scopes_not_proven'
+        : 'all_entrypoint_effect_scopes_resolved',
     summary: {
       entrypoints: decisions.length,
       go: go.length,
-      noGo: noGo.length,
-      consequentialScopes: decisions.filter((item) => (item.scope.effectPaths ?? []).some((path) => path.risk !== 'read' || path.external === true)).length,
+      noGo: noGo.length + (hasUnassigned ? 1 : 0),
+      consequentialScopes: decisions.filter((item) => item.scope.reachableTools.some((tool) => tool.risk !== 'read' || tool.external === true)).length,
+      unassignedTools: unassignedTools.length,
     },
     entrypoints: decisions,
-    truthBoundary: 'Repository aggregation is conservative: any scoped TECHNICAL_NO_GO makes the repository TECHNICAL_NO_GO. Scoped GO decisions cover reachable effect authority only; they do not certify confidentiality, legal compliance, model correctness, or dynamic paths invisible to static analysis.',
+    unassignedTools,
+    truthBoundary: 'Repository aggregation is conservative: any scoped TECHNICAL_NO_GO or unassigned non-MCP tool surface makes the repository TECHNICAL_NO_GO. Scoped GO decisions cover reachable effect authority only; they do not certify confidentiality, legal compliance, model correctness, or dynamic paths invisible to static analysis.',
   }
 }
