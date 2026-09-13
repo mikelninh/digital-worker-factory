@@ -1,0 +1,31 @@
+name: Cohere FDE runtime proof
+
+on:
+  pull_request:
+    paths:
+      - 'proofs/cohere-fde/**'
+      - 'core/agent-gateway.mjs'
+      - 'core/capability-registry.mjs'
+      - 'core/policy-gate.mjs'
+      - 'core/security-boundary.mjs'
+      - '.github/workflows/cohere-fde-runtime.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'proofs/cohere-fde/**'
+      - 'core/agent-gateway.mjs'
+      - 'core/capability-registry.mjs'
+      - 'core/policy-gate.mjs'
+      - 'core/security-boundary.mjs'
+      - '.github/workflows/cohere-fde-runtime.yml'
+
+jobs:
+  runtime-proof:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Run Cohere FDE runtime tests
+        run: node --test proofs/cohere-fde/runtime.test.mjs
