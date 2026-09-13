@@ -1,16 +1,34 @@
 {
   "schema": "mikel-harness-receipt-v0.1",
-  "task": "cohere-fde-runtime-proof",
-  "status": "verified_locally_and_deployed",
-  "goal": "Back the public Cohere Forward Deployed Engineer demo with an executable bounded runtime and inspectable run receipt.",
-  "risk_class": "A3",
-  "approval_basis": "User explicitly requested the live runtime integration and deployment in chat.",
-  "evidence": {
-    "local_test_command": "node --test proofs/cohere-fde/runtime.test.mjs",
-    "local_test_result": {
+  "task_id": "cohere-fde-runtime-proof",
+  "verdict": "partial",
+  "context_sources": [
+    "AGENTS.md",
+    "README.md",
+    ".harness/project.json",
+    "core/agent-gateway.mjs",
+    "core/capability-registry.mjs",
+    "core/policy-gate.mjs",
+    "core/security-boundary.mjs"
+  ],
+  "tools_used": [
+    "GitHub branch",
+    "GitHub pull request",
+    "GitHub Actions",
+    "Supabase Edge Functions",
+    "local Node test runner"
+  ],
+  "verification": {
+    "runtime_commit": "c24899ef8a1e2e0012319b51d23a2701930110ec",
+    "local_test": {
+      "command": "node --test proofs/cohere-fde/runtime.test.mjs",
       "tests": 3,
       "passed": 3,
       "failed": 0
+    },
+    "runtime_ci": {
+      "run_id": 34759967139,
+      "conclusion": "success"
     },
     "covered_states": [
       "complete evidence -> REVIEW_REQUIRED",
@@ -24,19 +42,29 @@
       "version": 1,
       "verify_jwt": true
     },
-    "runtime_commit": "c24899ef8a1e2e0012319b51d23a2701930110ec"
+    "remaining": [
+      "harness-contract CI after receipt repair",
+      "browser end-to-end invocation from GitHub Pages"
+    ]
   },
-  "constraints": [
-    "Synthetic fixtures only",
-    "No customer data",
-    "No external side effects",
-    "Consequential release remains human-gated",
-    "Deployed endpoint imports a pinned runtime commit"
+  "human_corrections": 0,
+  "retries": 1,
+  "external_actions": [
+    {
+      "kind": "deploy_edge_function",
+      "target": "company-01/cohere-fde-runtime@v1",
+      "risk_class": "A3",
+      "approved": true
+    },
+    {
+      "kind": "open_pull_request",
+      "target": "#57",
+      "risk_class": "A2",
+      "approved": true
+    }
   ],
-  "remaining_verification": [
-    "GitHub Actions CI on pull request",
-    "Browser end-to-end check of the public GitHub Pages demo against the deployed endpoint"
-  ],
+  "accepted_artifact": "PR #57 + live synthetic serverless runtime",
+  "rollback_point": "7712e3e3ec215fbbabd055a652433d138d1015c7",
   "next_owner": "verifier",
-  "next_step": "Open PR, wait for runtime CI, inspect public demo end-to-end, then merge if green."
+  "next_step": "Wait for repaired harness CI, perform browser invocation of the public demo, then mark accepted and merge if green."
 }
