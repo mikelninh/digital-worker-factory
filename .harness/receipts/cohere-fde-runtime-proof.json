@@ -1,0 +1,42 @@
+{
+  "schema": "mikel-harness-receipt-v0.1",
+  "task": "cohere-fde-runtime-proof",
+  "status": "verified_locally_and_deployed",
+  "goal": "Back the public Cohere Forward Deployed Engineer demo with an executable bounded runtime and inspectable run receipt.",
+  "risk_class": "A3",
+  "approval_basis": "User explicitly requested the live runtime integration and deployment in chat.",
+  "evidence": {
+    "local_test_command": "node --test proofs/cohere-fde/runtime.test.mjs",
+    "local_test_result": {
+      "tests": 3,
+      "passed": 3,
+      "failed": 0
+    },
+    "covered_states": [
+      "complete evidence -> REVIEW_REQUIRED",
+      "missing contract -> BLOCKED before prepare/release",
+      "explicit human approval -> APPROVED synthetic-only release"
+    ],
+    "edge_function": {
+      "provider": "Supabase Edge Functions",
+      "project": "company-01",
+      "slug": "cohere-fde-runtime",
+      "version": 1,
+      "verify_jwt": true
+    },
+    "runtime_commit": "c24899ef8a1e2e0012319b51d23a2701930110ec"
+  },
+  "constraints": [
+    "Synthetic fixtures only",
+    "No customer data",
+    "No external side effects",
+    "Consequential release remains human-gated",
+    "Deployed endpoint imports a pinned runtime commit"
+  ],
+  "remaining_verification": [
+    "GitHub Actions CI on pull request",
+    "Browser end-to-end check of the public GitHub Pages demo against the deployed endpoint"
+  ],
+  "next_owner": "verifier",
+  "next_step": "Open PR, wait for runtime CI, inspect public demo end-to-end, then merge if green."
+}
