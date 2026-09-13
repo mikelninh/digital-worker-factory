@@ -1,0 +1,70 @@
+{
+  "schema": "mikel-harness-receipt-v0.1",
+  "task_id": "cohere-fde-runtime-proof",
+  "verdict": "partial",
+  "context_sources": [
+    "AGENTS.md",
+    "README.md",
+    ".harness/project.json",
+    "core/agent-gateway.mjs",
+    "core/capability-registry.mjs",
+    "core/policy-gate.mjs",
+    "core/security-boundary.mjs"
+  ],
+  "tools_used": [
+    "GitHub branch",
+    "GitHub pull request",
+    "GitHub Actions",
+    "Supabase Edge Functions",
+    "local Node test runner"
+  ],
+  "verification": {
+    "runtime_commit": "c24899ef8a1e2e0012319b51d23a2701930110ec",
+    "local_test": {
+      "command": "node --test proofs/cohere-fde/runtime.test.mjs",
+      "tests": 3,
+      "passed": 3,
+      "failed": 0
+    },
+    "runtime_ci": {
+      "run_id": 34759967139,
+      "conclusion": "success"
+    },
+    "covered_states": [
+      "complete evidence -> REVIEW_REQUIRED",
+      "missing contract -> BLOCKED before prepare/release",
+      "explicit human approval -> APPROVED synthetic-only release"
+    ],
+    "edge_function": {
+      "provider": "Supabase Edge Functions",
+      "project": "company-01",
+      "slug": "cohere-fde-runtime",
+      "version": 1,
+      "verify_jwt": true
+    },
+    "remaining": [
+      "harness-contract CI after receipt repair",
+      "browser end-to-end invocation from GitHub Pages"
+    ]
+  },
+  "human_corrections": 0,
+  "retries": 1,
+  "external_actions": [
+    {
+      "kind": "deploy_edge_function",
+      "target": "company-01/cohere-fde-runtime@v1",
+      "risk_class": "A3",
+      "approved": true
+    },
+    {
+      "kind": "open_pull_request",
+      "target": "#57",
+      "risk_class": "A2",
+      "approved": true
+    }
+  ],
+  "accepted_artifact": "PR #57 + live synthetic serverless runtime",
+  "rollback_point": "7712e3e3ec215fbbabd055a652433d138d1015c7",
+  "next_owner": "verifier",
+  "next_step": "Wait for repaired harness CI, perform browser invocation of the public demo, then mark accepted and merge if green."
+}
