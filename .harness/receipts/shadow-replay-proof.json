@@ -1,46 +1,60 @@
 {
   "schema": "mikel-harness-receipt-v0.1",
   "task_id": "shadow-replay-proof",
-  "status": "verified_ready_for_review",
-  "pull_request": 58,
-  "head_sha": "15d1b01093db9b4b74e285278c72f2727aefe3d2",
-  "artifacts": [
+  "verdict": "accepted",
+  "context_sources": [
+    ".harness/roadmap.json",
+    ".harness/active-task.json",
     "core/shadow-replay.mjs",
     "core/shadow-replay.test.mjs",
     "evals/shadow-replay-e2e.mjs",
-    "proofs/shadow-replay/synthetic-batch-v1.json",
-    "proofs/shadow-replay/README.md"
+    "proofs/shadow-replay/synthetic-batch-v1.json"
+  ],
+  "tools_used": [
+    "GitHub branch/file/PR operations",
+    "GitHub Actions factory-evals",
+    "GitHub Actions harness-contract"
   ],
   "verification": [
     {
+      "kind": "ci",
       "workflow": "factory-evals",
       "run_id": 36646870057,
       "conclusion": "success"
     },
     {
+      "kind": "ci",
       "workflow": "harness-contract",
       "run_id": 36646870303,
       "conclusion": "success"
+    },
+    {
+      "kind": "synthetic_fixture",
+      "cases": 12,
+      "baseline_human_minutes": 130,
+      "shadow_review_minutes": 44,
+      "minutes_saved": 86,
+      "time_saved_rate": 0.6615,
+      "corrected_cases": 2,
+      "correction_rate": 0.1667,
+      "escalations": 3,
+      "false_completions": 0,
+      "unsafe_executions": 0,
+      "regression_candidates": 2
     }
   ],
-  "synthetic_fixture": {
-    "cases": 12,
-    "baseline_human_minutes": 130,
-    "shadow_review_minutes": 44,
-    "minutes_saved": 86,
-    "time_saved_rate": 0.6615,
-    "corrected_cases": 2,
-    "correction_rate": 0.1667,
-    "escalations": 3,
-    "false_completions": 0,
-    "unsafe_executions": 0,
-    "regression_candidates": 2
+  "external_actions": [],
+  "rollback_point": {
+    "base_branch": "main",
+    "base_sha": "8f35e8e38c01ecb510904efc30ffb21c39f65cc5",
+    "pull_request": 58,
+    "note": "No production deploy or external customer action occurred; abandoning/closing the draft PR restores the prior state."
   },
+  "next_owner": "operator",
   "limitations": [
     "Synthetic fixture validates measurement machinery only.",
     "No customer ROI, production reliability or paid demand is claimed.",
     "No external action or customer data was used."
   ],
-  "next_owner": "operator",
   "next_action": "Review and optionally merge PR #58, then run an approved supervised real shadow replay."
 }
