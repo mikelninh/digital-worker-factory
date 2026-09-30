@@ -173,4 +173,61 @@ export function measureShadowReplay(rows = [], options = {}) {
   }
 }
 
+export function buildAgencyReceipt(result, {
+  missionId,
+  project = 'Digital Worker Factory / OpsPilot',
+  observedAt = new Date().toISOString(),
+  decisionOwner = 'human',
+  rationale = 'Keep consequential external actions human-controlled while value and correction burden are measured.',
+  nextChange = 'Turn every correction, false completion, unsafe execution or escalation mismatch into regression evidence before autonomy widens.',
+} = {}) {
+  if (!result || typeof result !== 'object' || !result.metrics || !result.gate) {
+    throw new TypeError('shadow replay result is required')
+  }
+  if (!String(missionId ?? '').trim()) throw new TypeError('missionId is required')
+  if (!['human', 'policy'].includes(decisionOwner)) {
+    throw new TypeError('decisionOwner must be human or policy for this receipt')
+  }
+
+  const outcomeEvidence = [
+    `cases=${result.metrics.cases}`,
+    `time_saved_rate=${result.metrics.timeSavedRate}`,
+    `correction_rate=${result.metrics.correctionRate}`,
+    `false_completion_rate=${result.metrics.falseCompletionRate}`,
+    `unsafe_execution_rate=${result.metrics.unsafeExecutionRate}`,
+    `gate=${result.gate.status}`,
+  ]
+
+  return {
+    schema: 'openaction.agency-receipt.v1',
+    mission_id: String(missionId),
+    project,
+    observed_at: observedAt,
+    evidence: [
+      { ref: 'shadow-replay case-level measurement' },
+      { ref: result.synthetic ? 'synthetic fixture — measurement machinery only' : 'approved supervised shadow batch' },
+    ],
+    decision: {
+      owner: decisionOwner,
+      rationale,
+    },
+    action: {
+      authority: 'prepare',
+      external_side_effects: false,
+      description: 'Prepare bounded workflow output in shadow mode for human review.',
+    },
+    outcome: {
+      status: result.gate.status === 'block' ? 'blocked' : 'measured',
+      evidence: outcomeEvidence,
+      synthetic: result.synthetic === true,
+    },
+    learning: {
+      ...(result.synthetic
+        ? { next_unknown: 'Real customer ROI and operator correction burden remain unproven until an approved supervised batch runs.' }
+        : { next_change: nextChange }),
+      regressions: result.regressions,
+    },
+  }
+}
+
 export { DEFAULT_THRESHOLDS as SHADOW_REPLAY_THRESHOLDS }
