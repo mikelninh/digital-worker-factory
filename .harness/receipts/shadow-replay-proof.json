@@ -17,18 +17,6 @@
   ],
   "verification": [
     {
-      "kind": "ci",
-      "workflow": "factory-evals",
-      "run_id": 36646870057,
-      "conclusion": "success"
-    },
-    {
-      "kind": "ci",
-      "workflow": "harness-contract",
-      "run_id": 36646870303,
-      "conclusion": "success"
-    },
-    {
       "kind": "synthetic_fixture",
       "cases": 12,
       "baseline_human_minutes": 130,
@@ -41,6 +29,23 @@
       "false_completions": 0,
       "unsafe_executions": 0,
       "regression_candidates": 2
+    },
+    {
+      "kind": "ci",
+      "workflow": "factory-evals",
+      "run_id": 36707607945,
+      "conclusion": "success"
+    },
+    {
+      "kind": "ci",
+      "workflow": "harness-contract",
+      "run_id": 36707607893,
+      "conclusion": "success"
+    },
+    {
+      "kind": "agency_receipt_contract",
+      "schema": "openaction.agency-receipt.v1",
+      "synthetic_truth_boundary": "verified"
     }
   ],
   "external_actions": [],
@@ -52,8 +57,9 @@
   },
   "next_owner": "operator",
   "limitations": [
-    "Synthetic fixture validates measurement machinery only.",
+    "Synthetic fixture validates measurement and receipt machinery only.",
     "No customer ROI, production reliability or paid demand is claimed.",
+    "Synthetic evidence cannot satisfy the real-world release gate.",
     "No external action or customer data was used."
   ],
   "next_action": "Review and optionally merge PR #58, then run an approved supervised real shadow replay."
