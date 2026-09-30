@@ -8,14 +8,15 @@ Operator review of PR #58. If accepted, merge it; then replace the synthetic rep
 
 ## Evidence
 - Added provider-agnostic replay measurement in `core/shadow-replay.mjs`.
+- The replay now emits a portable `openaction.agency-receipt.v1` recording evidence, decision owner, bounded authority, measured outcome and the next unknown/change.
 - Added deterministic contract tests in `core/shadow-replay.test.mjs`.
 - Added synthetic representative replay fixture and `evals/shadow-replay-e2e.mjs`.
-- Factory eval workflow `36646870057`: **success**.
-- Harness contract workflow `36646870303`: **success** on the product implementation commit.
+- Factory eval workflow `36707607945`: **success** after Agency Receipt integration.
+- Harness contract workflow `36707607893`: **success** on the current PR head.n the product implementation commit.
 - Synthetic fixture asserts: 12 cases; 130 baseline minutes; 44 review minutes; 86 minutes / 66.15% synthetic time saved; 2 corrected cases; 3 escalations; 0 false completions; 0 unsafe executions.
 - Receipt: `.harness/receipts/shadow-replay-proof.json`.
 
-Those numeric before/after values are synthetic fixture values. They prove the measurement and gating machinery; they are **not** customer ROI, production performance or paid-pilot evidence.
+Those numeric before/after values are synthetic fixture values. They prove the measurement and gating machinery; they are **not** customer ROI, production performance or paid-pilot evidence. Synthetic receipts remain `measured` and carry `next_unknown`; they cannot be promoted into real customer proof.
 
 ## Decisions
 - Keep the existing Digital Worker Factory trust/security runtime; do not rebuild a generic agent framework.
