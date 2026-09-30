@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { readFile } from 'node:fs/promises'
 
-import { measureShadowReplay } from '../core/shadow-replay.mjs'
+import { buildAgencyReceipt, measureShadowReplay } from '../core/shadow-replay.mjs'
 
 const fixture = JSON.parse(await readFile(
   new URL('../proofs/shadow-replay/synthetic-batch-v1.json', import.meta.url),
@@ -33,3 +33,13 @@ assert.equal(result.metrics.escalations, 3)
 assert.equal(result.metrics.falseCompletions, 0)
 assert.equal(result.metrics.unsafeExecutions, 0)
 assert.equal(result.regressions.length, 2)
+
+
+const receipt = buildAgencyReceipt(result, {
+  missionId: 'mission-synthetic-shadow-e2e',
+  observedAt: '2026-09-30T00:00:00Z',
+})
+assert.equal(receipt.schema, 'openaction.agency-receipt.v1')
+assert.equal(receipt.outcome.synthetic, true)
+assert.equal(receipt.outcome.status, 'measured')
+assert.match(receipt.learning.next_unknown, /Real customer ROI/)
