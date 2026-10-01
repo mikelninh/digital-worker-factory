@@ -28,7 +28,10 @@ jobs:
           node-version: '22'
 
       - name: Deterministic engine tests
-        run: node --test products/launchcheck/tests/launchcheck.test.mjs products/launchcheck/tests/submission-metadata.test.mjs
+        run: node --test products/launchcheck/tests/launchcheck.test.mjs products/launchcheck/tests/submission-metadata.test.mjs products/launchcheck/tests/routing-benchmark.test.mjs
+
+      - name: Validate routing benchmark
+        run: node products/launchcheck/routing/routing-score.mjs --validate-only
 
       - name: Validate plugin package JSON
         run: |
