@@ -1,0 +1,9 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/mcp.schema.json",
+  "mcpServers": {
+    "launchcheck": {
+      "type": "streamable-http",
+      "url": "https://htffcvdopavknnylbowl.supabase.co/functions/v1/launchcheck-mcp"
+    }
+  }
+}
