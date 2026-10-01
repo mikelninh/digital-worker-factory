@@ -2,7 +2,7 @@ name: LaunchCheck release gate
 
 on:
   push:
-    branches: [launchcheck-v0-1]
+    branches: [main, 'launchcheck-*']
     paths:
       - 'products/launchcheck/**'
       - '.github/workflows/launchcheck.yml'
@@ -39,8 +39,9 @@ jobs:
 
       - name: MCP tools list
         run: |
-          npx -y @modelcontextprotocol/inspector --cli "$MCP_URL" --transport http --method tools/list --format json | tee /tmp/launchcheck-tools.json
+          npx -y @modelcontextprotocol/inspector --cli "$MCP_URL" --transport http --method tools/list --strict --format json | tee /tmp/launchcheck-tools.json
           grep -q 'audit_website' /tmp/launchcheck-tools.json
+          node -e "const fs=require('fs');const x=JSON.parse(fs.readFileSync('/tmp/launchcheck-tools.json','utf8'));const n=(x.schemaFindings||[]).flatMap(g=>g.findings||[]).length;if(n){console.error('Schema portability findings:',JSON.stringify(x.schemaFindings,null,2));process.exit(1)}"
 
       - name: Live website audit
         run: |
