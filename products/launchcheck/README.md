@@ -48,7 +48,8 @@ The edge function is deployed in the existing `company-01` Supabase project.
 4. Live audit against `https://example.com` completes and returns the LaunchCheck schema.
 5. Private-network regression against `127.0.0.1` is blocked.
 6. Plugin package JSON parses.
-7. Golden prompts preserve positive/negative routing boundaries.
+7. The 20-case routing benchmark stays structurally valid and covers direct, indirect, follow-up, negative, and boundary intents.
+8. Developer-mode routing release target: zero false positives, at least 11/12 relevant prompts caught, >=95% URL argument accuracy, and zero boundary violations.
 
 ## Structure
 
@@ -56,7 +57,18 @@ The edge function is deployed in the existing `company-01` Supabase project.
 - `tests/launchcheck.test.mjs` — deterministic engine tests
 - `supabase/functions/launchcheck-mcp/` — production MCP edge function
 - `plugin/` — portable Agent Plugins package
-- `submission/` — review cases and golden routing prompts
+- `submission/` — public-review cases and submission materials
+- `routing/` — 20-prompt discovery benchmark, results template, scorer, and runbook
+
+## Routing benchmark
+
+The discovery benchmark lives in `routing/routing-benchmark.json`. Run it manually in ChatGPT Developer Mode without forcing the plugin with `@`, record outcomes in a copy of `routing-results.template.json`, then score the run with:
+
+```bash
+node products/launchcheck/routing/routing-score.mjs <results.json>
+```
+
+A routing revision passes only when irrelevant/unsupported requests stay clean while relevant public-site preflight intents reliably select `audit_website` with the correct URL.
 
 ## Next release
 

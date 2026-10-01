@@ -1,0 +1,169 @@
+{
+  "run_id": "replace-with-date-and-short-label",
+  "plugin_version": "0.1.0",
+  "metadata_commit": "replace-with-git-sha",
+  "chatgpt_surface": "Work",
+  "notes": "",
+  "cases": [
+    {
+      "id": "D01",
+      "actual_tool": null,
+      "actual_args": null,
+      "useful_result": null,
+      "component_rendered": null,
+      "notes": ""
+    },
+    {
+      "id": "D02",
+      "actual_tool": null,
+      "actual_args": null,
+      "useful_result": null,
+      "component_rendered": null,
+      "notes": ""
+    },
+    {
+      "id": "D03",
+      "actual_tool": null,
+      "actual_args": null,
+      "useful_result": null,
+      "component_rendered": null,
+      "notes": ""
+    },
+    {
+      "id": "D04",
+      "actual_tool": null,
+      "actual_args": null,
+      "useful_result": null,
+      "component_rendered": null,
+      "notes": ""
+    },
+    {
+      "id": "I01",
+      "actual_tool": null,
+      "actual_args": null,
+      "useful_result": null,
+      "component_rendered": null,
+      "notes": ""
+    },
+    {
+      "id": "I02",
+      "actual_tool": null,
+      "actual_args": null,
+      "useful_result": null,
+      "component_rendered": null,
+      "notes": ""
+    },
+    {
+      "id": "I03",
+      "actual_tool": null,
+      "actual_args": null,
+      "useful_result": null,
+      "component_rendered": null,
+      "notes": ""
+    },
+    {
+      "id": "I04",
+      "actual_tool": null,
+      "actual_args": null,
+      "useful_result": null,
+      "component_rendered": null,
+      "notes": ""
+    },
+    {
+      "id": "I05",
+      "actual_tool": null,
+      "actual_args": null,
+      "useful_result": null,
+      "component_rendered": null,
+      "notes": ""
+    },
+    {
+      "id": "I06",
+      "actual_tool": null,
+      "actual_args": null,
+      "useful_result": null,
+      "component_rendered": null,
+      "notes": ""
+    },
+    {
+      "id": "F01",
+      "actual_tool": null,
+      "actual_args": null,
+      "useful_result": null,
+      "component_rendered": null,
+      "notes": ""
+    },
+    {
+      "id": "F02",
+      "actual_tool": null,
+      "actual_args": null,
+      "useful_result": null,
+      "component_rendered": null,
+      "notes": ""
+    },
+    {
+      "id": "N01",
+      "actual_tool": null,
+      "actual_args": null,
+      "useful_result": null,
+      "component_rendered": null,
+      "notes": ""
+    },
+    {
+      "id": "N02",
+      "actual_tool": null,
+      "actual_args": null,
+      "useful_result": null,
+      "component_rendered": null,
+      "notes": ""
+    },
+    {
+      "id": "N03",
+      "actual_tool": null,
+      "actual_args": null,
+      "useful_result": null,
+      "component_rendered": null,
+      "notes": ""
+    },
+    {
+      "id": "N04",
+      "actual_tool": null,
+      "actual_args": null,
+      "useful_result": null,
+      "component_rendered": null,
+      "notes": ""
+    },
+    {
+      "id": "N05",
+      "actual_tool": null,
+      "actual_args": null,
+      "useful_result": null,
+      "component_rendered": null,
+      "notes": ""
+    },
+    {
+      "id": "B01",
+      "actual_tool": null,
+      "actual_args": null,
+      "useful_result": null,
+      "component_rendered": null,
+      "notes": ""
+    },
+    {
+      "id": "B02",
+      "actual_tool": null,
+      "actual_args": null,
+      "useful_result": null,
+      "component_rendered": null,
+      "notes": ""
+    },
+    {
+      "id": "B03",
+      "actual_tool": null,
+      "actual_args": null,
+      "useful_result": null,
+      "component_rendered": null,
+      "notes": ""
+    }
+  ]
+}

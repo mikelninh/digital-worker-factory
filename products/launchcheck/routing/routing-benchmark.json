@@ -1,0 +1,238 @@
+{
+  "version": "0.1.0",
+  "plugin": "LaunchCheck",
+  "tool": "audit_website",
+  "purpose": "Measure whether ChatGPT selects LaunchCheck for relevant website-preflight intents while avoiding irrelevant or unsupported requests.",
+  "release_targets": {
+    "precision_min": 0.95,
+    "recall_min": 0.9,
+    "negative_specificity_min": 1,
+    "argument_accuracy_min": 0.95,
+    "useful_completion_min": 0.9,
+    "max_boundary_violations": 0
+  },
+  "cases": [
+    {
+      "id": "D01",
+      "kind": "direct",
+      "turns": [
+        "Check https://example.com before I launch."
+      ],
+      "should_call": true,
+      "expected_tool": "audit_website",
+      "expected_url": "https://example.com",
+      "why": "Explicit launch preflight with a public URL."
+    },
+    {
+      "id": "D02",
+      "kind": "direct",
+      "turns": [
+        "Use LaunchCheck on https://example.com."
+      ],
+      "should_call": true,
+      "expected_tool": "audit_website",
+      "expected_url": "https://example.com",
+      "why": "Explicit product invocation."
+    },
+    {
+      "id": "D03",
+      "kind": "direct",
+      "turns": [
+        "Smoke test https://example.com before release."
+      ],
+      "should_call": true,
+      "expected_tool": "audit_website",
+      "expected_url": "https://example.com",
+      "why": "Direct smoke-test request."
+    },
+    {
+      "id": "D04",
+      "kind": "direct",
+      "turns": [
+        "Find broken internal links on https://example.com."
+      ],
+      "should_call": true,
+      "expected_tool": "audit_website",
+      "expected_url": "https://example.com",
+      "why": "Direct supported broken-link check."
+    },
+    {
+      "id": "I01",
+      "kind": "indirect",
+      "turns": [
+        "I'm about to share https://example.com with customers. Anything obviously broken?"
+      ],
+      "should_call": true,
+      "expected_tool": "audit_website",
+      "expected_url": "https://example.com",
+      "why": "User asks for launch-risk detection without naming the tool."
+    },
+    {
+      "id": "I02",
+      "kind": "indirect",
+      "turns": [
+        "We deploy tomorrow. Can you sanity-check https://example.com?"
+      ],
+      "should_call": true,
+      "expected_tool": "audit_website",
+      "expected_url": "https://example.com",
+      "why": "Deployment sanity check maps to preflight."
+    },
+    {
+      "id": "I03",
+      "kind": "indirect",
+      "turns": [
+        "Before I post this on Product Hunt, check https://example.com for basic technical mistakes."
+      ],
+      "should_call": true,
+      "expected_tool": "audit_website",
+      "expected_url": "https://example.com",
+      "why": "Pre-launch technical check."
+    },
+    {
+      "id": "I04",
+      "kind": "indirect",
+      "turns": [
+        "This landing page is live now: https://example.com. Can you do a technical launch sanity check?"
+      ],
+      "should_call": true,
+      "expected_tool": "audit_website",
+      "expected_url": "https://example.com",
+      "why": "Outcome is exactly the supported preflight job."
+    },
+    {
+      "id": "I05",
+      "kind": "indirect",
+      "turns": [
+        "Could any obvious HTML or header mistake hurt this release? https://example.com"
+      ],
+      "should_call": true,
+      "expected_tool": "audit_website",
+      "expected_url": "https://example.com",
+      "why": "Supported static HTML/header checks."
+    },
+    {
+      "id": "I06",
+      "kind": "indirect",
+      "turns": [
+        "I think one of the links on https://example.com might be dead. Can you check before I send traffic?"
+      ],
+      "should_call": true,
+      "expected_tool": "audit_website",
+      "expected_url": "https://example.com",
+      "why": "Supported sampled same-origin link checking."
+    },
+    {
+      "id": "F01",
+      "kind": "follow_up",
+      "turns": [
+        "Check https://example.com before I launch.",
+        "Now do the same for https://example.com/pricing."
+      ],
+      "should_call": true,
+      "expected_tool": "audit_website",
+      "expected_url": "https://example.com/pricing",
+      "why": "Follow-up should reuse the same preflight workflow on the new URL."
+    },
+    {
+      "id": "F02",
+      "kind": "follow_up",
+      "turns": [
+        "Smoke test https://example.com.",
+        "What about https://example.com/docs — same preflight please."
+      ],
+      "should_call": true,
+      "expected_tool": "audit_website",
+      "expected_url": "https://example.com/docs",
+      "why": "Context-dependent follow-up should still route to LaunchCheck."
+    },
+    {
+      "id": "N01",
+      "kind": "negative",
+      "turns": [
+        "Build me a landing page for my startup."
+      ],
+      "should_call": false,
+      "expected_tool": null,
+      "expected_url": null,
+      "why": "Creation is not a LaunchCheck job."
+    },
+    {
+      "id": "N02",
+      "kind": "negative",
+      "turns": [
+        "Rewrite my homepage headline to convert better."
+      ],
+      "should_call": false,
+      "expected_tool": null,
+      "expected_url": null,
+      "why": "Copywriting should not invoke the audit tool."
+    },
+    {
+      "id": "N03",
+      "kind": "negative",
+      "turns": [
+        "Give me SEO keyword ideas for vegan protein."
+      ],
+      "should_call": false,
+      "expected_tool": null,
+      "expected_url": null,
+      "why": "Keyword research is outside scope."
+    },
+    {
+      "id": "N04",
+      "kind": "negative",
+      "turns": [
+        "What is Content-Security-Policy?"
+      ],
+      "should_call": false,
+      "expected_tool": null,
+      "expected_url": null,
+      "why": "A factual explanation needs no site audit."
+    },
+    {
+      "id": "N05",
+      "kind": "negative",
+      "turns": [
+        "Design a prettier mobile navigation for my website."
+      ],
+      "should_call": false,
+      "expected_tool": null,
+      "expected_url": null,
+      "why": "Design work is not a static audit."
+    },
+    {
+      "id": "B01",
+      "kind": "boundary",
+      "turns": [
+        "Open http://localhost:3000 and test my dev build."
+      ],
+      "should_call": false,
+      "expected_tool": null,
+      "expected_url": null,
+      "why": "Private/local targets are intentionally unsupported."
+    },
+    {
+      "id": "B02",
+      "kind": "boundary",
+      "turns": [
+        "Log into my admin panel and submit the signup form to make sure it works."
+      ],
+      "should_call": false,
+      "expected_tool": null,
+      "expected_url": null,
+      "why": "Authenticated browser interaction and form submission are outside v0.1."
+    },
+    {
+      "id": "B03",
+      "kind": "boundary",
+      "turns": [
+        "Visually inspect https://example.com on an iPhone 15 and click every CTA."
+      ],
+      "should_call": false,
+      "expected_tool": null,
+      "expected_url": null,
+      "why": "Visual rendering and click-path testing are browser-runtime features reserved for v0.2."
+    }
+  ]
+}
