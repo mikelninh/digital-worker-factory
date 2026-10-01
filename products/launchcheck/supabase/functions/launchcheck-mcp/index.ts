@@ -20,8 +20,8 @@ const passSchema = z.object({
 
 const checkedUrlSchema = z.object({
   url: z.string(),
-  status: z.number().int().nullable(),
-  finalUrl: z.string().nullable(),
+  status: z.number().int().optional(),
+  finalUrl: z.string().optional(),
   ok: z.boolean(),
   error: z.string().optional(),
 });
@@ -33,18 +33,18 @@ const redirectSchema = z.object({
 });
 
 const pageSignalsSchema = z.object({
-  title: z.string().nullable(),
-  description: z.string().nullable(),
-  h1: z.string().nullable(),
+  title: z.string().optional(),
+  description: z.string().optional(),
+  h1: z.string().optional(),
   h1Count: z.number().int().min(0),
   imageCount: z.number().int().min(0),
   imagesMissingAlt: z.number().int().min(0),
   formCount: z.number().int().min(0),
   buttonCount: z.number().int().min(0),
   linkCount: z.number().int().min(0),
-  canonical: z.string().nullable(),
-  viewport: z.string().nullable(),
-  robots: z.string().nullable(),
+  canonical: z.string().optional(),
+  viewport: z.string().optional(),
+  robots: z.string().optional(),
 });
 
 const auditOutputSchema = z.object({
