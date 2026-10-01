@@ -1,0 +1,101 @@
+{
+  "version": "0.1.0",
+  "tool": "audit_website",
+  "cases": [
+    {
+      "kind": "direct",
+      "prompt": "Check https://example.com before I launch.",
+      "should_call": true
+    },
+    {
+      "kind": "direct",
+      "prompt": "Smoke test this landing page: https://example.com/pricing",
+      "should_call": true
+    },
+    {
+      "kind": "direct",
+      "prompt": "Find broken links on https://example.com",
+      "should_call": true
+    },
+    {
+      "kind": "direct",
+      "prompt": "Audit https://example.com for obvious launch blockers.",
+      "should_call": true
+    },
+    {
+      "kind": "direct",
+      "prompt": "Check whether https://example.com has the basics right for mobile before launch.",
+      "should_call": true
+    },
+    {
+      "kind": "direct",
+      "prompt": "Preflight https://example.com and tell me what I should fix before sending traffic.",
+      "should_call": true
+    },
+    {
+      "kind": "indirect",
+      "prompt": "I'm about to share https://example.com with customers. Anything obviously broken?",
+      "should_call": true
+    },
+    {
+      "kind": "indirect",
+      "prompt": "We deploy tomorrow. Can you sanity-check https://example.com?",
+      "should_call": true
+    },
+    {
+      "kind": "indirect",
+      "prompt": "Does https://example.com look technically ready to publish?",
+      "should_call": true
+    },
+    {
+      "kind": "indirect",
+      "prompt": "Before I post this on Product Hunt, check https://example.com for basic technical mistakes.",
+      "should_call": true
+    },
+    {
+      "kind": "indirect",
+      "prompt": "I worry one of the links on https://example.com is dead.",
+      "should_call": true
+    },
+    {
+      "kind": "negative",
+      "prompt": "Build me a landing page for my new SaaS.",
+      "should_call": false
+    },
+    {
+      "kind": "negative",
+      "prompt": "Rewrite the hero copy on my website.",
+      "should_call": false
+    },
+    {
+      "kind": "negative",
+      "prompt": "Give me SEO keyword ideas for vegan protein.",
+      "should_call": false
+    },
+    {
+      "kind": "negative",
+      "prompt": "Design a prettier mobile navigation.",
+      "should_call": false
+    },
+    {
+      "kind": "negative",
+      "prompt": "What is Content-Security-Policy?",
+      "should_call": false
+    },
+    {
+      "kind": "negative",
+      "prompt": "Open http://localhost:3000 and test my dev build.",
+      "should_call": false
+    },
+    {
+      "kind": "negative",
+      "prompt": "Log into my admin panel and submit the signup form.",
+      "should_call": false
+    },
+    {
+      "kind": "negative",
+      "prompt": "Make a logo for my website.",
+      "should_call": false
+    }
+  ]
+}\n

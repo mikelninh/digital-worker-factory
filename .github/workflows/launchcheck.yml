@@ -1,0 +1,53 @@
+name: LaunchCheck release gate
+
+on:
+  push:
+    branches: [launchcheck-v0-1]
+    paths:
+      - 'products/launchcheck/**'
+      - '.github/workflows/launchcheck.yml'
+  pull_request:
+    paths:
+      - 'products/launchcheck/**'
+      - '.github/workflows/launchcheck.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      MCP_URL: https://htffcvdopavknnylbowl.supabase.co/functions/v1/launchcheck-mcp
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Deterministic engine tests
+        run: node --test products/launchcheck/tests/launchcheck.test.mjs
+
+      - name: Validate plugin package JSON
+        run: |
+          node -e "JSON.parse(require('fs').readFileSync('products/launchcheck/plugin/plugin.json','utf8')); JSON.parse(require('fs').readFileSync('products/launchcheck/plugin/mcp.json','utf8')); JSON.parse(require('fs').readFileSync('products/launchcheck/submission/golden-prompts.json','utf8'));"
+
+      - name: MCP initialize
+        run: npx -y @modelcontextprotocol/inspector --cli "$MCP_URL" --transport http --method initialize --format json | tee /tmp/launchcheck-init.json
+
+      - name: MCP tools list
+        run: |
+          npx -y @modelcontextprotocol/inspector --cli "$MCP_URL" --transport http --method tools/list --format json | tee /tmp/launchcheck-tools.json
+          grep -q 'audit_website' /tmp/launchcheck-tools.json
+
+      - name: Live website audit
+        run: |
+          npx -y @modelcontextprotocol/inspector --cli "$MCP_URL" --transport http --method tools/call --tool-name audit_website --tool-args-json '{"url":"https://example.com","max_links":2}' --format json | tee /tmp/launchcheck-audit.json
+          grep -q 'launchcheck/audit-v0.1' /tmp/launchcheck-audit.json
+
+      - name: Private-network regression
+        run: |
+          npx -y @modelcontextprotocol/inspector --cli "$MCP_URL" --transport http --method tools/call --tool-name audit_website --tool-args-json '{"url":"http://127.0.0.1","max_links":0}' --format json | tee /tmp/launchcheck-private.json
+          grep -Eq 'Private|private|reserved|local' /tmp/launchcheck-private.json

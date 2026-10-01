@@ -1,0 +1,32 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "launchcheck",
+  "version": "0.1.0",
+  "description": "Check a public website before launch for broken links, HTTP failures, missing launch metadata, mobile setup, basic accessibility signals, and security headers.",
+  "author": {
+    "name": "Michael Ninh",
+    "url": "https://github.com/mikelninh"
+  },
+  "homepage": "https://github.com/mikelninh/digital-worker-factory/tree/main/products/launchcheck",
+  "repository": "https://github.com/mikelninh/digital-worker-factory",
+  "keywords": ["website testing", "preflight", "launch", "qa", "broken links"],
+  "extensions": {
+    "com.openai": {
+      "interface": {
+        "displayName": "LaunchCheck",
+        "shortDescription": "Check your website before you launch.",
+        "longDescription": "LaunchCheck runs a bounded, read-only preflight on a public website and returns launch blockers, warnings, passes, checked URLs, and evidence.",
+        "developerName": "Michael Ninh",
+        "capabilities": ["Read"],
+        "websiteURL": "https://github.com/mikelninh/digital-worker-factory/tree/main/products/launchcheck",
+        "privacyPolicyURL": "https://github.com/mikelninh/digital-worker-factory/blob/main/products/launchcheck/plugin/PRIVACY.md",
+        "termsOfServiceURL": "https://github.com/mikelninh/digital-worker-factory/blob/main/products/launchcheck/plugin/TERMS.md",
+        "defaultPrompt": [
+          "Check this website before I launch it.",
+          "Find launch blockers and broken links on this landing page."
+        ],
+        "brandColor": "#111111"
+      }
+    }
+  }
+}
