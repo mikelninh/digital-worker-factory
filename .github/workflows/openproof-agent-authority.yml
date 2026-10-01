@@ -1,0 +1,26 @@
+name: OpenProof agent authority
+on:
+  pull_request:
+    paths:
+      - 'core/openproof-agent-authority.js'
+      - 'evals/openproof-agent-authority.mjs'
+      - 'agents/OPENPROOF_AGENT_AUTHORITY.md'
+      - '.github/workflows/openproof-agent-authority.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'core/openproof-agent-authority.js'
+      - 'evals/openproof-agent-authority.mjs'
+      - '.github/workflows/openproof-agent-authority.yml'
+permissions:
+  contents: read
+jobs:
+  authority-proof:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node --check core/openproof-agent-authority.js
+      - run: node evals/openproof-agent-authority.mjs
