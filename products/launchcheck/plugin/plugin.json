@@ -2,30 +2,99 @@
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "launchcheck",
   "version": "0.1.0",
-  "description": "Check a public website before launch for broken links, HTTP failures, missing launch metadata, mobile setup, basic accessibility signals, and security headers.",
+  "description": "Check a public website before launch for broken links, HTTP failures, launch metadata, mobile setup, basic accessibility signals, and security headers.",
   "author": {
     "name": "Michael Ninh",
     "url": "https://github.com/mikelninh"
   },
   "homepage": "https://github.com/mikelninh/digital-worker-factory/tree/main/products/launchcheck",
   "repository": "https://github.com/mikelninh/digital-worker-factory",
-  "keywords": ["website testing", "preflight", "launch", "qa", "broken links"],
+  "keywords": [
+    "website testing",
+    "preflight",
+    "launch",
+    "qa",
+    "broken links"
+  ],
   "extensions": {
     "com.openai": {
       "interface": {
         "displayName": "LaunchCheck",
-        "shortDescription": "Check your website before you launch.",
-        "longDescription": "LaunchCheck runs a bounded, read-only preflight on a public website and returns launch blockers, warnings, passes, checked URLs, and evidence.",
+        "shortDescription": "Check your site before launch",
+        "longDescription": "LaunchCheck runs a bounded, read-only preflight on a public website before launch. It checks reachability, sampled broken internal links, mobile and sharing metadata, basic accessibility signals, and important security headers, then returns evidence-backed blockers, warnings, and passes. v0.1 is a static HTTP audit: it does not execute JavaScript, click controls, submit forms, or visually inspect responsive layout.",
         "developerName": "Michael Ninh",
-        "capabilities": ["Read"],
+        "category": "Developer Tools",
+        "capabilities": [
+          "Website preflight",
+          "Broken-link checks",
+          "Launch metadata checks"
+        ],
         "websiteURL": "https://github.com/mikelninh/digital-worker-factory/tree/main/products/launchcheck",
+        "supportURL": "https://github.com/mikelninh/digital-worker-factory/issues",
         "privacyPolicyURL": "https://github.com/mikelninh/digital-worker-factory/blob/main/products/launchcheck/plugin/PRIVACY.md",
         "termsOfServiceURL": "https://github.com/mikelninh/digital-worker-factory/blob/main/products/launchcheck/plugin/TERMS.md",
         "defaultPrompt": [
           "Check this website before I launch it.",
           "Find launch blockers and broken links on this landing page."
         ],
-        "brandColor": "#111111"
+        "brandColor": "#111111",
+        "composerIcon": "./assets/icon.svg",
+        "logo": "./assets/icon.svg"
+      },
+      "review": {
+        "test_cases": {
+          "positive": [
+            {
+              "description": "Preflight a public website before launch",
+              "prompt": "Check https://example.com before I launch.",
+              "tools_triggered": "audit_website",
+              "expected_behavior": "Run the bounded website audit and summarize evidence-backed blockers, warnings, and passes without claiming browser interactions."
+            },
+            {
+              "description": "Sanity-check a site before sending traffic",
+              "prompt": "I'm about to send traffic to https://example.com. Can you sanity-check it?",
+              "tools_triggered": "audit_website",
+              "expected_behavior": "Audit the supplied public URL and return a launch verdict with supporting evidence."
+            },
+            {
+              "description": "Find broken links and launch mistakes",
+              "prompt": "Find broken links and obvious launch mistakes on https://example.com.",
+              "tools_triggered": "audit_website",
+              "expected_behavior": "Audit the page, sample same-origin links, and report any HTTP failures and static launch issues."
+            },
+            {
+              "description": "Check mobile and sharing setup",
+              "prompt": "Does https://example.com have the basics right for mobile and sharing?",
+              "tools_triggered": "audit_website",
+              "expected_behavior": "Inspect viewport and sharing metadata and clearly state that v0.1 does not visually render mobile layouts."
+            },
+            {
+              "description": "Smoke-test a release candidate",
+              "prompt": "Smoke test https://example.com before tomorrow's release.",
+              "tools_triggered": "audit_website",
+              "expected_behavior": "Run the read-only public-site preflight and return the most important issues first."
+            }
+          ],
+          "negative": [
+            {
+              "description": "Website creation is outside LaunchCheck",
+              "prompt": "Build me a landing page for my startup."
+            },
+            {
+              "description": "Copywriting is outside LaunchCheck",
+              "prompt": "Rewrite my homepage headline to convert better."
+            },
+            {
+              "description": "Keyword research is outside LaunchCheck",
+              "prompt": "Give me SEO keyword ideas for my product."
+            }
+          ]
+        },
+        "commerce": false,
+        "commerce_description": "LaunchCheck does not sell products or process payments."
+      },
+      "publication": {
+        "release_notes": "Initial LaunchCheck v0.1: bounded read-only public website preflight with evidence-backed launch blockers, warnings, passes, sampled broken-link checks, and private-network protections."
       }
     }
   }
