@@ -291,7 +291,7 @@ export async function auditWebsite({ url, maxLinks = DEFAULT_MAX_LINKS }, deps =
       checkedUrls.push({ url:href, status:result.response.status, finalUrl:result.finalUrl, ok:result.response.status < 400 });
       if (result.response.status >= 400) blockers.push(issue('blocker','broken_internal_link',`Internal link returned HTTP ${result.response.status}.`, href, 'Fix or remove the broken destination before launch.'));
     } catch (error) {
-      checkedUrls.push({ url:href, status:null, finalUrl:null, ok:false, error:error.message });
+      checkedUrls.push({ url:href, ok:false, error:error.message });
       blockers.push(issue('blocker','broken_internal_link','An internal link could not be reached safely.', `${href}: ${error.message}`, 'Fix or remove the broken destination before launch.'));
     }
   }
@@ -316,10 +316,10 @@ export async function auditWebsite({ url, maxLinks = DEFAULT_MAX_LINKS }, deps =
     checkedUrls,
     redirects,
     pageSignals:{
-      title:doc.title || null, description:doc.description || null, h1:doc.h1 || null,
+      title:doc.title || undefined, description:doc.description || undefined, h1:doc.h1 || undefined,
       h1Count:doc.h1Count, imageCount:doc.imageCount, imagesMissingAlt:doc.imagesMissingAlt,
       formCount:doc.formCount, buttonCount:doc.buttonCount, linkCount:doc.linkCount,
-      canonical:doc.canonical, viewport:doc.viewport, robots:doc.robots,
+      canonical:doc.canonical || undefined, viewport:doc.viewport || undefined, robots:doc.robots || undefined,
     },
     limitations:['Static fetch audit only; JavaScript rendering, clicks, form submission, visual layout, console errors, and network waterfalls are not executed in v0.1.'],
   };
