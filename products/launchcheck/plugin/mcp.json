@@ -3,7 +3,7 @@
   "mcpServers": {
     "launchcheck": {
       "type": "streamable-http",
-      "url": "https://htffcvdopavknnylbowl.supabase.co/functions/v1/launchcheck-mcp"
+      "url": "https://launchcheck-ai.netlify.app/mcp"
     }
   }
 }
