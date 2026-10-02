@@ -20,7 +20,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     env:
-      MCP_URL: https://htffcvdopavknnylbowl.supabase.co/functions/v1/launchcheck-mcp
+      MCP_URL: https://launchcheck-ai.netlify.app/mcp
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
