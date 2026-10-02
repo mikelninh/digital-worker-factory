@@ -36,9 +36,9 @@ v0.1 is a **bounded static HTTP audit**. It does **not** execute JavaScript, cli
 
 ## Production MCP
 
-`https://htffcvdopavknnylbowl.supabase.co/functions/v1/launchcheck-mcp`
+`https://launchcheck-ai.netlify.app/mcp`
 
-The edge function is deployed in the existing `company-01` Supabase project.
+The public MCP endpoint is served from the `launchcheck-ai.netlify.app` front door and proxies to the proven `company-01` Supabase runtime. The same Netlify origin also owns `/.well-known/openai-apps-challenge` for OpenAI domain verification.
 
 ## Release gates
 
