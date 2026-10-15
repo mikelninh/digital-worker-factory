@@ -1,0 +1,26 @@
+name: HTGF proof · evidence → approved once → retry blocked
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'proofs/htgf-boundary-release.test.mjs'
+      - 'core/production-boundary.mjs'
+      - 'core/trust-chain.mjs'
+      - 'core/security-boundary.mjs'
+      - '.github/workflows/htgf-proof-gate.yml'
+permissions:
+  contents: read
+jobs:
+  proof:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '22'
+      - name: Run actual production-boundary contract (synthetic)
+        run: node --test proofs/htgf-boundary-release.test.mjs
+      - name: Run existing production context, idempotency and trust tests
+        run: node --test core/production-boundary.test.mjs core/trust-chain.test.mjs
