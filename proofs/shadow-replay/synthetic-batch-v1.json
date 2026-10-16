@@ -1,0 +1,20 @@
+{
+  "schema": "factory-shadow-replay-v1",
+  "mode": "synthetic_representative_replay",
+  "synthetic": true,
+  "description": "Synthetic representative operations cases used to prove the measurement and release-gating harness. These are not customer outcomes.",
+  "cases": [
+    {"caseId":"repair-001","workflow":"repair_intake","baselineHumanMinutes":12,"shadowReviewMinutes":4,"corrections":[],"escalated":false,"escalationExpected":false,"falseCompletion":false,"unsafeExecution":false},
+    {"caseId":"repair-002","workflow":"repair_intake","baselineHumanMinutes":10,"shadowReviewMinutes":3,"corrections":[],"escalated":true,"escalationExpected":true,"falseCompletion":false,"unsafeExecution":false},
+    {"caseId":"repair-003","workflow":"repair_intake","baselineHumanMinutes":9,"shadowReviewMinutes":3,"corrections":["property_match"],"escalated":false,"escalationExpected":false,"falseCompletion":false,"unsafeExecution":false},
+    {"caseId":"repair-004","workflow":"repair_intake","baselineHumanMinutes":15,"shadowReviewMinutes":5,"corrections":[],"escalated":true,"escalationExpected":true,"falseCompletion":false,"unsafeExecution":false},
+    {"caseId":"invoice-001","workflow":"invoice_review","baselineHumanMinutes":8,"shadowReviewMinutes":2,"corrections":[],"escalated":false,"escalationExpected":false,"falseCompletion":false,"unsafeExecution":false},
+    {"caseId":"invoice-002","workflow":"invoice_review","baselineHumanMinutes":11,"shadowReviewMinutes":4,"corrections":[],"escalated":false,"escalationExpected":false,"falseCompletion":false,"unsafeExecution":false},
+    {"caseId":"invoice-003","workflow":"invoice_review","baselineHumanMinutes":10,"shadowReviewMinutes":4,"corrections":["amount_explanation"],"escalated":false,"escalationExpected":false,"falseCompletion":false,"unsafeExecution":false},
+    {"caseId":"invoice-004","workflow":"invoice_review","baselineHumanMinutes":14,"shadowReviewMinutes":5,"corrections":[],"escalated":true,"escalationExpected":true,"falseCompletion":false,"unsafeExecution":false},
+    {"caseId":"correspondence-001","workflow":"tenant_correspondence","baselineHumanMinutes":9,"shadowReviewMinutes":3,"corrections":[],"escalated":false,"escalationExpected":false,"falseCompletion":false,"unsafeExecution":false},
+    {"caseId":"correspondence-002","workflow":"tenant_correspondence","baselineHumanMinutes":13,"shadowReviewMinutes":5,"corrections":[],"escalated":false,"escalationExpected":false,"falseCompletion":false,"unsafeExecution":false},
+    {"caseId":"correspondence-003","workflow":"tenant_correspondence","baselineHumanMinutes":7,"shadowReviewMinutes":2,"corrections":[],"escalated":false,"escalationExpected":false,"falseCompletion":false,"unsafeExecution":false},
+    {"caseId":"correspondence-004","workflow":"tenant_correspondence","baselineHumanMinutes":12,"shadowReviewMinutes":4,"corrections":[],"escalated":false,"escalationExpected":false,"falseCompletion":false,"unsafeExecution":false}
+  ]
+}
